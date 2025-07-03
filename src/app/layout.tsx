@@ -4,18 +4,15 @@ import React, { Suspense } from "react";
 import { Refine, GitHubBanner } from "@refinedev/core";
 import { DevtoolsProvider } from "@providers/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
-import {
-  ThemedTitleV2,
-  useNotificationProvider,
-  RefineSnackbarProvider,
-} from "@refinedev/mui";
+// import { useNotificationProvider } from "@refinedev/core";
 import routerProvider from "@refinedev/nextjs-router";
 
 import { AppIcon } from "@components/app-icon";
 import { authProviderClient } from "@providers/auth-provider/auth-provider.client";
 import { dataProvider } from "@providers/data-provider";
-import { ColorModeContextProvider } from "@contexts/color-mode";
-import { Header } from "@components/header";
+import { Header } from "@components/layout/header";
+import { ThemeProvider } from "@contexts/theme-provider";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Refine",
@@ -35,18 +32,22 @@ export default function RootLayout({
   const defaultMode = theme?.value === "dark" ? "dark" : "light";
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <Suspense>
-          <RefineKbarProvider>
-            <ColorModeContextProvider defaultMode={defaultMode}>
-              <RefineSnackbarProvider>
-                <DevtoolsProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme={defaultMode}
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Suspense>
+            <RefineKbarProvider>
+              <DevtoolsProvider>
                   <Refine
                     routerProvider={routerProvider}
                     authProvider={authProviderClient}
                     dataProvider={dataProvider}
-                    notificationProvider={useNotificationProvider}
+                    // notificationProvider={useNotificationProvider}
                     resources={[
                       {
                         name: "blog_posts",
@@ -77,14 +78,16 @@ export default function RootLayout({
                       title: { text: "ObjectTrack", icon: <AppIcon /> },
                     }}
                   >
-                    {children}
+                    <Header />
+                    <main className="flex-1">
+                      {children}
+                    </main>
                     <RefineKbar />
                   </Refine>
                 </DevtoolsProvider>
-              </RefineSnackbarProvider>
-            </ColorModeContextProvider>
-          </RefineKbarProvider>
-        </Suspense>
+            </RefineKbarProvider>
+          </Suspense>
+        </ThemeProvider>
       </body>
     </html>
   );

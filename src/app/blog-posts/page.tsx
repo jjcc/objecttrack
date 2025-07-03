@@ -1,131 +1,145 @@
-"use client";
+"use client"
 
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import { useMany } from "@refinedev/core";
-import {
-  DateField,
-  DeleteButton,
-  EditButton,
-  List,
-  ShowButton,
-  useDataGrid,
-} from "@refinedev/mui";
-import { Typography } from "@mui/material";
-import React from "react";
+import * as React from "react"
+import { ColumnDef } from "@tanstack/react-table"
+import { useMany, useList, useDelete, useNavigation } from "@refinedev/core"
+import { format } from "date-fns"
+
+import { DataTable, createActionColumn } from "@/components/data-table"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+
+type BlogPost = {
+  id: number
+  title: string
+  content: string
+  status: string
+  createdAt: string
+  categories?: {
+    id: number
+    title: string
+  }
+}
 
 export default function BlogPostList() {
-  const { dataGridProps } = useDataGrid({
-    syncWithLocation: true,
+  const { edit, show, create } = useNavigation()
+  const { mutate: deletePost } = useDelete()
+  
+  const { data: blogPostData, isLoading } = useList<BlogPost>({
+    resource: "blog_posts",
     meta: {
       select: "*, categories(id,title)",
     },
-  });
+  })
 
   const { data: categoryData, isLoading: categoryIsLoading } = useMany({
     resource: "categories",
-    ids:
-      dataGridProps?.rows
-        ?.map((item: any) => item?.categories?.id)
-        .filter(Boolean) ?? [],
+    ids: blogPostData?.data?.map((item) => item?.categories?.id).filter((id): id is number => Boolean(id)) ?? [],
     queryOptions: {
-      enabled: !!dataGridProps?.rows,
+      enabled: !!blogPostData?.data,
     },
-  });
+  })
 
-  const columns = React.useMemo<GridColDef[]>(
+  const columns = React.useMemo<ColumnDef<BlogPost>[]>(
     () => [
       {
-        field: "id",
-        headerName: "ID",
-        type: "number",
-        minWidth: 50,
-        display: "flex",
-        align: "left",
-        headerAlign: "left",
+        accessorKey: "id",
+        header: "ID",
+        cell: ({ row }) => (
+          <div className="w-12">{row.getValue("id")}</div>
+        ),
       },
       {
-        field: "title",
-        headerName: "Title",
-        minWidth: 200,
-        display: "flex",
+        accessorKey: "title",
+        header: "Title",
+        cell: ({ row }) => (
+          <div className="font-medium">{row.getValue("title")}</div>
+        ),
       },
       {
-        field: "content",
-        flex: 1,
-        headerName: "Content",
-        minWidth: 250,
-        display: "flex",
-        renderCell: function render({ value }) {
-          if (!value) return "-";
+        accessorKey: "content",
+        header: "Content",
+        cell: ({ row }) => {
+          const content = row.getValue("content") as string
           return (
-            <Typography
-              component="p"
-              whiteSpace="pre"
-              overflow="hidden"
-              textOverflow="ellipsis"
-            >
-              {value}
-            </Typography>
-          );
+            <div className="max-w-xs truncate">
+              {content || "-"}
+            </div>
+          )
         },
       },
       {
-        field: "categories",
-        headerName: "Category",
-        minWidth: 160,
-        display: "flex",
-        valueGetter: (_, row) => {
-          const value = row?.categories;
-          return value;
-        },
-        renderCell: function render({ value }) {
-          return categoryIsLoading ? (
-            <>Loading...</>
-          ) : (
-            categoryData?.data?.find((item) => item.id === value?.id)?.title
-          );
+        accessorKey: "categories",
+        header: "Category",
+        cell: ({ row }) => {
+          const category = row.getValue("categories") as any
+          if (categoryIsLoading) return <div>Loading...</div>
+          
+          const categoryTitle = categoryData?.data?.find(
+            (item) => item.id === category?.id
+          )?.title
+          
+          return <div>{categoryTitle || "-"}</div>
         },
       },
       {
-        field: "status",
-        headerName: "Status",
-        minWidth: 80,
-        display: "flex",
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => (
+          <div className="capitalize">{row.getValue("status")}</div>
+        ),
       },
       {
-        field: "createdAt",
-        headerName: "Created at",
-        minWidth: 120,
-        display: "flex",
-        renderCell: function render({ value }) {
-          return <DateField value={value} />;
-        },
-      },
-      {
-        field: "actions",
-        headerName: "Actions",
-        align: "right",
-        headerAlign: "right",
-        minWidth: 120,
-        sortable: false,
-        display: "flex",
-        renderCell: function render({ row }) {
+        accessorKey: "createdAt",
+        header: "Created At",
+        cell: ({ row }) => {
+          const date = row.getValue("createdAt") as string
           return (
-            <>
-              <EditButton hideText recordItemId={row.id} />
-              <ShowButton hideText recordItemId={row.id} />
-              <DeleteButton hideText recordItemId={row.id} />
-            </>
-          );
+            <div className="text-sm text-muted-foreground">
+              {format(Date(date), "MMM dd, yyyy")}
+            </div>
+          )
         },
       },
+      createActionColumn<BlogPost>({
+        onShow: (row) => show("blog_posts", row.id),
+        onEdit: (row) => edit("blog_posts", row.id),
+        onDelete: (row) => {
+          if (window.confirm("Are you sure you want to delete this post?")) {
+            deletePost({
+              resource: "blog_posts",
+              id: row.id,
+            })
+          }
+        },
+      }),
     ],
-    [categoryData, categoryIsLoading]
-  );
+    [categoryData, categoryIsLoading, edit, show, deletePost]
+  )
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-10">
+        <div>Loading...</div>
+      </div>
+    )
+  }
 
   return (
-    <List>
-      <DataGrid {...dataGridProps} columns={columns} />
-    </List>
-  );
+    <div className="container mx-auto py-10 h-full">
+      <Card className="h-full">
+        <CardHeader>
+          <CardTitle>Blog Posts</CardTitle>
+          <CardDescription>
+            Manage your blog posts here.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="h-full">
+          <DataTable 
+            columns={columns} 
+            data={blogPostData?.data ?? []} 
+          />
+        </CardContent>
+      </Card>
+    </div>
+  )
 }

@@ -1,31 +1,50 @@
-"use client";
+"use client"
 
-import { Stack, Typography } from "@mui/material";
-import { useShow } from "@refinedev/core";
-import {
-  NumberField,
-  Show,
-  TextFieldComponent as TextField,
-} from "@refinedev/mui";
+import * as React from "react"
+import { useOne, useNavigation } from "@refinedev/core"
+import { format } from "date-fns"
 
-export default function CategoryShow() {
-  const { query } = useShow({});
-  const { data, isLoading } = query;
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-  const record = data?.data;
+export default function CategoryShow({ params }: { params: { id: string } }) {
+  const { data: categoryData, isLoading } = useOne({
+    resource: "categories",
+    id: params.id,
+  })
+  
+  const { list, edit } = useNavigation()
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-10">
+        <div>Loading...</div>
+      </div>
+    )
+  }
+
+  const category = categoryData?.data
 
   return (
-    <Show isLoading={isLoading}>
-      <Stack gap={1}>
-        <Typography variant="body1" fontWeight="bold">
-          {"ID"}
-        </Typography>
-        <TextField value={record?.id} />
-        <Typography variant="body1" fontWeight="bold">
-          {"Title"}
-        </Typography>
-        <TextField value={record?.title} />
-      </Stack>
-    </Show>
-  );
+    <div className="container mx-auto py-10">
+      <Card>
+        <CardHeader>
+          <CardTitle>{category?.title}</CardTitle>
+          <CardDescription>
+            Created: {category?.createdAt ? format(new Date(category.createdAt), "MMM dd, yyyy") : "-"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="mt-6 flex space-x-2">
+            <Button onClick={() => edit("categories", params.id)}>
+              Edit
+            </Button>
+            <Button variant="outline" onClick={() => list("categories")}>
+              Back to List
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
 }
