@@ -6,6 +6,7 @@ export default async function Login() {
   const data = await getData();
 
   if (data.authenticated) {
+    console.log("Already authenticated, redirecting...");
     redirect(data?.redirectTo || "/");
   }
 
@@ -13,7 +14,9 @@ export default async function Login() {
 }
 
 async function getData() {
+  console.log("GETDATA called");
   const { authenticated, redirectTo, error } = await authProviderServer.check();
+  console.log("AUTH:", authenticated);
 
   return {
     authenticated,

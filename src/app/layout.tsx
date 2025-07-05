@@ -49,21 +49,61 @@ export default function RootLayout({
                     notificationProvider={useNotificationProvider}
                     resources={[
                       {
-                        name: "blog_posts",
-                        list: "/blog-posts",
-                        create: "/blog-posts/create",
-                        edit: "/blog-posts/edit/:id",
-                        show: "/blog-posts/show/:id",
+                        name: "Category",
+                        list: "/Category",
+                        create: "/Category/create",
+                        edit: "/Category/edit/:id",
+                        show: "/Category/show/:id",
                         meta: {
                           canDelete: true,
                         },
                       },
                       {
-                        name: "categories",
-                        list: "/categories",
-                        create: "/categories/create",
-                        edit: "/categories/edit/:id",
-                        show: "/categories/show/:id",
+                        name: "EventType",
+                        list: "/EventType",
+                        create: "/EventType/create",
+                        edit: "/EventType/edit/:id",
+                        show: "/EventType/show/:id",
+                        meta: {
+                          canDelete: true,
+                        },
+                      },
+                      {
+                        name: "Group",
+                        list: "/Group",
+                        create: "/Group/create",
+                        edit: "/Group/edit/:id",
+                        show: "/Group/show/:id",
+                        meta: {
+                          canDelete: true,
+                        },
+                      },
+                      {
+                        name: "Object",
+                        list: "/Object",
+                        create: "/Object/create",
+                        edit: "/Object/edit/:id",
+                        show: "/Object/show/:id",
+                        meta: {
+                          canDelete: true,
+                        },
+                      },
+                      {
+                        name: "Event",
+                        list: "/Event",
+                        create: "/Event/create",
+                        edit: "/Event/edit/:id",
+                        show: "/Event/show/:id",
+                        meta: {
+                          canDelete: true,
+                        },
+                      },
+                      {
+                        name: "User",
+                        list: "/User",
+                        create: "/User/create",
+                        edit: "/User/edit/:id",
+                        show: "/User/show/:id",
                         meta: {
                           canDelete: true,
                         },
