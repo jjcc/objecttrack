@@ -117,8 +117,8 @@ export default function ObjectList() {
   );
 
   return (
-    <List create={false}>
-      <DataGrid {...dataGridProps} columns={columns} autoHeight />
+    <List>
+      <DataGrid {...dataGridProps} columns={columns} />
       <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between" }}>
         <Box>
           <Button
@@ -126,10 +126,10 @@ export default function ObjectList() {
             onClick={handleGenerateBarcode}
             disabled={!selectedId}
           >
-            Generate Barcode
+           生成二维码 
           </Button>
         </Box>
-        <Box>
+        <Box sx={{ textAlign: "center", width: "80%" }}>
           {qrCodeValue && <QrCode value={qrCodeValue} size={256} />}
         </Box>
       </Box>
