@@ -10,6 +10,7 @@ import React, { useState } from "react";
 import { useMany } from "@refinedev/core";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import Radio from "@mui/material/Radio";
 import QrCode from "@components/qr-code";
 
 export default function ObjectList() {
@@ -24,11 +25,14 @@ export default function ObjectList() {
     },
   });
 
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [qrCodeValue, setQrCodeValue] = useState("");
 
-  const handleGenerateBarcode = (id: number) => {
-    const paddedId = id.toString().padStart(16, "0");
-    setQrCodeValue(paddedId);
+  const handleGenerateBarcode = () => {
+    if (selectedId) {
+      const paddedId = selectedId.toString().padStart(16, "0");
+      setQrCodeValue(paddedId);
+    }
   };
 
   const { data: categoryData, isLoading: categoryIsLoading } = useMany({
@@ -93,13 +97,15 @@ export default function ObjectList() {
       },
       {
         field: "actions",
-        headerName: "Actions",
+        headerName: "Choose",
         sortable: false,
         renderCell: function render({ row }) {
           return (
-            <Button onClick={() => handleGenerateBarcode(row.id)}>
-              Generate Barcode
-            </Button>
+            <Radio
+              checked={selectedId === row.id}
+              onChange={() => setSelectedId(row.id)}
+              value={row.id}
+            />
           );
         },
         align: "center",
@@ -107,17 +113,26 @@ export default function ObjectList() {
         minWidth: 120,
       },
     ],
-    [categoryData, categoryIsLoading]
+    [categoryData, categoryIsLoading, selectedId]
   );
 
   return (
     <List create={false}>
       <DataGrid {...dataGridProps} columns={columns} autoHeight />
-      {qrCodeValue && (
-        <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
-          <QrCode value={qrCodeValue} size={256} />
+      <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between" }}>
+        <Box>
+          <Button
+            variant="contained"
+            onClick={handleGenerateBarcode}
+            disabled={!selectedId}
+          >
+            Generate Barcode
+          </Button>
         </Box>
-      )}
+        <Box>
+          {qrCodeValue && <QrCode value={qrCodeValue} size={256} />}
+        </Box>
+      </Box>
     </List>
   );
 }
