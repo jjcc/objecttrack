@@ -10,12 +10,7 @@ import React, { useState } from "react";
 import { useMany } from "@refinedev/core";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import dynamic from "next/dynamic";
-
-const QRCode = dynamic(() => import("qrcode.react"), {
-  ssr: false,
-  loading: () => <p>Loading QR Code...</p>,
-});
+import QrCode from "@components/qr-code";
 
 export default function ObjectList() {
   const { dataGridProps } = useDataGrid({
@@ -120,7 +115,7 @@ export default function ObjectList() {
       <DataGrid {...dataGridProps} columns={columns} autoHeight />
       {qrCodeValue && (
         <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
-          <QRCode value={qrCodeValue} size={256} />
+          <QrCode value={qrCodeValue} size={256} />
         </Box>
       )}
     </List>
