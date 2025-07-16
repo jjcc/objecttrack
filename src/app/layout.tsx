@@ -89,6 +89,13 @@ export default function RootLayout({
                         },
                       },
                       {
+                        name: "Barcode",
+                        list: "/Barcode",
+                        meta: {
+                          canDelete: true,
+                        },
+                      },
+                      {
                         name: "Event",
                         list: "/Event",
                         create: "/Event/create",
