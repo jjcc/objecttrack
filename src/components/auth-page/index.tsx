@@ -5,12 +5,10 @@ import type { AuthPageProps } from "@refinedev/core";
 export const AuthPage = (props: AuthPageProps) => {
   return (
     <AuthPageBase
-      {...props}
+      {...(props as any)}
       formProps={{
-        defaultValues: {
-          //email: "info@refine.dev",
+        initialValues: {
           email: "bpzmik@163.com",
-          //password: "refine-supabase",
           password: "",
         },
       }}

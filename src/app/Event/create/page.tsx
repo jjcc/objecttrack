@@ -29,13 +29,13 @@ export default function EventCreate() {
 
   const { options: userOptions } = useSelect({
     resource: "user_profiles",
-    optionLabel: (item) => `${item.first_name} ${item.last_name}`,
-    optionValue: "id",
+    optionLabel: (item: any) => `${item.first_name} ${item.last_name}`,
+    optionValue: (item: any) => item.id,
   });
 
   return (
     <Create isLoading={formLoading} saveButtonProps={saveButtonProps}>
-      <Stack component="form" autoComplete="off">
+      <Stack>
         <Controller
           control={control}
           name="object_id"

@@ -14,7 +14,7 @@ export default function GroupCreate() {
 
   return (
     <Create isLoading={formLoading} saveButtonProps={saveButtonProps}>
-      <Stack component="form" autoComplete="off">
+      <Stack>
         <TextInput
           {...register("group_title", { required: "This field is required" })}
           error={(errors as any)?.group_title?.message}

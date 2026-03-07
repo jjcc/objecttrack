@@ -55,8 +55,8 @@ export default function ObjectList() {
     refineCore: { current, setCurrent, pageCount },
   } = useTable({
       columns,
-      syncWithLocation: true,
       refineCoreProps: {
+        syncWithLocation: true,
         resource: "objects",
         meta: { select: "*, categories(id,name)" },
         pagination: { pageSize: 25 },
@@ -67,28 +67,28 @@ export default function ObjectList() {
     <List>
       <ScrollArea>
         <Table highlightOnHover>
-          <Table.Thead>
+          <thead>
             {getHeaderGroups().map((hg: any) => (
-              <Table.Tr key={hg.id}>
+              <tr key={hg.id}>
                 {hg.headers.map((h: any) => (
-                  <Table.Th key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</Table.Th>
+                  <th key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</th>
                 ))}
-              </Table.Tr>
+              </tr>
             ))}
-          </Table.Thead>
-          <Table.Tbody>
+          </thead>
+          <tbody>
             {getRowModel().rows.map((row: any) => (
-              <Table.Tr key={row.id}>
+              <tr key={row.id}>
                 {row.getVisibleCells().map((cell: any) => (
-                  <Table.Td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</Table.Td>
+                  <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
                 ))}
-              </Table.Tr>
+              </tr>
             ))}
-          </Table.Tbody>
+          </tbody>
         </Table>
       </ScrollArea>
       <Pagination value={current} onChange={setCurrent} total={pageCount} mt="md" />
-      <Group mt="xl" justify="space-between">
+      <Group mt="xl" position="apart">
         <Button onClick={handleGenerateBarcode} disabled={!selectedId}>
           生成二维码
         </Button>

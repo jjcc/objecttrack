@@ -21,23 +21,19 @@ export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
   const { data: user } = useGetIdentity<IUser>();
 
   return (
-    <Group justify="space-between" align="center" px="sm" h="100%">
+    <Group position="apart" align="center" px="sm" h="100%">
       <HamburgerMenu />
-      <Group gap="sm">
+      <Group spacing="sm">
         <ActionIcon
-          variant="subtle"
-          onClick={toggleColorScheme}
+          variant="light"
+          onClick={() => toggleColorScheme()}
           aria-label="Toggle color scheme"
         >
           {colorScheme === "dark" ? <IconSun size={18} /> : <IconMoon size={18} />}
         </ActionIcon>
         {(user?.avatar || user?.name) && (
-          <Group gap="sm" align="center">
-            {user?.name && (
-              <Text size="sm" visibleFrom="sm">
-                {user.name}
-              </Text>
-            )}
+          <Group spacing="sm" align="center">
+            {user?.name && <Text size="sm">{user.name}</Text>}
             <Avatar src={user?.avatar} alt={user?.name} size="sm" />
           </Group>
         )}

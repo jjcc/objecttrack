@@ -35,7 +35,7 @@ export default function UserList() {
         header: "Actions",
         id: "actions",
         cell: ({ row }) => (
-          <Group gap="xs" wrap="nowrap">
+          <Group spacing="xs">
             <EditButton hideText recordItemId={row.original.id} />
             <ShowButton hideText recordItemId={row.original.id} />
             <DeleteButton hideText recordItemId={row.original.id} />
@@ -60,28 +60,28 @@ export default function UserList() {
     <List>
       <ScrollArea>
         <Table highlightOnHover>
-          <Table.Thead>
+          <thead>
             {getHeaderGroups().map((headerGroup) => (
-              <Table.Tr key={headerGroup.id}>
+              <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <Table.Th key={header.id}>
+                  <th key={header.id}>
                     {flexRender(header.column.columnDef.header, header.getContext())}
-                  </Table.Th>
+                  </th>
                 ))}
-              </Table.Tr>
+              </tr>
             ))}
-          </Table.Thead>
-          <Table.Tbody>
+          </thead>
+          <tbody>
             {getRowModel().rows.map((row) => (
-              <Table.Tr key={row.id}>
+              <tr key={row.id}>
                 {row.getVisibleCells().map((cell) => (
-                  <Table.Td key={cell.id}>
+                  <td key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Table.Td>
+                  </td>
                 ))}
-              </Table.Tr>
+              </tr>
             ))}
-          </Table.Tbody>
+          </tbody>
         </Table>
       </ScrollArea>
       <Pagination value={current} onChange={setCurrent} total={pageCount} mt="md" />

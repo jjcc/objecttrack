@@ -11,7 +11,7 @@ export default function EventTypeShow() {
 
   return (
     <Show isLoading={isLoading}>
-      <Stack gap="sm">
+      <Stack spacing="sm">
         <Text fw={700}>ID</Text>
         <NumberField value={record?.id ?? ""} />
         <Text fw={700}>Label</Text>

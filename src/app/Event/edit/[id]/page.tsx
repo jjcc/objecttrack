@@ -40,14 +40,14 @@ export default function EventEdit() {
 
   const { options: userOptions } = useSelect({
     resource: "user_profiles",
-    optionLabel: (item) => `${item.first_name} ${item.last_name}`,
-    optionValue: "id",
+    optionLabel: (item: any) => `${item.first_name} ${item.last_name}`,
+    optionValue: (item: any) => item.id,
     defaultValue: [eventData?.e_from, eventData?.e_to],
   });
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <Stack component="form" autoComplete="off">
+      <Stack>
         <TextInput {...register("id")} disabled label="ID" type="number" />
         <Controller
           control={control}

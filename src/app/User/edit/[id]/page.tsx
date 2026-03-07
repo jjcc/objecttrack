@@ -33,7 +33,7 @@ export default function UserEdit() {
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <Stack component="form" autoComplete="off">
+      <Stack>
         <TextInput {...register("id")} disabled label="ID" type="number" />
         <TextInput
           {...register("last_name", { required: "This field is required" })}

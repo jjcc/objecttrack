@@ -14,7 +14,7 @@ export default function EventTypeCreate() {
 
   return (
     <Create isLoading={formLoading} saveButtonProps={saveButtonProps}>
-      <Stack component="form" autoComplete="off">
+      <Stack>
         <TextInput
           {...register("label", { required: "This field is required" })}
           error={(errors as any)?.label?.message}

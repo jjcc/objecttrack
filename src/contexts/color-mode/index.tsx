@@ -4,8 +4,13 @@ import React, {
   type PropsWithChildren,
   createContext,
   useCallback,
+  useState,
 } from "react";
-import { MantineProvider, useMantineColorScheme } from "@mantine/core";
+import {
+  ColorScheme,
+  ColorSchemeProvider,
+  MantineProvider,
+} from "@mantine/core";
 import Cookies from "js-cookie";
 
 type ColorModeContextType = {
@@ -21,29 +26,31 @@ type ColorModeContextProviderProps = {
   defaultMode?: string;
 };
 
-function ColorModeInner({ children }: PropsWithChildren) {
-  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
-
-  const handleToggle = useCallback(() => {
-    toggleColorScheme();
-    Cookies.set("theme", colorScheme === "dark" ? "light" : "dark");
-  }, [colorScheme, toggleColorScheme]);
-
-  return (
-    <ColorModeContext.Provider
-      value={{ mode: colorScheme, setMode: handleToggle }}
-    >
-      {children}
-    </ColorModeContext.Provider>
-  );
-}
-
 export const ColorModeContextProvider: React.FC<
   PropsWithChildren<ColorModeContextProviderProps>
 > = ({ children, defaultMode }) => {
+  const [colorScheme, setColorScheme] = useState<ColorScheme>(
+    (defaultMode as ColorScheme) || "light"
+  );
+
+  const toggleColorScheme = useCallback(() => {
+    const next = colorScheme === "dark" ? "light" : "dark";
+    setColorScheme(next);
+    Cookies.set("theme", next);
+  }, [colorScheme]);
+
   return (
-    <MantineProvider defaultColorScheme={(defaultMode as any) || "light"}>
-      <ColorModeInner>{children}</ColorModeInner>
-    </MantineProvider>
+    <ColorModeContext.Provider
+      value={{ mode: colorScheme, setMode: toggleColorScheme }}
+    >
+      <ColorSchemeProvider
+        colorScheme={colorScheme}
+        toggleColorScheme={toggleColorScheme}
+      >
+        <MantineProvider theme={{ colorScheme }}>
+          {children}
+        </MantineProvider>
+      </ColorSchemeProvider>
+    </ColorModeContext.Provider>
   );
 };

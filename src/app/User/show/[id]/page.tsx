@@ -24,7 +24,7 @@ export default function UserShow() {
 
   return (
     <Show isLoading={isLoading}>
-      <Stack gap="xs">
+      <Stack spacing="xs">
         <Text fw={700}>ID</Text>
         <NumberField value={record?.id ?? ""} />
         <Text fw={700}>Last Name</Text>

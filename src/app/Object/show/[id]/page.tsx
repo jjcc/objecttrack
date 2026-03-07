@@ -13,7 +13,7 @@ export default function ObjectShow() {
 
   return (
     <Show isLoading={isLoading}>
-      <Stack gap="sm">
+      <Stack spacing="sm">
         <Text fw={700}>ID</Text>
         <NumberField value={record?.id ?? ""} />
         <Text fw={700}>Name</Text>

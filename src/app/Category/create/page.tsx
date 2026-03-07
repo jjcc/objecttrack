@@ -14,7 +14,7 @@ export default function CategoryCreate() {
 
   return (
     <Create isLoading={formLoading} saveButtonProps={saveButtonProps}>
-      <Stack component="form" autoComplete="off">
+      <Stack>
         <TextInput
           {...register("name", { required: "This field is required" })}
           error={(errors as any)?.name?.message}

@@ -23,7 +23,7 @@ export default function UserCreate() {
 
   return (
     <Create isLoading={formLoading} saveButtonProps={saveButtonProps}>
-      <Stack component="form" autoComplete="off">
+      <Stack>
         <TextInput
           {...register("last_name", { required: "This field is required" })}
           error={(errors as any)?.last_name?.message}
