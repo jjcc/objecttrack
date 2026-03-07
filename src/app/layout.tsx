@@ -1,14 +1,14 @@
+import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import React, { Suspense } from "react";
-import { Refine, GitHubBanner } from "@refinedev/core";
+import { Refine } from "@refinedev/core";
 import { DevtoolsProvider } from "@providers/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
-import {
-  ThemedTitleV2,
-  useNotificationProvider,
-  RefineSnackbarProvider,
-} from "@refinedev/mui";
+import { useNotificationProvider } from "@refinedev/mantine";
+import { Notifications } from "@mantine/notifications";
+import { ColorSchemeScript } from "@mantine/core";
 import routerProvider from "@refinedev/nextjs-router";
 
 import { AppIcon } from "@components/app-icon";
@@ -36,12 +36,15 @@ export default function RootLayout({
 
   return (
     <html lang="en">
+      <head>
+        <ColorSchemeScript />
+      </head>
       <body>
         <Suspense>
           <RefineKbarProvider>
             <ColorModeContextProvider defaultMode={defaultMode}>
-              <RefineSnackbarProvider>
-                <DevtoolsProvider>
+              <Notifications />
+              <DevtoolsProvider>
                   <Refine
                     routerProvider={routerProvider}
                     authProvider={authProviderClient}
@@ -134,7 +137,6 @@ export default function RootLayout({
                     <RefineKbar />
                   </Refine>
                 </DevtoolsProvider>
-              </RefineSnackbarProvider>
             </ColorModeContextProvider>
           </RefineKbarProvider>
         </Suspense>

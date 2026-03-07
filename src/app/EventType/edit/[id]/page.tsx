@@ -1,69 +1,33 @@
 "use client";
 
-import { Box, TextField } from "@mui/material";
-import { Edit } from "@refinedev/mui";
+import { Stack, TextInput } from "@mantine/core";
+import { Edit } from "@refinedev/mantine";
 import { useForm } from "@refinedev/react-hook-form";
 
 export default function EventTypeEdit() {
   const {
     saveButtonProps,
-    refineCore: { queryResult },
     register,
     formState: { errors },
   } = useForm({
-    refineCoreProps: {
-      meta: {
-        select: "id, label, label_cn",
-      },
-    },
+    refineCoreProps: { meta: { select: "id, label, label_cn" } },
   });
-
-  const eventTypeData = queryResult?.data?.data;
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <Box
-        component="form"
-        sx={{ display: "flex", flexDirection: "column" }}
-        autoComplete="off"
-      >
-        <TextField
-          {...register("id")}
-          disabled
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          type="number"
-          label={"ID"}
-          name="id"
+      <Stack component="form" autoComplete="off">
+        <TextInput {...register("id")} disabled label="ID" type="number" />
+        <TextInput
+          {...register("label", { required: "This field is required" })}
+          error={(errors as any)?.label?.message}
+          label="Label"
         />
-        <TextField
-          {...register("label", {
-            required: "This field is required",
-          })}
-          error={!!(errors as any)?.label}
-          helperText={(errors as any)?.label?.message}
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          type="text"
-          label={"Label"}
-          name="label"
+        <TextInput
+          {...register("label_cn", { required: "This field is required" })}
+          error={(errors as any)?.label_cn?.message}
+          label="Label (CN)"
         />
-        <TextField
-          {...register("label_cn", {
-            required: "This field is required",
-          })}
-          error={!!(errors as any)?.label_cn}
-          helperText={(errors as any)?.label_cn?.message}
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          type="text"
-          label={"Label (CN)"}
-          name="label_cn"
-        />
-      </Box>
+      </Stack>
     </Edit>
   );
 }

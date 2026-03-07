@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { ErrorComponent } from "@refinedev/mui";
+import { ErrorComponent } from "@refinedev/mantine";
 import { Authenticated } from "@refinedev/core";
 
 export default function NotFound() {

@@ -1,7 +1,7 @@
 "use client";
 
-import { Box, TextField } from "@mui/material";
-import { Create } from "@refinedev/mui";
+import { Stack, TextInput } from "@mantine/core";
+import { Create } from "@refinedev/mantine";
 import { useForm } from "@refinedev/react-hook-form";
 
 export default function EventTypeCreate() {
@@ -14,38 +14,18 @@ export default function EventTypeCreate() {
 
   return (
     <Create isLoading={formLoading} saveButtonProps={saveButtonProps}>
-      <Box
-        component="form"
-        sx={{ display: "flex", flexDirection: "column" }}
-        autoComplete="off"
-      >
-        <TextField
-          {...register("label", {
-            required: "This field is required",
-          })}
-          error={!!(errors as any)?.label}
-          helperText={(errors as any)?.label?.message}
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          type="text"
-          label={"Label"}
-          name="label"
+      <Stack component="form" autoComplete="off">
+        <TextInput
+          {...register("label", { required: "This field is required" })}
+          error={(errors as any)?.label?.message}
+          label="Label"
         />
-        <TextField
-          {...register("label_cn", {
-            required: "This field is required",
-          })}
-          error={!!(errors as any)?.label_cn}
-          helperText={(errors as any)?.label_cn?.message}
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          type="text"
-          label={"Label (CN)"}
-          name="label_cn"
+        <TextInput
+          {...register("label_cn", { required: "This field is required" })}
+          error={(errors as any)?.label_cn?.message}
+          label="Label (CN)"
         />
-      </Box>
+      </Stack>
     </Create>
   );
 }

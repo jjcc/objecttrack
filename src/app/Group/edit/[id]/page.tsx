@@ -1,69 +1,33 @@
 "use client";
 
-import { Box, TextField } from "@mui/material";
-import { Edit } from "@refinedev/mui";
+import { Stack, Textarea, TextInput } from "@mantine/core";
+import { Edit } from "@refinedev/mantine";
 import { useForm } from "@refinedev/react-hook-form";
 
 export default function GroupEdit() {
   const {
     saveButtonProps,
-    refineCore: { queryResult },
     register,
     formState: { errors },
   } = useForm({
-    refineCoreProps: {
-      meta: {
-        select: "id, group_title, description",
-      },
-    },
+    refineCoreProps: { meta: { select: "id, group_title, description" } },
   });
-
-  const groupData = queryResult?.data?.data;
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <Box
-        component="form"
-        sx={{ display: "flex", flexDirection: "column" }}
-        autoComplete="off"
-      >
-        <TextField
-          {...register("id")}
-          disabled
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          type="number"
-          label={"ID"}
-          name="id"
+      <Stack component="form" autoComplete="off">
+        <TextInput {...register("id")} disabled label="ID" type="number" />
+        <TextInput
+          {...register("group_title", { required: "This field is required" })}
+          error={(errors as any)?.group_title?.message}
+          label="Group Title"
         />
-        <TextField
-          {...register("group_title", {
-            required: "This field is required",
-          })}
-          error={!!(errors as any)?.group_title}
-          helperText={(errors as any)?.group_title?.message}
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          type="text"
-          label={"Group Title"}
-          name="group_title"
+        <Textarea
+          {...register("description", { required: "This field is required" })}
+          error={(errors as any)?.description?.message}
+          label="Description"
         />
-        <TextField
-          {...register("description", {
-            required: "This field is required",
-          })}
-          error={!!(errors as any)?.description}
-          helperText={(errors as any)?.description?.message}
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          multiline
-          label={"Description"}
-          name="description"
-        />
-      </Box>
+      </Stack>
     </Edit>
   );
 }

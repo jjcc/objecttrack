@@ -1,7 +1,7 @@
 "use client";
 
-import { Box, TextField } from "@mui/material";
-import { Create } from "@refinedev/mui";
+import { Stack, Textarea, TextInput } from "@mantine/core";
+import { Create } from "@refinedev/mantine";
 import { useForm } from "@refinedev/react-hook-form";
 
 export default function GroupCreate() {
@@ -14,38 +14,18 @@ export default function GroupCreate() {
 
   return (
     <Create isLoading={formLoading} saveButtonProps={saveButtonProps}>
-      <Box
-        component="form"
-        sx={{ display: "flex", flexDirection: "column" }}
-        autoComplete="off"
-      >
-        <TextField
-          {...register("group_title", {
-            required: "This field is required",
-          })}
-          error={!!(errors as any)?.group_title}
-          helperText={(errors as any)?.group_title?.message}
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          type="text"
-          label={"Group Title"}
-          name="group_title"
+      <Stack component="form" autoComplete="off">
+        <TextInput
+          {...register("group_title", { required: "This field is required" })}
+          error={(errors as any)?.group_title?.message}
+          label="Group Title"
         />
-        <TextField
-          {...register("description", {
-            required: "This field is required",
-          })}
-          error={!!(errors as any)?.description}
-          helperText={(errors as any)?.description?.message}
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          multiline
-          label={"Description"}
-          name="description"
+        <Textarea
+          {...register("description", { required: "This field is required" })}
+          error={(errors as any)?.description?.message}
+          label="Description"
         />
-      </Box>
+      </Stack>
     </Create>
   );
 }

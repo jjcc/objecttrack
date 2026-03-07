@@ -1,5 +1,5 @@
 "use client";
-import { AuthPage as AuthPageBase } from "@refinedev/mui";
+import { AuthPage as AuthPageBase } from "@refinedev/mantine";
 import type { AuthPageProps } from "@refinedev/core";
 
 export const AuthPage = (props: AuthPageProps) => {

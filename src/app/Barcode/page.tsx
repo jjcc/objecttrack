@@ -1,30 +1,13 @@
 "use client";
 
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import {
-  DateField,
-  List,
-  useDataGrid,
-} from "@refinedev/mui";
 import React, { useState } from "react";
-import { useMany } from "@refinedev/core";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
-import Radio from "@mui/material/Radio";
+import { useTable } from "@refinedev/react-table";
+import { DateField, List } from "@refinedev/mantine";
+import { Button, Group, Pagination, Radio, ScrollArea, Table } from "@mantine/core";
+import { ColumnDef, flexRender } from "@tanstack/react-table";
 import QrCode from "@components/qr-code";
 
 export default function ObjectList() {
-  const { dataGridProps } = useDataGrid({
-    syncWithLocation: true,
-    resource: "objects",
-    meta: {
-      select: "*, categories(id,name)",
-    },
-    pagination: {
-      pageSize: 25,
-    },
-  });
-
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [qrCodeValue, setQrCodeValue] = useState("");
 
@@ -35,104 +18,84 @@ export default function ObjectList() {
     }
   };
 
-  const { data: categoryData, isLoading: categoryIsLoading } = useMany({
-    resource: "categories",
-    ids:
-      dataGridProps?.rows
-        ?.map((item: any) => item?.categories?.id)
-        .filter(Boolean) ?? [],
-    queryOptions: {
-      enabled: !!dataGridProps?.rows,
-    },
-  });
-
-  const columns = React.useMemo<GridColDef[]>(
+  const columns = React.useMemo<ColumnDef<any>[]>(
     () => [
+      { header: "ID", accessorKey: "id" },
+      { header: "Name", accessorKey: "name" },
+      { header: "Description", accessorKey: "description" },
       {
-        field: "id",
-        headerName: "ID",
-        type: "number",
-        minWidth: 50,
+        header: "Category",
+        accessorKey: "categories",
+        cell: (params: any) => params.getValue()?.name,
+      },
+      { header: "Model", accessorKey: "model" },
+      {
+        header: "Created at",
+        accessorKey: "create_date",
+        cell: (params: any) => <DateField value={params.getValue()} />,
       },
       {
-        field: "name",
-        headerName: "Name",
-        minWidth: 200,
-        flex: 1,
-      },
-      {
-        field: "description",
-        headerName: "Description",
-        minWidth: 250,
-        flex: 1,
-      },
-      {
-        field: "categories",
-        headerName: "Category",
-        minWidth: 160,
-        valueGetter: (_, row) => {
-          const value = row?.categories;
-          return value;
-        },
-        renderCell: function render({ value }) {
-          return categoryIsLoading ? (
-            <>Loading...</>
-          ) : (
-            categoryData?.data?.find((item) => item.id === value?.id)?.name
-          );
-        },
-      },
-      {
-        field: "model",
-        headerName: "Model",
-        minWidth: 150,
-      },
-      {
-        field: "create_date",
-        headerName: "Created at",
-        minWidth: 120,
-        renderCell: function render({ value }) {
-          return <DateField value={value} />;
-        },
-      },
-      {
-        field: "actions",
-        headerName: "Choose",
-        sortable: false,
-        renderCell: function render({ row }) {
-          return (
-            <Radio
-              checked={selectedId === row.id}
-              onChange={() => setSelectedId(row.id)}
-              value={row.id}
-            />
-          );
-        },
-        align: "center",
-        headerAlign: "center",
-        minWidth: 120,
+        header: "Choose",
+        id: "actions",
+        cell: (params: any) => (
+          <Radio
+            checked={selectedId === params.row.original.id}
+            onChange={() => setSelectedId(params.row.original.id)}
+            value={String(params.row.original.id)}
+          />
+        ),
       },
     ],
-    [categoryData, categoryIsLoading, selectedId]
+    [selectedId]
   );
+
+  const {
+    getHeaderGroups,
+    getRowModel,
+    refineCore: { current, setCurrent, pageCount },
+  } = useTable({
+      columns,
+      syncWithLocation: true,
+      refineCoreProps: {
+        resource: "objects",
+        meta: { select: "*, categories(id,name)" },
+        pagination: { pageSize: 25 },
+      },
+    });
 
   return (
     <List>
-      <DataGrid {...dataGridProps} columns={columns} />
-      <Box sx={{ mt: 4, display: "flex", justifyContent: "space-between" }}>
-        <Box>
-          <Button
-            variant="contained"
-            onClick={handleGenerateBarcode}
-            disabled={!selectedId}
-          >
-           生成二维码 
-          </Button>
-        </Box>
-        <Box sx={{ textAlign: "center", width: "80%" }}>
+      <ScrollArea>
+        <Table highlightOnHover>
+          <Table.Thead>
+            {getHeaderGroups().map((hg: any) => (
+              <Table.Tr key={hg.id}>
+                {hg.headers.map((h: any) => (
+                  <Table.Th key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</Table.Th>
+                ))}
+              </Table.Tr>
+            ))}
+          </Table.Thead>
+          <Table.Tbody>
+            {getRowModel().rows.map((row: any) => (
+              <Table.Tr key={row.id}>
+                {row.getVisibleCells().map((cell: any) => (
+                  <Table.Td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</Table.Td>
+                ))}
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </ScrollArea>
+      <Pagination value={current} onChange={setCurrent} total={pageCount} mt="md" />
+      <Group mt="xl" justify="space-between">
+        <Button onClick={handleGenerateBarcode} disabled={!selectedId}>
+          生成二维码
+        </Button>
+        <div style={{ textAlign: "center", width: "80%" }}>
           {qrCodeValue && <QrCode value={qrCodeValue} size={256} />}
-        </Box>
-      </Box>
+        </div>
+      </Group>
     </List>
   );
 }

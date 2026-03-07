@@ -3,15 +3,10 @@
 import React, {
   type PropsWithChildren,
   createContext,
-  useEffect,
-  useState,
+  useCallback,
 } from "react";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { ThemeProvider } from "@mui/material/styles";
-import { RefineThemes } from "@refinedev/mui";
+import { MantineProvider, useMantineColorScheme } from "@mantine/core";
 import Cookies from "js-cookie";
-import GlobalStyles from "@mui/material/GlobalStyles";
-import CssBaseline from "@mui/material/CssBaseline";
 
 type ColorModeContextType = {
   mode: string;
@@ -26,47 +21,29 @@ type ColorModeContextProviderProps = {
   defaultMode?: string;
 };
 
-export const ColorModeContextProvider: React.FC<
-  PropsWithChildren<ColorModeContextProviderProps>
-> = ({ children, defaultMode }) => {
-  const [isMounted, setIsMounted] = useState(false);
-  const [mode, setMode] = useState(defaultMode || "light");
+function ColorModeInner({ children }: PropsWithChildren) {
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const systemTheme = useMediaQuery(`(prefers-color-scheme: dark)`);
-
-  useEffect(() => {
-    if (isMounted) {
-      const theme = Cookies.get("theme") || (systemTheme ? "dark" : "light");
-      setMode(theme);
-    }
-  }, [isMounted, systemTheme]);
-
-  const toggleTheme = () => {
-    const nextTheme = mode === "light" ? "dark" : "light";
-
-    setMode(nextTheme);
-    Cookies.set("theme", nextTheme);
-  };
+  const handleToggle = useCallback(() => {
+    toggleColorScheme();
+    Cookies.set("theme", colorScheme === "dark" ? "light" : "dark");
+  }, [colorScheme, toggleColorScheme]);
 
   return (
     <ColorModeContext.Provider
-      value={{
-        setMode: toggleTheme,
-        mode,
-      }}
+      value={{ mode: colorScheme, setMode: handleToggle }}
     >
-      <ThemeProvider
-        // you can change the theme colors here. example: mode === "light" ? RefineThemes.Magenta : RefineThemes.MagentaDark
-        theme={mode === "light" ? RefineThemes.Blue : RefineThemes.BlueDark}
-      >
-        <CssBaseline />
-        <GlobalStyles styles={{ html: { WebkitFontSmoothing: "auto" } }} />
-        {children}
-      </ThemeProvider>
+      {children}
     </ColorModeContext.Provider>
+  );
+}
+
+export const ColorModeContextProvider: React.FC<
+  PropsWithChildren<ColorModeContextProviderProps>
+> = ({ children, defaultMode }) => {
+  return (
+    <MantineProvider defaultColorScheme={(defaultMode as any) || "light"}>
+      <ColorModeInner>{children}</ColorModeInner>
+    </MantineProvider>
   );
 };

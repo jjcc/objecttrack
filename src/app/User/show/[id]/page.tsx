@@ -1,14 +1,14 @@
 "use client";
 
-import { Stack, Typography } from "@mui/material";
-import { useOne, useShow } from "@refinedev/core";
+import { Stack, Text } from "@mantine/core";
+import { useShow } from "@refinedev/core";
 import {
   DateField,
   EmailField,
   NumberField,
   Show,
-  TextFieldComponent as TextField,
-} from "@refinedev/mui";
+  TextField,
+} from "@refinedev/mantine";
 
 export default function UserShow() {
   const { queryResult } = useShow({
@@ -22,62 +22,30 @@ export default function UserShow() {
 
   const record = data?.data;
 
-  const { data: groupData, isLoading: groupIsLoading } = useOne({
-    resource: "groups",
-    id: record?.groups?.id || "",
-    queryOptions: {
-      enabled: !!record,
-    },
-  });
-
   return (
     <Show isLoading={isLoading}>
-      <Stack gap={1}>
-        <Typography variant="body1" fontWeight="bold">
-          ID
-        </Typography>
+      <Stack gap="xs">
+        <Text fw={700}>ID</Text>
         <NumberField value={record?.id ?? ""} />
-        <Typography variant="body1" fontWeight="bold">
-          Last Name
-        </Typography>
+        <Text fw={700}>Last Name</Text>
         <TextField value={record?.last_name} />
-        <Typography variant="body1" fontWeight="bold">
-          First Name
-        </Typography>
+        <Text fw={700}>First Name</Text>
         <TextField value={record?.first_name} />
-        <Typography variant="body1" fontWeight="bold">
-          Title
-        </Typography>
+        <Text fw={700}>Title</Text>
         <TextField value={record?.title} />
-        <Typography variant="body1" fontWeight="bold">
-          Group
-        </Typography>
-        {groupIsLoading ? (
-          <>Loading...</>
-        ) : (
-          <>{groupData?.data?.title}</>
-        )}
-        <Typography variant="body1" fontWeight="bold">
-          Email
-        </Typography>
+        <Text fw={700}>Group</Text>
+        <TextField value={record?.groups?.title} />
+        <Text fw={700}>Email</Text>
         <EmailField value={record?.email} />
-        <Typography variant="body1" fontWeight="bold">
-          Phone
-        </Typography>
+        <Text fw={700}>Phone</Text>
         <TextField value={record?.phone} />
-        <Typography variant="body1" fontWeight="bold">
-          Wechat ID
-        </Typography>
+        <Text fw={700}>Wechat ID</Text>
         <TextField value={record?.wechat_id} />
-        <Typography variant="body1" fontWeight="bold">
-          Address
-        </Typography>
+        <Text fw={700}>Address</Text>
         <TextField
           value={`${record?.city}, ${record?.province}, ${record?.country} ${record?.zipcode}`}
         />
-        <Typography variant="body1" fontWeight="bold">
-          Created At
-        </Typography>
+        <Text fw={700}>Created At</Text>
         <DateField value={record?.create_date} />
       </Stack>
     </Show>

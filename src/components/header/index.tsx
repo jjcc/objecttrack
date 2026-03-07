@@ -1,17 +1,11 @@
 "use client";
 
-import { ColorModeContext } from "@contexts/color-mode";
-import DarkModeOutlined from "@mui/icons-material/DarkModeOutlined";
-import LightModeOutlined from "@mui/icons-material/LightModeOutlined";
-import AppBar from "@mui/material/AppBar";
-import Avatar from "@mui/material/Avatar";
-import IconButton from "@mui/material/IconButton";
-import Stack from "@mui/material/Stack";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
+import { ActionIcon, Avatar, Group, Text } from "@mantine/core";
+import { useMantineColorScheme } from "@mantine/core";
+import { IconMoon, IconSun } from "@tabler/icons-react";
 import { useGetIdentity } from "@refinedev/core";
-import { HamburgerMenu, RefineThemedLayoutV2HeaderProps } from "@refinedev/mui";
-import React, { useContext } from "react";
+import { HamburgerMenu, RefineThemedLayoutV2HeaderProps } from "@refinedev/mantine";
+import React from "react";
 
 type IUser = {
   id: number;
@@ -22,61 +16,32 @@ type IUser = {
 export const Header: React.FC<RefineThemedLayoutV2HeaderProps> = ({
   sticky = true,
 }) => {
-  const { mode, setMode } = useContext(ColorModeContext);
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
 
   const { data: user } = useGetIdentity<IUser>();
 
   return (
-    <AppBar position={sticky ? "sticky" : "relative"}>
-      <Toolbar>
-        <Stack
-          direction="row"
-          width="100%"
-          justifyContent="flex-end"
-          alignItems="center"
+    <Group justify="space-between" align="center" px="sm" h="100%">
+      <HamburgerMenu />
+      <Group gap="sm">
+        <ActionIcon
+          variant="subtle"
+          onClick={toggleColorScheme}
+          aria-label="Toggle color scheme"
         >
-          <HamburgerMenu />
-          <Stack
-            direction="row"
-            width="100%"
-            justifyContent="flex-end"
-            alignItems="center"
-          >
-            <IconButton
-              color="inherit"
-              onClick={() => {
-                setMode();
-              }}
-            >
-              {mode === "dark" ? <LightModeOutlined /> : <DarkModeOutlined />}
-            </IconButton>
-
-            {(user?.avatar || user?.name) && (
-              <Stack
-                direction="row"
-                gap="16px"
-                alignItems="center"
-                justifyContent="center"
-              >
-                {user?.name && (
-                  <Typography
-                    sx={{
-                      display: {
-                        xs: "none",
-                        sm: "inline-block",
-                      },
-                    }}
-                    variant="subtitle2"
-                  >
-                    {user?.name}
-                  </Typography>
-                )}
-                <Avatar src={user?.avatar} alt={user?.name} />
-              </Stack>
+          {colorScheme === "dark" ? <IconSun size={18} /> : <IconMoon size={18} />}
+        </ActionIcon>
+        {(user?.avatar || user?.name) && (
+          <Group gap="sm" align="center">
+            {user?.name && (
+              <Text size="sm" visibleFrom="sm">
+                {user.name}
+              </Text>
             )}
-          </Stack>
-        </Stack>
-      </Toolbar>
-    </AppBar>
+            <Avatar src={user?.avatar} alt={user?.name} size="sm" />
+          </Group>
+        )}
+      </Group>
+    </Group>
   );
 };

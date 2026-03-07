@@ -1,7 +1,8 @@
 "use client";
 
-import { Autocomplete, Box, TextField } from "@mui/material";
-import { Edit, useAutocomplete } from "@refinedev/mui";
+import { Select, Stack, Textarea, TextInput } from "@mantine/core";
+import { Edit } from "@refinedev/mantine";
+import { useSelect } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
 import { Controller } from "react-hook-form";
 
@@ -14,59 +15,32 @@ export default function ObjectEdit() {
     formState: { errors },
   } = useForm({
     refineCoreProps: {
-      meta: {
-        select: "id, name, description, category_id, model, categories(id,name)",
-      },
+      meta: { select: "id, name, description, category_id, model, categories(id,name)" },
     },
   });
 
   const objectData = queryResult?.data?.data;
 
-  const { autocompleteProps: categoryAutocompleteProps } = useAutocomplete({
+  const { options: categoryOptions } = useSelect({
     resource: "categories",
+    optionLabel: "name",
+    optionValue: "id",
     defaultValue: objectData?.category_id,
   });
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <Box
-        component="form"
-        sx={{ display: "flex", flexDirection: "column" }}
-        autoComplete="off"
-      >
-        <TextField
-          {...register("id")}
-          disabled
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          type="number"
-          label={"ID"}
-          name="id"
+      <Stack component="form" autoComplete="off">
+        <TextInput {...register("id")} disabled label="ID" type="number" />
+        <TextInput
+          {...register("name", { required: "This field is required" })}
+          error={(errors as any)?.name?.message}
+          label="Name"
         />
-        <TextField
-          {...register("name", {
-            required: "This field is required",
-          })}
-          error={!!(errors as any)?.name}
-          helperText={(errors as any)?.name?.message}
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          type="text"
-          label={"Name"}
-          name="name"
-        />
-        <TextField
+        <Textarea
           {...register("description")}
-          error={!!(errors as any)?.description}
-          helperText={(errors as any)?.description?.message}
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          multiline
-          label={"Description"}
-          name="description"
+          error={(errors as any)?.description?.message}
+          label="Description"
         />
         <Controller
           control={control}
@@ -74,58 +48,22 @@ export default function ObjectEdit() {
           rules={{ required: "This field is required" }}
           defaultValue={objectData?.category_id}
           render={({ field }) => (
-            <Autocomplete
-              {...categoryAutocompleteProps}
-              {...field}
-              onChange={(_, value) => {
-                field.onChange(value.id);
-              }}
-              getOptionLabel={(item) => {
-                return (
-                  categoryAutocompleteProps?.options?.find((p) => {
-                    const itemId =
-                      typeof item === "object"
-                        ? item?.id?.toString()
-                        : item?.toString();
-                    const pId = p?.id?.toString();
-                    return itemId === pId;
-                  })?.name ?? ""
-                );
-              }}
-              isOptionEqualToValue={(option, value) => {
-                const optionId = option?.id?.toString();
-                const valueId =
-                  typeof value === "object"
-                    ? value?.id?.toString()
-                    : value?.toString();
-                return value === undefined || optionId === valueId;
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label={"Category"}
-                  margin="normal"
-                  variant="outlined"
-                  error={!!(errors as any)?.category_id}
-                  helperText={(errors as any)?.category_id?.message}
-                  required
-                />
-              )}
+            <Select
+              label="Category"
+              data={categoryOptions}
+              value={field.value?.toString() ?? null}
+              onChange={(val: string | null) => field.onChange(val ? Number(val) : null)}
+              error={(errors as any)?.category_id?.message}
+              required
             />
           )}
         />
-        <TextField
+        <TextInput
           {...register("model")}
-          error={!!(errors as any)?.model}
-          helperText={(errors as any)?.model?.message}
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          type="text"
-          label={"Model"}
-          name="model"
+          error={(errors as any)?.model?.message}
+          label="Model"
         />
-      </Box>
+      </Stack>
     </Edit>
   );
 }

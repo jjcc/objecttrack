@@ -1,67 +1,33 @@
 "use client";
 
-import { Box, TextField } from "@mui/material";
-import { Edit } from "@refinedev/mui";
+import { Stack, Textarea, TextInput } from "@mantine/core";
+import { Edit } from "@refinedev/mantine";
 import { useForm } from "@refinedev/react-hook-form";
 
 export default function CategoryEdit() {
   const {
     saveButtonProps,
-    refineCore: { queryResult },
     register,
     formState: { errors },
   } = useForm({
-    refineCoreProps: {
-      meta: {
-        select: "id, name, description",
-      },
-    },
+    refineCoreProps: { meta: { select: "id, name, description" } },
   });
-
-  const categoryData = queryResult?.data?.data;
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <Box
-        component="form"
-        sx={{ display: "flex", flexDirection: "column" }}
-        autoComplete="off"
-      >
-        <TextField
-          {...register("id")}
-          disabled
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          type="number"
-          label={"ID"}
-          name="id"
+      <Stack component="form" autoComplete="off">
+        <TextInput {...register("id")} disabled label="ID" type="number" />
+        <TextInput
+          {...register("name", { required: "This field is required" })}
+          error={(errors as any)?.name?.message}
+          label="Name"
         />
-        <TextField
-          {...register("name", {
-            required: "This field is required",
-          })}
-          error={!!(errors as any)?.name}
-          helperText={(errors as any)?.name?.message}
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          type="text"
-          label={"Name"}
-          name="name"
-        />
-        <TextField
+        <Textarea
           {...register("description")}
-          error={!!(errors as any)?.description}
-          helperText={(errors as any)?.description?.message}
-          margin="normal"
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-          multiline
-          label={"Description"}
-          name="description"
+          error={(errors as any)?.description?.message}
+          label="Description"
         />
-      </Box>
+      </Stack>
     </Edit>
   );
 }

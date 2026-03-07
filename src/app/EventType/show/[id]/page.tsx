@@ -1,34 +1,22 @@
 "use client";
 
-import { Stack, Typography } from "@mui/material";
-import { useOne, useShow } from "@refinedev/core";
-import {
-  NumberField,
-  Show,
-  TextFieldComponent as TextField,
-} from "@refinedev/mui";
+import { Stack, Text } from "@mantine/core";
+import { useShow } from "@refinedev/core";
+import { NumberField, Show, TextField } from "@refinedev/mantine";
 
 export default function EventTypeShow() {
   const { queryResult } = useShow({});
-
   const { data, isLoading } = queryResult;
-
   const record = data?.data;
 
   return (
     <Show isLoading={isLoading}>
-      <Stack gap={1}>
-        <Typography variant="body1" fontWeight="bold">
-          ID
-        </Typography>
+      <Stack gap="sm">
+        <Text fw={700}>ID</Text>
         <NumberField value={record?.id ?? ""} />
-        <Typography variant="body1" fontWeight="bold">
-          Label
-        </Typography>
+        <Text fw={700}>Label</Text>
         <TextField value={record?.label} />
-        <Typography variant="body1" fontWeight="bold">
-          Label (CN)
-        </Typography>
+        <Text fw={700}>Label (CN)</Text>
         <TextField value={record?.label_cn} />
       </Stack>
     </Show>

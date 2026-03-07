@@ -1,63 +1,30 @@
 "use client";
 
-import { Stack, Typography } from "@mui/material";
-import { useOne, useShow } from "@refinedev/core";
-import {
-  DateField,
-  NumberField,
-  Show,
-  TextFieldComponent as TextField,
-} from "@refinedev/mui";
+import { Stack, Text } from "@mantine/core";
+import { useShow } from "@refinedev/core";
+import { DateField, NumberField, Show, TextField } from "@refinedev/mantine";
 
 export default function ObjectShow() {
   const { queryResult } = useShow({
-    meta: {
-      select: "id, name, description, created_at, model, categories(id, name)",
-    },
+    meta: { select: "id, name, description, created_at, model, categories(id, name)" },
   });
-
   const { data, isLoading } = queryResult;
-
   const record = data?.data;
-
-  const { data: categoryData, isLoading: categoryIsLoading } = useOne({
-    resource: "categories",
-    id: record?.categories?.id || "",
-    queryOptions: {
-      enabled: !!record,
-    },
-  });
 
   return (
     <Show isLoading={isLoading}>
-      <Stack gap={1}>
-        <Typography variant="body1" fontWeight="bold">
-          ID
-        </Typography>
+      <Stack gap="sm">
+        <Text fw={700}>ID</Text>
         <NumberField value={record?.id ?? ""} />
-        <Typography variant="body1" fontWeight="bold">
-          Name
-        </Typography>
+        <Text fw={700}>Name</Text>
         <TextField value={record?.name} />
-        <Typography variant="body1" fontWeight="bold">
-          Description
-        </Typography>
+        <Text fw={700}>Description</Text>
         <TextField value={record?.description} />
-        <Typography variant="body1" fontWeight="bold">
-          Category
-        </Typography>
-        {categoryIsLoading ? (
-          <>Loading...</>
-        ) : (
-          <>{categoryData?.data?.name}</>
-        )}
-        <Typography variant="body1" fontWeight="bold">
-          Model
-        </Typography>
+        <Text fw={700}>Category</Text>
+        <Text>{record?.categories?.name}</Text>
+        <Text fw={700}>Model</Text>
         <TextField value={record?.model} />
-        <Typography variant="body1" fontWeight="bold">
-          Created At
-        </Typography>
+        <Text fw={700}>Created At</Text>
         <DateField value={record?.create_date} />
       </Stack>
     </Show>

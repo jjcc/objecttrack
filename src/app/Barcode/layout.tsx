@@ -1,5 +1,5 @@
 import React from "react";
-import { ThemedLayoutV2 } from "@refinedev/mui";
+import { ThemedLayoutV2 } from "@refinedev/mantine";
 import { Header } from "@components/header";
 import { authProviderServer } from "@providers/auth-provider/auth-provider.server";
 import { redirect } from "next/navigation";
