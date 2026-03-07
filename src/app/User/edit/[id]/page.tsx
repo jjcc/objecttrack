@@ -16,7 +16,7 @@ export default function UserEdit() {
     refineCoreProps: {
       meta: {
         select:
-          "id, last_name, first_name, title, city, province, country, zipcode, phone, wechat_id, group_id, email, Group(id,group_title)",
+          "id, last_name, first_name, title, city, province, country, zipcode, phone, wechat_id, group_id, email, groups(id,title)",
       },
     },
   });
@@ -24,7 +24,7 @@ export default function UserEdit() {
   const userData = queryResult?.data?.data;
 
   const { autocompleteProps: groupAutocompleteProps } = useAutocomplete({
-    resource: "Group",
+    resource: "groups",
     defaultValue: userData?.group_id,
   });
 
@@ -168,7 +168,7 @@ export default function UserEdit() {
                         : item?.toString();
                     const pId = p?.id?.toString();
                     return itemId === pId;
-                  })?.group_title ?? ""
+                  })?.title ?? ""
                 );
               }}
               isOptionEqualToValue={(option, value) => {

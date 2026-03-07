@@ -13,7 +13,7 @@ export default function EventShow() {
   const { queryResult } = useShow({
     meta: {
       select:
-        "id, extra, timestamp, Object(id,name), EventType(id,label), User_e_from:User!Event_e_from_fkey(id,first_name,last_name), User_e_to:User!Event_e_to_fkey(id,first_name,last_name)",
+        "id, extra, created_at, objects(id,name), event_types(id,label), user_profiles_from:user_profiles!events_e_from_fkey(id,first_name,last_name), user_profiles_to:user_profiles!events_e_to_fkey(id,first_name,last_name)",
     },
   });
 
@@ -22,32 +22,32 @@ export default function EventShow() {
   const record = data?.data;
 
   const { data: objectData, isLoading: objectIsLoading } = useOne({
-    resource: "Object",
-    id: record?.Object?.id || "",
+    resource: "objects",
+    id: record?.objects?.id || "",
     queryOptions: {
       enabled: !!record,
     },
   });
 
   const { data: eventTypeData, isLoading: eventTypeIsLoading } = useOne({
-    resource: "EventType",
-    id: record?.EventType?.id || "",
+    resource: "event_types",
+    id: record?.event_types?.id || "",
     queryOptions: {
       enabled: !!record,
     },
   });
 
   const { data: fromUserData, isLoading: fromUserIsLoading } = useOne({
-    resource: "User",
-    id: record?.User_e_from?.id || "",
+    resource: "user_profiles",
+    id: record?.user_profiles_from?.id || "",
     queryOptions: {
       enabled: !!record,
     },
   });
 
   const { data: toUserData, isLoading: toUserIsLoading } = useOne({
-    resource: "User",
-    id: record?.User_e_to?.id || "",
+    resource: "user_profiles",
+    id: record?.user_profiles_to?.id || "",
     queryOptions: {
       enabled: !!record,
     },

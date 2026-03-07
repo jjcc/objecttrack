@@ -14,7 +14,7 @@ export default function UserShow() {
   const { queryResult } = useShow({
     meta: {
       select:
-        "id, last_name, first_name, title, create_date, city, province, country, zipcode, phone, wechat_id, group_id, email, Group(id,group_title)",
+        "id, last_name, first_name, title, created_at, city, province, country, zipcode, phone, wechat_id, group_id, email, groups(id,title)",
     },
   });
 
@@ -23,8 +23,8 @@ export default function UserShow() {
   const record = data?.data;
 
   const { data: groupData, isLoading: groupIsLoading } = useOne({
-    resource: "Group",
-    id: record?.Group?.id || "",
+    resource: "groups",
+    id: record?.groups?.id || "",
     queryOptions: {
       enabled: !!record,
     },
@@ -55,7 +55,7 @@ export default function UserShow() {
         {groupIsLoading ? (
           <>Loading...</>
         ) : (
-          <>{groupData?.data?.group_title}</>
+          <>{groupData?.data?.title}</>
         )}
         <Typography variant="body1" fontWeight="bold">
           Email

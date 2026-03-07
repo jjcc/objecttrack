@@ -16,7 +16,7 @@ export default function ObjectCreate() {
   } = useForm({});
 
   const { autocompleteProps: categoryAutocompleteProps } = useAutocomplete({
-    resource: "Category",
+    resource: "categories",
   });
 
   return (

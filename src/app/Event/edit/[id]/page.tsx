@@ -16,7 +16,7 @@ export default function EventEdit() {
     refineCoreProps: {
       meta: {
         select:
-          "id, object_id, e_type, e_from, e_to, extra, Object(id,name), EventType(id,label), User_e_from:User!Event_e_from_fkey(id,first_name,last_name), User_e_to:User!Event_e_to_fkey(id,first_name,last_name)",
+          "id, object_id, event_type_id, e_from, e_to, extra, objects(id,name), event_types(id,label), user_profiles_from:user_profiles!events_e_from_fkey(id,first_name,last_name), user_profiles_to:user_profiles!events_e_to_fkey(id,first_name,last_name)",
       },
     },
   });
@@ -24,17 +24,17 @@ export default function EventEdit() {
   const eventData = queryResult?.data?.data;
 
   const { autocompleteProps: objectAutocompleteProps } = useAutocomplete({
-    resource: "Object",
+    resource: "objects",
     defaultValue: eventData?.object_id,
   });
 
   const { autocompleteProps: eventTypeAutocompleteProps } = useAutocomplete({
-    resource: "EventType",
-    defaultValue: eventData?.e_type,
+    resource: "event_types",
+    defaultValue: eventData?.event_type_id,
   });
 
   const { autocompleteProps: userAutocompleteProps } = useAutocomplete({
-    resource: "User",
+    resource: "user_profiles",
     defaultValue: [eventData?.e_from, eventData?.e_to],
   });
 

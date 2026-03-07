@@ -16,15 +16,15 @@ export default function ObjectList() {
   const { dataGridProps } = useDataGrid({
     syncWithLocation: true,
     meta: {
-      select: "*, Category(id,name)",
+      select: "*, categories(id,name)",
     },
   });
 
   const { data: categoryData, isLoading: categoryIsLoading } = useMany({
-    resource: "Category",
+    resource: "categories",
     ids:
       dataGridProps?.rows
-        ?.map((item: any) => item?.Category?.id)
+        ?.map((item: any) => item?.categories?.id)
         .filter(Boolean) ?? [],
     queryOptions: {
       enabled: !!dataGridProps?.rows,
@@ -52,11 +52,11 @@ export default function ObjectList() {
         flex: 1,
       },
       {
-        field: "Category",
+        field: "categories",
         headerName: "Category",
         minWidth: 160,
         valueGetter: (_, row) => {
-          const value = row?.Category;
+          const value = row?.categories;
           return value;
         },
         renderCell: function render({ value }) {

@@ -15,7 +15,7 @@ export default function ObjectEdit() {
   } = useForm({
     refineCoreProps: {
       meta: {
-        select: "id, name, description, category_id, model, Category(id,name)",
+        select: "id, name, description, category_id, model, categories(id,name)",
       },
     },
   });
@@ -23,7 +23,7 @@ export default function ObjectEdit() {
   const objectData = queryResult?.data?.data;
 
   const { autocompleteProps: categoryAutocompleteProps } = useAutocomplete({
-    resource: "Category",
+    resource: "categories",
     defaultValue: objectData?.category_id,
   });
 

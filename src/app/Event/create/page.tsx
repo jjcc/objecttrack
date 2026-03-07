@@ -16,15 +16,15 @@ export default function EventCreate() {
   } = useForm({});
 
   const { autocompleteProps: objectAutocompleteProps } = useAutocomplete({
-    resource: "Object",
+    resource: "objects",
   });
 
   const { autocompleteProps: eventTypeAutocompleteProps } = useAutocomplete({
-    resource: "EventType",
+    resource: "event_types",
   });
 
   const { autocompleteProps: userAutocompleteProps } = useAutocomplete({
-    resource: "User",
+    resource: "user_profiles",
   });
 
   return (

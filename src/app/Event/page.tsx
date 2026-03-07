@@ -17,15 +17,15 @@ export default function EventList() {
     syncWithLocation: true,
     meta: {
       select:
-        "*, Object(id,name), EventType(id,label), User_e_from:User!Event_e_from_fkey(id,first_name,last_name), User_e_to:User!Event_e_to_fkey(id,first_name,last_name)",
+        "*, objects(id,name), event_types(id,label), user_profiles_from:user_profiles!events_e_from_fkey(id,first_name,last_name), user_profiles_to:user_profiles!events_e_to_fkey(id,first_name,last_name)",
     },
   });
 
   const { data: objectData, isLoading: objectIsLoading } = useMany({
-    resource: "Object",
+    resource: "objects",
     ids:
       dataGridProps?.rows
-        ?.map((item: any) => item?.Object?.id)
+        ?.map((item: any) => item?.objects?.id)
         .filter(Boolean) ?? [],
     queryOptions: {
       enabled: !!dataGridProps?.rows,
@@ -33,10 +33,10 @@ export default function EventList() {
   });
 
   const { data: eventTypeData, isLoading: eventTypeIsLoading } = useMany({
-    resource: "EventType",
+    resource: "event_types",
     ids:
       dataGridProps?.rows
-        ?.map((item: any) => item?.EventType?.id)
+        ?.map((item: any) => item?.event_types?.id)
         .filter(Boolean) ?? [],
     queryOptions: {
       enabled: !!dataGridProps?.rows,
@@ -44,10 +44,10 @@ export default function EventList() {
   });
 
   const { data: fromUserData, isLoading: fromUserIsLoading } = useMany({
-    resource: "User",
+    resource: "user_profiles",
     ids:
       dataGridProps?.rows
-        ?.map((item: any) => item?.User_e_from?.id)
+        ?.map((item: any) => item?.user_profiles_from?.id)
         .filter(Boolean) ?? [],
     queryOptions: {
       enabled: !!dataGridProps?.rows,
@@ -55,10 +55,10 @@ export default function EventList() {
   });
 
   const { data: toUserData, isLoading: toUserIsLoading } = useMany({
-    resource: "User",
+    resource: "user_profiles",
     ids:
       dataGridProps?.rows
-        ?.map((item: any) => item?.User_e_to?.id)
+        ?.map((item: any) => item?.user_profiles_to?.id)
         .filter(Boolean) ?? [],
     queryOptions: {
       enabled: !!dataGridProps?.rows,
@@ -74,11 +74,11 @@ export default function EventList() {
         minWidth: 50,
       },
       {
-        field: "Object",
+        field: "objects",
         headerName: "Object",
         minWidth: 160,
         valueGetter: (_, row) => {
-          const value = row?.Object;
+          const value = row?.objects;
           return value;
         },
         renderCell: function render({ value }) {
@@ -90,11 +90,11 @@ export default function EventList() {
         },
       },
       {
-        field: "EventType",
+        field: "event_types",
         headerName: "Event Type",
         minWidth: 160,
         valueGetter: (_, row) => {
-          const value = row?.EventType;
+          const value = row?.event_types;
           return value;
         },
         renderCell: function render({ value }) {
@@ -106,11 +106,11 @@ export default function EventList() {
         },
       },
       {
-        field: "User_e_from",
+        field: "user_profiles_from",
         headerName: "From",
         minWidth: 160,
         valueGetter: (_, row) => {
-          const value = row?.User_e_from;
+          const value = row?.user_profiles_from;
           return value;
         },
         renderCell: function render({ value }) {
@@ -128,11 +128,11 @@ export default function EventList() {
         },
       },
       {
-        field: "User_e_to",
+        field: "user_profiles_to",
         headerName: "To",
         minWidth: 160,
         valueGetter: (_, row) => {
-          const value = row?.User_e_to;
+          const value = row?.user_profiles_to;
           return value;
         },
         renderCell: function render({ value }) {

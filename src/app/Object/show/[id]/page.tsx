@@ -12,7 +12,7 @@ import {
 export default function ObjectShow() {
   const { queryResult } = useShow({
     meta: {
-      select: "id, name, description, create_date, model, Category(id, name)",
+      select: "id, name, description, created_at, model, categories(id, name)",
     },
   });
 
@@ -21,8 +21,8 @@ export default function ObjectShow() {
   const record = data?.data;
 
   const { data: categoryData, isLoading: categoryIsLoading } = useOne({
-    resource: "Category",
-    id: record?.Category?.id || "",
+    resource: "categories",
+    id: record?.categories?.id || "",
     queryOptions: {
       enabled: !!record,
     },

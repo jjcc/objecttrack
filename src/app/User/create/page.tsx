@@ -16,7 +16,7 @@ export default function UserCreate() {
   } = useForm({});
 
   const { autocompleteProps: groupAutocompleteProps } = useAutocomplete({
-    resource: "Group",
+    resource: "groups",
   });
 
   return (
@@ -149,7 +149,7 @@ export default function UserCreate() {
                         : item?.toString();
                     const pId = p?.id?.toString();
                     return itemId === pId;
-                  })?.group_title ?? ""
+                  })?.title ?? ""
                 );
               }}
               isOptionEqualToValue={(option, value) => {

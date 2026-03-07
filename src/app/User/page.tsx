@@ -16,15 +16,15 @@ export default function UserList() {
   const { dataGridProps } = useDataGrid({
     syncWithLocation: true,
     meta: {
-      select: "*, Group(id,group_title)",
+      select: "*, groups(id,title)",
     },
   });
 
   const { data: groupData, isLoading: groupIsLoading } = useMany({
-    resource: "Group",
+    resource: "groups",
     ids:
       dataGridProps?.rows
-        ?.map((item: any) => item?.Group?.id)
+        ?.map((item: any) => item?.groups?.id)
         .filter(Boolean) ?? [],
     queryOptions: {
       enabled: !!dataGridProps?.rows,
@@ -55,18 +55,18 @@ export default function UserList() {
         minWidth: 150,
       },
       {
-        field: "Group",
+        field: "groups",
         headerName: "Group",
         minWidth: 160,
         valueGetter: (_, row) => {
-          const value = row?.Group;
+          const value = row?.groups;
           return value;
         },
         renderCell: function render({ value }) {
           return groupIsLoading ? (
             <>Loading...</>
           ) : (
-            groupData?.data?.find((item) => item.id === value?.id)?.group_title
+            groupData?.data?.find((item) => item.id === value?.id)?.title
           );
         },
       },

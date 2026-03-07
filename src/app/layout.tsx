@@ -49,43 +49,47 @@ export default function RootLayout({
                     notificationProvider={useNotificationProvider}
                     resources={[
                       {
-                        name: "Category",
+                        name: "categories",
                         list: "/Category",
                         create: "/Category/create",
                         edit: "/Category/edit/:id",
                         show: "/Category/show/:id",
                         meta: {
                           canDelete: true,
+                          label: "Category",
                         },
                       },
                       {
-                        name: "EventType",
+                        name: "event_types",
                         list: "/EventType",
                         create: "/EventType/create",
                         edit: "/EventType/edit/:id",
                         show: "/EventType/show/:id",
                         meta: {
                           canDelete: true,
+                          label: "Event Type",
                         },
                       },
                       {
-                        name: "Group",
+                        name: "groups",
                         list: "/Group",
                         create: "/Group/create",
                         edit: "/Group/edit/:id",
                         show: "/Group/show/:id",
                         meta: {
                           canDelete: true,
+                          label: "Group",
                         },
                       },
                       {
-                        name: "Object",
+                        name: "objects",
                         list: "/Object",
                         create: "/Object/create",
                         edit: "/Object/edit/:id",
                         show: "/Object/show/:id",
                         meta: {
                           canDelete: true,
+                          label: "Object",
                         },
                       },
                       {
@@ -96,23 +100,25 @@ export default function RootLayout({
                         },
                       },
                       {
-                        name: "Event",
+                        name: "events",
                         list: "/Event",
                         create: "/Event/create",
                         edit: "/Event/edit/:id",
                         show: "/Event/show/:id",
                         meta: {
                           canDelete: true,
+                          label: "Event",
                         },
                       },
                       {
-                        name: "User",
+                        name: "user_profiles",
                         list: "/User",
                         create: "/User/create",
                         edit: "/User/edit/:id",
                         show: "/User/show/:id",
                         meta: {
                           canDelete: true,
+                          label: "User",
                         },
                       },
                     ]}

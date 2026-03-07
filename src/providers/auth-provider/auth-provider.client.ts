@@ -5,6 +5,7 @@ import { supabaseBrowserClient } from "@utils/supabase/client";
 
 export const authProviderClient: AuthProvider = {
   login: async ({ email, password }) => {
+    console.log("Logging in with:", email, password); 
     const { data, error } = await supabaseBrowserClient.auth.signInWithPassword(
       {
         email,
@@ -38,6 +39,7 @@ export const authProviderClient: AuthProvider = {
     };
   },
   logout: async () => {
+    console.log("Logging out (client)");
     const { error } = await supabaseBrowserClient.auth.signOut();
 
     if (error) {
