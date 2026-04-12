@@ -9,16 +9,22 @@ import {
   Button,
   ActionIcon,
   Text,
+  Paper,
+  Radio,
+  SimpleGrid,
 } from "@mantine/core";
 import { DataTable } from "mantine-datatable";
 import { IconEdit, IconEye, IconPlus } from "@tabler/icons-react";
 import { useTable } from "@refinedev/core";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import { ObjectQrCode } from "@/components/shared/ObjectQrCode";
 import dayjs from "dayjs";
 
 export default function ObjectsListPage() {
   const router = useRouter();
+  const [selectedObjectId, setSelectedObjectId] = useState<number | null>(null);
 
   const {
     tableQuery,
@@ -63,6 +69,22 @@ export default function ObjectsListPage() {
           fetching={tableQuery.isLoading}
           records={records}
           columns={[
+            {
+              accessor: "select",
+              title: "QR",
+              width: 60,
+              render: (record) => {
+                const objectId = (record as Record<string, number>).id;
+
+                return (
+                  <Radio
+                    aria-label={`Select object ${objectId} for barcode generation`}
+                    checked={selectedObjectId === objectId}
+                    onChange={() => setSelectedObjectId(objectId)}
+                  />
+                );
+              },
+            },
             { accessor: "id", title: "ID", width: 80 },
             { accessor: "name", title: "Name" },
             {
@@ -111,6 +133,34 @@ export default function ObjectsListPage() {
           paginationSize="sm"
           noRecordsText="No objects found"
         />
+
+        <Paper withBorder p="md" radius="md">
+          <Stack gap="md">
+            <Title order={4}>2D Barcode</Title>
+            <Text c="dimmed" size="sm">
+              Select an object from the table to generate its 16-digit 2D barcode.
+            </Text>
+
+            {selectedObjectId ? (
+              <SimpleGrid cols={{ base: 1, md: 2 }}>
+                <ObjectQrCode objectId={selectedObjectId} />
+                <Paper withBorder p="md" radius="md">
+                  <Stack gap="xs">
+                    <Text fw={600}>Barcode Details</Text>
+                    <Text size="sm">Selected object ID: {selectedObjectId}</Text>
+                    <Text size="sm">
+                      Encoded value: {selectedObjectId.toString().padStart(16, "0")}
+                    </Text>
+                  </Stack>
+                </Paper>
+              </SimpleGrid>
+            ) : (
+              <Text size="sm" c="dimmed">
+                No object selected yet.
+              </Text>
+            )}
+          </Stack>
+        </Paper>
       </Stack>
     </AppShell>
   );
