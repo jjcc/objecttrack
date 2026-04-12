@@ -1,0 +1,142 @@
+import type { AuthProvider } from "@refinedev/core";
+import { supabaseClient } from "@/lib/supabase/client";
+
+export const authProvider: AuthProvider = {
+  login: async ({ email, password }) => {
+    try {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return {
+          success: false,
+          error: {
+            name: "LoginError",
+            message: error.message,
+          },
+        };
+      }
+
+      if (data?.user) {
+        const { data: adminRecord } = await supabaseClient
+          .from("admin_users")
+          .select("id")
+          .eq("id", data.user.id)
+          .single();
+
+        if (!adminRecord) {
+          await supabaseClient.auth.signOut();
+          return {
+            success: false,
+            error: {
+              name: "LoginError",
+              message: "You are not authorized to access this application.",
+            },
+          };
+        }
+      }
+
+      return {
+        success: true,
+        redirectTo: "/dashboard",
+      };
+    } catch (e) {
+      const error = e as Error;
+      return {
+        success: false,
+        error: {
+          name: "LoginError",
+          message: error.message,
+        },
+      };
+    }
+  },
+
+  logout: async () => {
+    const { error } = await supabaseClient.auth.signOut();
+
+    if (error) {
+      return {
+        success: false,
+        error: {
+          name: "LogoutError",
+          message: error.message,
+        },
+      };
+    }
+
+    return {
+      success: true,
+      redirectTo: "/login",
+    };
+  },
+
+  check: async () => {
+    const { data } = await supabaseClient.auth.getUser();
+
+    if (data?.user) {
+      return {
+        authenticated: true,
+      };
+    }
+
+    return {
+      authenticated: false,
+      redirectTo: "/login",
+    };
+  },
+
+  getPermissions: async () => {
+    const { data } = await supabaseClient.auth.getUser();
+
+    if (!data?.user) {
+      return null;
+    }
+
+    const { data: adminRecord } = await supabaseClient
+      .from("admin_users")
+      .select("id")
+      .eq("id", data.user.id)
+      .single();
+
+    return adminRecord ? "admin" : "user";
+  },
+
+  getIdentity: async () => {
+    const { data } = await supabaseClient.auth.getUser();
+
+    if (!data?.user) {
+      return null;
+    }
+
+    const { data: profile } = await supabaseClient
+      .from("user_profiles")
+      .select("first_name, last_name, email")
+      .eq("id", data.user.id)
+      .single();
+
+    const profileData = profile as { first_name: string | null; last_name: string | null; email: string | null } | null;
+
+    return {
+      id: data.user.id,
+      name: profileData
+        ? `${profileData.first_name ?? ""} ${profileData.last_name ?? ""}`.trim()
+        : data.user.email,
+      email: data.user.email,
+      avatar: undefined,
+    };
+  },
+
+  onError: async (error) => {
+    if (error?.status === 401 || error?.status === 403) {
+      return {
+        logout: true,
+        redirectTo: "/login",
+      };
+    }
+
+    return { error };
+  },
+};
