@@ -158,6 +158,20 @@ export const authProvider: AuthProvider = {
     const { data } = await supabaseClient.auth.getUser();
 
     if (data?.user) {
+      const { data: adminRecord } = await supabaseClient
+        .from("admin_users")
+        .select("id")
+        .eq("id", data.user.id)
+        .single();
+
+      if (!adminRecord) {
+        return {
+          authenticated: false,
+          redirectTo: "/unauthorized",
+          logout: true,
+        };
+      }
+
       return {
         authenticated: true,
       };
