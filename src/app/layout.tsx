@@ -3,6 +3,7 @@
 import { MantineProvider, ColorSchemeScript, createTheme } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { Refine } from "@refinedev/core";
+import { Analytics } from "@vercel/analytics/next";
 import routerProvider from "@refinedev/nextjs-router";
 
 const theme = createTheme({
@@ -88,6 +89,7 @@ export default function RootLayout({
             {children}
           </Refine>
         </MantineProvider>
+        <Analytics />
       </body>
     </html>
   );
