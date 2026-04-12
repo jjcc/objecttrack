@@ -8,12 +8,14 @@ import {
   Title,
   Stack,
   Alert,
+  Anchor,
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { useLogin } from "@refinedev/core";
 import { z } from "zod";
 import { useState } from "react";
+import Link from "next/link";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -81,6 +83,12 @@ export function LoginForm() {
           <Button type="submit" fullWidth loading={isPending}>
             Sign in
           </Button>
+          <Anchor component={Link} href="/forgot-password" size="sm" ta="center">
+            Forgot your password?
+          </Anchor>
+          <Anchor component={Link} href="/register" size="sm" ta="center">
+            Need an account?
+          </Anchor>
         </Stack>
       </form>
     </Paper>

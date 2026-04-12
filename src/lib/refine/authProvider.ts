@@ -54,6 +54,82 @@ export const authProvider: AuthProvider = {
     }
   },
 
+  register: async ({ email, password }) => {
+    try {
+      const { error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        return {
+          success: false,
+          error: {
+            name: "RegisterError",
+            message: error.message,
+          },
+        };
+      }
+
+      await supabaseClient.auth.signOut();
+
+      return {
+        success: true,
+        redirectTo: "/login",
+        successNotification: {
+          message: "Registration submitted",
+          description:
+            "Your account was created. An existing admin must still grant admin access before you can use this application.",
+        },
+      };
+    } catch (e) {
+      const error = e as Error;
+      return {
+        success: false,
+        error: {
+          name: "RegisterError",
+          message: error.message,
+        },
+      };
+    }
+  },
+
+  forgotPassword: async ({ email }) => {
+    try {
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login`,
+      });
+
+      if (error) {
+        return {
+          success: false,
+          error: {
+            name: "ForgotPasswordError",
+            message: error.message,
+          },
+        };
+      }
+
+      return {
+        success: true,
+        redirectTo: "/login",
+        successNotification: {
+          message: "Reset email sent",
+          description: "If that email exists, a password reset link has been sent.",
+        },
+      };
+    } catch (e) {
+      const error = e as Error;
+      return {
+        success: false,
+        error: {
+          name: "ForgotPasswordError",
+          message: error.message,
+        },
+      };
+    }
+  },
+
   logout: async () => {
     const { error } = await supabaseClient.auth.signOut();
 

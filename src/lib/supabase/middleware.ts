@@ -34,21 +34,25 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isLoginPage = request.nextUrl.pathname === "/login";
+  const isRegisterPage = request.nextUrl.pathname === "/register";
+  const isForgotPasswordPage = request.nextUrl.pathname === "/forgot-password";
   const isUnauthorizedPage = request.nextUrl.pathname === "/unauthorized";
+  const isPublicAuthPage =
+    isLoginPage || isRegisterPage || isForgotPasswordPage;
 
-  if (!user && !isLoginPage) {
+  if (!user && !isPublicAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && isLoginPage) {
+  if (user && isPublicAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
-  if (user && !isLoginPage && !isUnauthorizedPage) {
+  if (user && !isPublicAuthPage && !isUnauthorizedPage) {
     const { data: adminRecord } = await supabase
       .from("admin_users")
       .select("id")
