@@ -1,9 +1,10 @@
 import type { AuthProvider } from "@refinedev/core";
-import { supabaseClient } from "@/lib/supabase/client";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 export const authProvider: AuthProvider = {
   login: async ({ email, password }) => {
     try {
+      const supabaseClient = getSupabaseClient();
       const { data, error } = await supabaseClient.auth.signInWithPassword({
         email,
         password,
@@ -56,6 +57,7 @@ export const authProvider: AuthProvider = {
 
   register: async ({ email, password }) => {
     try {
+      const supabaseClient = getSupabaseClient();
       const { error } = await supabaseClient.auth.signUp({
         email,
         password,
@@ -96,6 +98,7 @@ export const authProvider: AuthProvider = {
 
   forgotPassword: async ({ email }) => {
     try {
+      const supabaseClient = getSupabaseClient();
       const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/login`,
       });
@@ -131,6 +134,7 @@ export const authProvider: AuthProvider = {
   },
 
   logout: async () => {
+    const supabaseClient = getSupabaseClient();
     const { error } = await supabaseClient.auth.signOut();
 
     if (error) {
@@ -150,6 +154,7 @@ export const authProvider: AuthProvider = {
   },
 
   check: async () => {
+    const supabaseClient = getSupabaseClient();
     const { data } = await supabaseClient.auth.getUser();
 
     if (data?.user) {
@@ -165,6 +170,7 @@ export const authProvider: AuthProvider = {
   },
 
   getPermissions: async () => {
+    const supabaseClient = getSupabaseClient();
     const { data } = await supabaseClient.auth.getUser();
 
     if (!data?.user) {
@@ -181,6 +187,7 @@ export const authProvider: AuthProvider = {
   },
 
   getIdentity: async () => {
+    const supabaseClient = getSupabaseClient();
     const { data } = await supabaseClient.auth.getUser();
 
     if (!data?.user) {
