@@ -5,11 +5,12 @@ import { Notifications } from "@mantine/notifications";
 import { Refine } from "@refinedev/core";
 import { Analytics } from "@vercel/analytics/next";
 import routerProvider from "@refinedev/nextjs-router";
+import { useMemo } from "react";
 
 const theme = createTheme({
   primaryColor: "blue",
 });
-import { dataProvider } from "@/lib/refine/dataProvider";
+import { createDataProvider } from "@/lib/refine/dataProvider";
 import { authProvider } from "@/lib/refine/authProvider";
 
 import "@mantine/core/styles.css";
@@ -22,6 +23,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const dataProvider = useMemo(() => createDataProvider(), []);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
