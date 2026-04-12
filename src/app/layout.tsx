@@ -12,6 +12,7 @@ const theme = createTheme({
 });
 import { createDataProvider } from "@/lib/refine/dataProvider";
 import { authProvider } from "@/lib/refine/authProvider";
+import { AuthGate } from "@/components/auth/AuthGate";
 
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
@@ -90,7 +91,7 @@ export default function RootLayout({
                 warnWhenUnsavedChanges: true,
               }}
             >
-              {children}
+              <AuthGate>{children}</AuthGate>
             </Refine>
           </Suspense>
         </MantineProvider>
