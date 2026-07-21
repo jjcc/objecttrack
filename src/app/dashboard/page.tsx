@@ -54,9 +54,7 @@ function StatCard({ title, value, icon, color }: StatCardProps) {
 export default function DashboardPage() {
   const [totalObjects, setTotalObjects] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
-  const [totalGroups, setTotalGroups] = useState(0);
-  const [eventsToday, setEventsToday] = useState(0);
-  const [eventsThisWeek, setEventsThisWeek] = useState(0);
+  const [pendingTransfers, setPendingTransfers] = useState(0);
   const [recentEvents, setRecentEvents] = useState<Record<string, unknown>[]>([]);
 
   useEffect(() => {
@@ -73,29 +71,18 @@ export default function DashboardPage() {
         .select("*", { count: "exact", head: true });
       setTotalUsers(userCount ?? 0);
 
-      const { count: groupCount } = await supabase
-        .from("groups")
-        .select("*", { count: "exact", head: true });
-      setTotalGroups(groupCount ?? 0);
-
-      const todayStart = dayjs().startOf("day").toISOString();
-      const weekStart = dayjs().startOf("week").toISOString();
-
-      const { count: todayCount } = await supabase
-        .from("events")
+      const { count: transferCount } = await supabase
+        .from("transfer_requests")
         .select("*", { count: "exact", head: true })
-        .gte("created_at", todayStart);
-      setEventsToday(todayCount ?? 0);
+        .eq("status", "pending");
+      setPendingTransfers(transferCount ?? 0);
 
-      const { count: weekCount } = await supabase
-        .from("events")
-        .select("*", { count: "exact", head: true })
-        .gte("created_at", weekStart);
-      setEventsThisWeek(weekCount ?? 0);
+      const weekStart = dayjs().subtract(7, "day").toISOString();
 
       const { data: events } = await supabase
         .from("events")
         .select("*, objects(name), event_types(label), from:user_profiles!events_e_from_fkey(first_name, last_name), to:user_profiles!events_e_to_fkey(first_name, last_name)")
+        .gte("created_at", weekStart)
         .order("created_at", { ascending: false })
         .limit(15);
 
@@ -114,7 +101,7 @@ export default function DashboardPage() {
 
         <Title order={2}>Dashboard</Title>
 
-        <SimpleGrid cols={{ base: 1, xs: 2, md: 5 }}>
+        <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
           <StatCard
             title="Total Objects"
             value={totalObjects}
@@ -128,20 +115,14 @@ export default function DashboardPage() {
             color="green"
           />
           <StatCard
-            title="Total Groups"
-            value={totalGroups}
-            icon={<IconCategory size={24} />}
-            color="violet"
-          />
-          <StatCard
-            title="Events Today"
-            value={eventsToday}
+            title="Pending Transfers"
+            value={pendingTransfers}
             icon={<IconTransfer size={24} />}
             color="orange"
           />
           <StatCard
-            title="Events This Week"
-            value={eventsThisWeek}
+            title="Recent Events (7 days)"
+            value={recentEvents.length}
             icon={<IconTransfer size={24} />}
             color="teal"
           />

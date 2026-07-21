@@ -16,7 +16,8 @@ const navItems = [
   { label: "Objects", icon: IconBox, href: "/objects" },
   { label: "Users", icon: IconUsers, href: "/users" },
   { label: "Groups", icon: IconCategory, href: "/groups" },
-  { label: "Events", icon: IconTransfer, href: "/events" },
+  { label: "Transfers", icon: IconTransfer, href: "/transfers" },
+  { label: "Events", icon: IconCategory, href: "/events" },
   { label: "Settings", icon: IconSettings, href: "/settings" },
 ];
 

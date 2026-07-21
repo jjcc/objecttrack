@@ -85,6 +85,7 @@ export interface Database {
           description: string | null;
           category_id: number | null;
           model: string | null;
+          current_owner_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -93,6 +94,7 @@ export interface Database {
           description?: string | null;
           category_id?: number | null;
           model?: string | null;
+          current_owner_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -101,6 +103,7 @@ export interface Database {
           description?: string | null;
           category_id?: number | null;
           model?: string | null;
+          current_owner_id?: string | null;
           created_at?: string;
         };
       };
@@ -160,6 +163,38 @@ export interface Database {
         };
         Update: {
           id?: string;
+        };
+      };
+      transfer_requests: {
+        Row: {
+          id: number;
+          object_id: number;
+          from_user_id: string;
+          to_user_id: string;
+          status: string;
+          reason: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: never;
+          object_id: number;
+          from_user_id: string;
+          to_user_id: string;
+          status?: string;
+          reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: never;
+          object_id?: number;
+          from_user_id?: string;
+          to_user_id?: string;
+          status?: string;
+          reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
       };
     };
