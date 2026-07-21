@@ -1,9 +1,9 @@
 "use client";
 
 import { Center, Loader } from "@mantine/core";
-import { useIsAuthenticated } from "@refinedev/core";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 interface AuthGateProps {
   children: React.ReactNode;
@@ -19,21 +19,52 @@ const publicPaths = new Set([
 export function AuthGate({ children }: AuthGateProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { data, isLoading } = useIsAuthenticated();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const isPublicPath = pathname ? publicPaths.has(pathname) : false;
 
   useEffect(() => {
-    if (!isLoading && !isPublicPath && data?.authenticated === false) {
-      router.replace(data.redirectTo ?? "/login");
+    async function checkAuth() {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        if (!isPublicPath) {
+          router.replace("/login");
+        }
+        return;
+      }
+
+      const { data: adminData } = await supabase
+        .from("admin_users")
+        .select("id")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      if (!adminData) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        if (!isPublicPath) {
+          router.replace("/unauthorized");
+        }
+        return;
+      }
+
+      setIsAuthenticated(true);
+      setIsLoading(false);
     }
-  }, [data, isLoading, isPublicPath, router]);
+
+    checkAuth();
+  }, [pathname, isPublicPath, router]);
 
   if (isPublicPath) {
     return <>{children}</>;
   }
 
-  if (isLoading || data?.authenticated === false) {
+  if (isLoading || !isAuthenticated) {
     return (
       <Center h="100vh">
         <Loader />

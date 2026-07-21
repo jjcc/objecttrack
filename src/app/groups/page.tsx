@@ -11,28 +11,41 @@ import {
 } from "@mantine/core";
 import { DataTable } from "mantine-datatable";
 import { IconEdit, IconPlus } from "@tabler/icons-react";
-import { useTable } from "@refinedev/core";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import dayjs from "dayjs";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function GroupsListPage() {
   const router = useRouter();
 
-  const {
-    tableQuery,
-    result: tableResult,
-    currentPage,
-    setCurrentPage,
-    pageSize,
-    pageCount,
-  } = useTable({
-    resource: "groups",
-    pagination: { currentPage: 1, pageSize: 20 },
-    sorters: { initial: [{ field: "created_at", order: "desc" }] },
-  });
+  const [records, setRecords] = useState<Record<string, unknown>[]>([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
-  const records = tableResult.data;
+  useEffect(() => {
+    async function fetchGroups() {
+      setIsLoading(true);
+      const supabase = getSupabaseClient();
+
+      const { data, count, error } = await supabase
+        .from("groups")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1);
+
+      if (!error) {
+        setRecords((data ?? []) as unknown as Record<string, unknown>[]);
+        setTotalRecords(count ?? 0);
+      }
+      setIsLoading(false);
+    }
+
+    fetchGroups();
+  }, [page]);
 
   return (
     <AppShell>
@@ -57,7 +70,7 @@ export default function GroupsListPage() {
           borderRadius="md"
           striped
           highlightOnHover
-          fetching={tableQuery.isLoading}
+          fetching={isLoading}
           records={records}
           columns={[
             { accessor: "id", title: "ID", width: 80 },
@@ -87,10 +100,10 @@ export default function GroupsListPage() {
               ),
             },
           ]}
-          totalRecords={tableResult.total ?? 0}
+          totalRecords={totalRecords}
           recordsPerPage={pageSize}
-          page={currentPage}
-          onPageChange={setCurrentPage}
+          page={page}
+          onPageChange={setPage}
           paginationSize="sm"
           noRecordsText="No groups found"
         />

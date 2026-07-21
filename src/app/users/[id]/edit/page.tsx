@@ -15,11 +15,11 @@ import {
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
-import { useOne, useUpdate, useList } from "@refinedev/core";
 import { useParams, useRouter } from "next/navigation";
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const userSchema = z.object({
   first_name: z.string().optional(),
@@ -42,22 +42,9 @@ export default function UserEditPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const { query: userQuery, result: userResult } = useOne({
-    resource: "user_profiles",
-    id,
-  });
-
-  const { mutate: update, mutation: updateMutation } = useUpdate();
-
-  const { result: groupsResult } = useList({
-    resource: "groups",
-    pagination: { currentPage: 1, pageSize: 100 },
-  });
-
-  const groupOptions = groupsResult.data.map((g) => ({
-    value: String((g as Record<string, unknown>).id),
-    label: (g as Record<string, string>).title,
-  }));
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPending, setIsPending] = useState(false);
+  const [groupOptions, setGroupOptions] = useState<{ value: string; label: string }[]>([]);
 
   const form = useForm<UserFormValues>({
     initialValues: {
@@ -77,31 +64,47 @@ export default function UserEditPage() {
   });
 
   useEffect(() => {
-    if (userResult) {
-      const record = userResult as Record<string, unknown>;
-      form.setValues({
-        first_name: (record.first_name as string) ?? "",
-        last_name: (record.last_name as string) ?? "",
-        email: (record.email as string) ?? "",
-        title: (record.title as string) ?? "",
-        group_id: record.group_id ? String(record.group_id) : "",
-        phone: (record.phone as string) ?? "",
-        city: (record.city as string) ?? "",
-        province: (record.province as string) ?? "",
-        country: (record.country as string) ?? "",
-        zipcode: (record.zipcode as string) ?? "",
-        wechat_id: (record.wechat_id as string) ?? "",
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userResult]);
+    async function fetchData() {
+      const supabase = getSupabaseClient();
 
-  const handleSubmit = (values: UserFormValues) => {
-    update(
-      {
-        resource: "user_profiles",
-        id,
-        values: {
+      const { data: groups } = await supabase.from("groups").select("id, title").order("title") as unknown as { data: { id: number; title: string }[] };
+      setGroupOptions((groups ?? []).map((g) => ({ value: String(g.id), label: g.title })));
+
+      const { data: userData } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (userData) {
+        const record = userData as Record<string, unknown>;
+        form.setValues({
+          first_name: (record.first_name as string) ?? "",
+          last_name: (record.last_name as string) ?? "",
+          email: (record.email as string) ?? "",
+          title: (record.title as string) ?? "",
+          group_id: record.group_id ? String(record.group_id) : "",
+          phone: (record.phone as string) ?? "",
+          city: (record.city as string) ?? "",
+          province: (record.province as string) ?? "",
+          country: (record.country as string) ?? "",
+          zipcode: (record.zipcode as string) ?? "",
+          wechat_id: (record.wechat_id as string) ?? "",
+        });
+      }
+
+      setIsLoading(false);
+    }
+
+    fetchData();
+  }, [id, form]);
+
+  const handleSubmit = async (values: UserFormValues) => {
+    setIsPending(true);
+    try {
+      const supabase = getSupabaseClient();
+      const { error } = await (supabase.from("user_profiles") as any)
+        .update({
           first_name: values.first_name || null,
           last_name: values.last_name || null,
           email: values.email || null,
@@ -113,26 +116,33 @@ export default function UserEditPage() {
           country: values.country || null,
           zipcode: values.zipcode || null,
           wechat_id: values.wechat_id || null,
-        },
-      },
-      {
-        onSuccess: () => {
-          showNotification({
-            color: "green",
-            title: "Success",
-            message: "User profile updated successfully",
-          });
-          router.push("/users");
-        },
-        onError: (error) => {
-          showNotification({
-            color: "red",
-            title: "Error",
-            message: error?.message ?? "Failed to update user profile",
-          });
-        },
+        })
+        .eq("id", id);
+
+      if (error) {
+        showNotification({
+          color: "red",
+          title: "Error",
+          message: error.message ?? "Failed to update user profile",
+        });
+        return;
       }
-    );
+
+      showNotification({
+        color: "green",
+        title: "Success",
+        message: "User profile updated successfully",
+      });
+      router.push("/users");
+    } catch (err) {
+      showNotification({
+        color: "red",
+        title: "Error",
+        message: (err as Error)?.message ?? "Failed to update user profile",
+      });
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -147,7 +157,7 @@ export default function UserEditPage() {
         <Title order={2}>Edit User Profile</Title>
 
         <Paper withBorder p="md" radius="md" maw={800} pos="relative">
-          <LoadingOverlay visible={userQuery.isLoading} />
+          <LoadingOverlay visible={isLoading} />
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack>
               <SimpleGrid cols={{ base: 1, sm: 2 }}>
@@ -211,7 +221,7 @@ export default function UserEditPage() {
                 />
               </SimpleGrid>
               <Group>
-                <Button type="submit" loading={updateMutation.isPending}>
+                <Button type="submit" loading={isPending}>
                   Save
                 </Button>
                 <Button

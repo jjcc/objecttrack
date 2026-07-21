@@ -14,10 +14,11 @@ import {
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
-import { useCreate, useList } from "@refinedev/core";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { AppShell } from "@/components/layout/AppShell";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const userSchema = z.object({
   id: z.string().uuid("Must be a valid UUID (matching auth.users id)"),
@@ -38,17 +39,17 @@ type UserFormValues = z.infer<typeof userSchema>;
 
 export default function UserCreatePage() {
   const router = useRouter();
-  const { mutate: create, mutation: createMutation } = useCreate();
+  const [isPending, setIsPending] = useState(false);
+  const [groupOptions, setGroupOptions] = useState<{ value: string; label: string }[]>([]);
 
-  const { result: groupsResult } = useList({
-    resource: "groups",
-    pagination: { currentPage: 1, pageSize: 100 },
-  });
-
-  const groupOptions = groupsResult.data.map((g) => ({
-    value: String((g as Record<string, unknown>).id),
-    label: (g as Record<string, string>).title,
-  }));
+  useEffect(() => {
+    async function fetchGroups() {
+      const supabase = getSupabaseClient();
+      const { data } = await supabase.from("groups").select("id, title").order("title") as unknown as { data: { id: number; title: string }[] };
+      setGroupOptions((data ?? []).map((g) => ({ value: String(g.id), label: g.title })));
+    }
+    fetchGroups();
+  }, []);
 
   const form = useForm<UserFormValues>({
     initialValues: {
@@ -68,43 +69,49 @@ export default function UserCreatePage() {
     validate: zodResolver(userSchema),
   });
 
-  const handleSubmit = (values: UserFormValues) => {
-    create(
-      {
-        resource: "user_profiles",
-        values: {
-          id: values.id,
-          first_name: values.first_name || null,
-          last_name: values.last_name || null,
-          email: values.email || null,
-          title: values.title || null,
-          group_id: values.group_id ? Number(values.group_id) : null,
-          phone: values.phone || null,
-          city: values.city || null,
-          province: values.province || null,
-          country: values.country || null,
-          zipcode: values.zipcode || null,
-          wechat_id: values.wechat_id || null,
-        },
-      },
-      {
-        onSuccess: () => {
-          showNotification({
-            color: "green",
-            title: "Success",
-            message: "User profile created successfully",
-          });
-          router.push("/users");
-        },
-        onError: (error) => {
-          showNotification({
-            color: "red",
-            title: "Error",
-            message: error?.message ?? "Failed to create user profile",
-          });
-        },
+  const handleSubmit = async (values: UserFormValues) => {
+    setIsPending(true);
+    try {
+      const supabase = getSupabaseClient();
+      const { error } = await (supabase.from("user_profiles") as any).insert({
+        id: values.id,
+        first_name: values.first_name || null,
+        last_name: values.last_name || null,
+        email: values.email || null,
+        title: values.title || null,
+        group_id: values.group_id ? Number(values.group_id) : null,
+        phone: values.phone || null,
+        city: values.city || null,
+        province: values.province || null,
+        country: values.country || null,
+        zipcode: values.zipcode || null,
+        wechat_id: values.wechat_id || null,
+      });
+
+      if (error) {
+        showNotification({
+          color: "red",
+          title: "Error",
+          message: error.message ?? "Failed to create user profile",
+        });
+        return;
       }
-    );
+
+      showNotification({
+        color: "green",
+        title: "Success",
+        message: "User profile created successfully",
+      });
+      router.push("/users");
+    } catch (err) {
+      showNotification({
+        color: "red",
+        title: "Error",
+        message: (err as Error)?.message ?? "Failed to create user profile",
+      });
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -188,7 +195,7 @@ export default function UserCreatePage() {
                 />
               </SimpleGrid>
               <Group>
-                <Button type="submit" loading={createMutation.isPending}>
+                <Button type="submit" loading={isPending}>
                   Create
                 </Button>
                 <Button

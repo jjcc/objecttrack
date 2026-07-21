@@ -14,39 +14,50 @@ import {
   LoadingOverlay,
 } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
-import { useOne, useList } from "@refinedev/core";
 import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { EventTypeBadge } from "@/components/shared/EventTypeBadge";
 import dayjs from "dayjs";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function ObjectShowPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
 
-  const { query: objectQuery, result: objectResult } = useOne({
-    resource: "objects",
-    id,
-    meta: {
-      select: "*, categories(name)",
-    },
-  });
+  const [record, setRecord] = useState<Record<string, unknown> | null>(null);
+  const [events, setEvents] = useState<Record<string, unknown>[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { query: eventsQuery, result: eventsResult } = useList({
-    resource: "events",
-    filters: [{ field: "object_id", operator: "eq", value: Number(id) }],
-    sorters: [{ field: "created_at", order: "desc" }],
-    pagination: { currentPage: 1, pageSize: 50 },
-    meta: {
-      select:
-        "*, event_types(label), from:user_profiles!events_e_from_fkey(first_name, last_name), to:user_profiles!events_e_to_fkey(first_name, last_name), groups(title)",
-    },
-  });
+  useEffect(() => {
+    async function fetchData() {
+      setIsLoading(true);
+      const supabase = getSupabaseClient();
 
-  const record = objectResult as Record<string, unknown> | undefined;
+      const { data: objectData } = await supabase
+        .from("objects")
+        .select("*, categories(name)")
+        .eq("id", Number(id))
+        .single();
+
+      setRecord(objectData as unknown as Record<string, unknown> | null);
+
+      const { data: eventsData } = await supabase
+        .from("events")
+        .select("*, event_types(label), from:user_profiles!events_e_from_fkey(first_name, last_name), to:user_profiles!events_e_to_fkey(first_name, last_name), groups(title)")
+        .eq("object_id", Number(id))
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      setEvents((eventsData ?? []) as unknown as Record<string, unknown>[]);
+      setIsLoading(false);
+    }
+
+    fetchData();
+  }, [id]);
+
   const category = record?.categories as Record<string, string> | null;
-  const events = eventsResult.data;
 
   return (
     <AppShell>
@@ -69,7 +80,7 @@ export default function ObjectShowPage() {
         </Group>
 
         <Paper withBorder p="md" radius="md" pos="relative">
-          <LoadingOverlay visible={objectQuery.isLoading} />
+          <LoadingOverlay visible={isLoading} />
           <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <div>
               <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
@@ -109,7 +120,6 @@ export default function ObjectShowPage() {
         </Paper>
 
         <Paper withBorder p="md" radius="md" pos="relative">
-          <LoadingOverlay visible={eventsQuery.isLoading} />
           <Title order={4} mb="md">
             Event History
           </Title>

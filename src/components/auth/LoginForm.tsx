@@ -12,10 +12,11 @@ import {
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { IconAlertCircle } from "@tabler/icons-react";
-import { useLogin } from "@refinedev/core";
 import { z } from "zod";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -25,7 +26,8 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
-  const { mutate: login, isPending } = useLogin<LoginFormValues>();
+  const router = useRouter();
+  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<LoginFormValues>({
@@ -36,13 +38,27 @@ export function LoginForm() {
     validate: zodResolver(loginSchema),
   });
 
-  const handleSubmit = (values: LoginFormValues) => {
+  const handleSubmit = async (values: LoginFormValues) => {
     setError(null);
-    login(values, {
-      onError: (err) => {
-        setError(err?.message ?? "Login failed. Please try again.");
-      },
-    });
+    setIsPending(true);
+    try {
+      const supabase = getSupabaseClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+
+      if (signInError) {
+        setError(signInError.message);
+        return;
+      }
+
+      router.replace("/dashboard");
+    } catch (err) {
+      setError((err as Error)?.message ?? "Login failed. Please try again.");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (

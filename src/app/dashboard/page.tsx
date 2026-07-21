@@ -18,10 +18,11 @@ import {
   IconCategory,
   IconTransfer,
 } from "@tabler/icons-react";
-import { useList } from "@refinedev/core";
 import { AppShell } from "@/components/layout/AppShell";
 import { EventTypeBadge } from "@/components/shared/EventTypeBadge";
 import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 interface StatCardProps {
   title: string;
@@ -51,54 +52,58 @@ function StatCard({ title, value, icon, color }: StatCardProps) {
 }
 
 export default function DashboardPage() {
-  const { result: objectsResult } = useList({
-    resource: "objects",
-    pagination: { currentPage: 1, pageSize: 1 },
-  });
+  const [totalObjects, setTotalObjects] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalGroups, setTotalGroups] = useState(0);
+  const [eventsToday, setEventsToday] = useState(0);
+  const [eventsThisWeek, setEventsThisWeek] = useState(0);
+  const [recentEvents, setRecentEvents] = useState<Record<string, unknown>[]>([]);
 
-  const { result: usersResult } = useList({
-    resource: "user_profiles",
-    pagination: { currentPage: 1, pageSize: 1 },
-  });
+  useEffect(() => {
+    async function fetchData() {
+      const supabase = getSupabaseClient();
 
-  const { result: groupsResult } = useList({
-    resource: "groups",
-    pagination: { currentPage: 1, pageSize: 1 },
-  });
+      const { count: objCount } = await supabase
+        .from("objects")
+        .select("*", { count: "exact", head: true });
+      setTotalObjects(objCount ?? 0);
 
-  const todayStart = dayjs().startOf("day").toISOString();
-  const weekStart = dayjs().startOf("week").toISOString();
+      const { count: userCount } = await supabase
+        .from("user_profiles")
+        .select("*", { count: "exact", head: true });
+      setTotalUsers(userCount ?? 0);
 
-  const { result: todayEventsResult } = useList({
-    resource: "events",
-    filters: [
-      { field: "created_at", operator: "gte", value: todayStart },
-    ],
-    pagination: { currentPage: 1, pageSize: 1 },
-  });
+      const { count: groupCount } = await supabase
+        .from("groups")
+        .select("*", { count: "exact", head: true });
+      setTotalGroups(groupCount ?? 0);
 
-  const { result: weekEventsResult } = useList({
-    resource: "events",
-    filters: [
-      { field: "created_at", operator: "gte", value: weekStart },
-    ],
-    pagination: { currentPage: 1, pageSize: 1 },
-  });
+      const todayStart = dayjs().startOf("day").toISOString();
+      const weekStart = dayjs().startOf("week").toISOString();
 
-  const { result: recentEventsResult } = useList({
-    resource: "events",
-    pagination: { currentPage: 1, pageSize: 15 },
-    sorters: [{ field: "created_at", order: "desc" }],
-    meta: {
-      select: "*, objects(name), event_types(label), from:user_profiles!events_e_from_fkey(first_name, last_name), to:user_profiles!events_e_to_fkey(first_name, last_name)",
-    },
-  });
+      const { count: todayCount } = await supabase
+        .from("events")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", todayStart);
+      setEventsToday(todayCount ?? 0);
 
-  const totalObjects = objectsResult.total ?? 0;
-  const totalUsers = usersResult.total ?? 0;
-  const totalGroups = groupsResult.total ?? 0;
-  const eventsToday = todayEventsResult.total ?? 0;
-  const eventsThisWeek = weekEventsResult.total ?? 0;
+      const { count: weekCount } = await supabase
+        .from("events")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", weekStart);
+      setEventsThisWeek(weekCount ?? 0);
+
+      const { data: events } = await supabase
+        .from("events")
+        .select("*, objects(name), event_types(label), from:user_profiles!events_e_from_fkey(first_name, last_name), to:user_profiles!events_e_to_fkey(first_name, last_name)")
+        .order("created_at", { ascending: false })
+        .limit(15);
+
+      setRecentEvents((events ?? []) as unknown as Record<string, unknown>[]);
+    }
+
+    fetchData();
+  }, []);
 
   return (
     <AppShell>
@@ -157,7 +162,7 @@ export default function DashboardPage() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {recentEventsResult.data.map((event: Record<string, unknown>) => {
+              {recentEvents.map((event: Record<string, unknown>) => {
                 const obj = event.objects as Record<string, string> | null;
                 const eventType = event.event_types as Record<string, string> | null;
                 const fromUser = event.from as Record<string, string> | null;
@@ -189,7 +194,7 @@ export default function DashboardPage() {
                   </Table.Tr>
                 );
               })}
-              {recentEventsResult.data.length === 0 && (
+              {recentEvents.length === 0 && (
                 <Table.Tr>
                   <Table.Td colSpan={5}>
                     <Text ta="center" c="dimmed">

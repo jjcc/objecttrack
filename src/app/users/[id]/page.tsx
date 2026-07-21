@@ -14,47 +14,50 @@ import {
   LoadingOverlay,
 } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
-import { useOne, useList } from "@refinedev/core";
 import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { EventTypeBadge } from "@/components/shared/EventTypeBadge";
 import dayjs from "dayjs";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function UserShowPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
 
-  const { query: userQuery, result: userResult } = useOne({
-    resource: "user_profiles",
-    id,
-    meta: {
-      select: "*, groups(title)",
-    },
-  });
+  const [record, setRecord] = useState<Record<string, unknown> | null>(null);
+  const [events, setEvents] = useState<Record<string, unknown>[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { query: eventsQuery, result: eventsResult } = useList({
-    resource: "events",
-    filters: [
-      {
-        operator: "or",
-        value: [
-          { field: "e_from", operator: "eq", value: id },
-          { field: "e_to", operator: "eq", value: id },
-        ],
-      },
-    ],
-    sorters: [{ field: "created_at", order: "desc" }],
-    pagination: { currentPage: 1, pageSize: 50 },
-    meta: {
-      select:
-        "*, objects(name), event_types(label), from:user_profiles!events_e_from_fkey(first_name, last_name), to:user_profiles!events_e_to_fkey(first_name, last_name)",
-    },
-  });
+  useEffect(() => {
+    async function fetchData() {
+      setIsLoading(true);
+      const supabase = getSupabaseClient();
 
-  const record = userResult as Record<string, unknown> | undefined;
+      const { data: userData } = await supabase
+        .from("user_profiles")
+        .select("*, groups(title)")
+        .eq("id", id)
+        .single();
+
+      setRecord(userData as unknown as Record<string, unknown> | null);
+
+      const { data: eventsData } = await supabase
+        .from("events")
+        .select("*, objects(name), event_types(label), from:user_profiles!events_e_from_fkey(first_name, last_name), to:user_profiles!events_e_to_fkey(first_name, last_name)")
+        .or(`e_from.eq.${id},e_to.eq.${id}`)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      setEvents((eventsData ?? []) as unknown as Record<string, unknown>[]);
+      setIsLoading(false);
+    }
+
+    fetchData();
+  }, [id]);
+
   const group = record?.groups as Record<string, string> | null;
-  const events = eventsResult.data;
 
   const fullName = [record?.first_name, record?.last_name]
     .filter(Boolean)
@@ -81,7 +84,7 @@ export default function UserShowPage() {
         </Group>
 
         <Paper withBorder p="md" radius="md" pos="relative">
-          <LoadingOverlay visible={userQuery.isLoading} />
+          <LoadingOverlay visible={isLoading} />
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }}>
             <div>
               <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
@@ -141,7 +144,6 @@ export default function UserShowPage() {
         </Paper>
 
         <Paper withBorder p="md" radius="md" pos="relative">
-          <LoadingOverlay visible={eventsQuery.isLoading} />
           <Title order={4} mb="md">
             Event History
           </Title>
