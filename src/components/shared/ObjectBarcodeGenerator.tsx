@@ -11,32 +11,42 @@ import {
 } from "@mantine/core";
 import { DataTable } from "mantine-datatable";
 import { IconEdit, IconEye } from "@tabler/icons-react";
-import { useTable } from "@refinedev/core";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { ObjectQrCode } from "@/components/shared/ObjectQrCode";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 export function ObjectBarcodeGenerator() {
   const router = useRouter();
   const [selectedObjectId, setSelectedObjectId] = useState<number | null>(null);
 
-  const {
-    tableQuery,
-    result: tableResult,
-    currentPage,
-    setCurrentPage,
-    pageSize,
-  } = useTable({
-    resource: "objects",
-    pagination: { currentPage: 1, pageSize: 20 },
-    sorters: { initial: [{ field: "created_at", order: "desc" }] },
-    meta: {
-      select: "*, categories(name)",
-    },
-  });
+  const [records, setRecords] = useState<Record<string, unknown>[]>([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
-  const records = tableResult.data;
+  useEffect(() => {
+    async function fetchObjects() {
+      setIsLoading(true);
+      const supabase = getSupabaseClient();
+
+      const { data, count, error } = await supabase
+        .from("objects")
+        .select("*, categories(name)", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1);
+
+      if (!error) {
+        setRecords((data ?? []) as unknown as Record<string, unknown>[]);
+        setTotalRecords(count ?? 0);
+      }
+      setIsLoading(false);
+    }
+
+    fetchObjects();
+  }, [page]);
 
   return (
     <Stack gap="lg">
@@ -45,7 +55,7 @@ export function ObjectBarcodeGenerator() {
         borderRadius="md"
         striped
         highlightOnHover
-        fetching={tableQuery.isLoading}
+        fetching={isLoading}
         records={records}
         columns={[
           {
@@ -114,10 +124,10 @@ export function ObjectBarcodeGenerator() {
             ),
           },
         ]}
-        totalRecords={tableResult.total ?? 0}
+        totalRecords={totalRecords}
         recordsPerPage={pageSize}
-        page={currentPage}
-        onPageChange={setCurrentPage}
+        page={page}
+        onPageChange={setPage}
         paginationSize="sm"
         noRecordsText="No objects found"
       />

@@ -13,10 +13,10 @@ import {
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { IconAlertCircle } from "@tabler/icons-react";
-import { useForgotPassword } from "@refinedev/core";
 import Link from "next/link";
 import { useState } from "react";
 import { z } from "zod";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -25,8 +25,8 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
-  const { mutate: forgotPassword, isPending } =
-    useForgotPassword<ForgotPasswordFormValues>();
+  const [isPending, setIsPending] = useState(false);
+  const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<ForgotPasswordFormValues>({
@@ -36,13 +36,27 @@ export default function ForgotPasswordPage() {
     validate: zodResolver(forgotPasswordSchema),
   });
 
-  const handleSubmit = (values: ForgotPasswordFormValues) => {
+  const handleSubmit = async (values: ForgotPasswordFormValues) => {
     setError(null);
-    forgotPassword(values, {
-      onError: (err) => {
-        setError(err?.message ?? "Password reset failed. Please try again.");
-      },
-    });
+    setIsPending(true);
+    try {
+      const supabase = getSupabaseClient();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        values.email,
+        { redirectTo: `${window.location.origin}/login` }
+      );
+
+      if (resetError) {
+        setError(resetError.message);
+        return;
+      }
+
+      setSent(true);
+    } catch (err) {
+      setError((err as Error)?.message ?? "Password reset failed. Please try again.");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -70,22 +84,28 @@ export default function ForgotPasswordPage() {
           </Alert>
         )}
 
-        <form onSubmit={form.onSubmit(handleSubmit)}>
-          <Stack>
-            <TextInput
-              label="Email"
-              placeholder="name@example.com"
-              required
-              {...form.getInputProps("email")}
-            />
-            <Button type="submit" fullWidth loading={isPending}>
-              Send reset link
-            </Button>
-            <Anchor component={Link} href="/login" size="sm" ta="center">
-              Back to login
-            </Anchor>
-          </Stack>
-        </form>
+        {sent ? (
+          <Alert color="green" mb="md">
+            Check your email for a password reset link.
+          </Alert>
+        ) : (
+          <form onSubmit={form.onSubmit(handleSubmit)}>
+            <Stack>
+              <TextInput
+                label="Email"
+                placeholder="name@example.com"
+                required
+                {...form.getInputProps("email")}
+              />
+              <Button type="submit" fullWidth loading={isPending}>
+                Send reset link
+              </Button>
+              <Anchor component={Link} href="/login" size="sm" ta="center">
+                Back to login
+              </Anchor>
+            </Stack>
+          </form>
+        )}
       </Paper>
     </Center>
   );

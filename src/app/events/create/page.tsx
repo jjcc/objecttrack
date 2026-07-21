@@ -14,11 +14,11 @@ import {
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
-import { useCreate, useList } from "@refinedev/core";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { AppShell } from "@/components/layout/AppShell";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const eventSchema = z
   .object({
@@ -54,51 +54,37 @@ type EventFormValues = z.infer<typeof eventSchema>;
 
 export default function EventCreatePage() {
   const router = useRouter();
-  const { mutate: create, mutation: createMutation } = useCreate();
+  const [isPending, setIsPending] = useState(false);
 
-  const { result: groupsResult } = useList({
-    resource: "groups",
-    pagination: { currentPage: 1, pageSize: 100 },
-  });
+  const [groupOptions, setGroupOptions] = useState<{ value: string; label: string }[]>([]);
+  const [objectOptions, setObjectOptions] = useState<{ value: string; label: string }[]>([]);
+  const [eventTypeOptions, setEventTypeOptions] = useState<{ value: string; label: string }[]>([]);
+  const [userOptions, setUserOptions] = useState<{ value: string; label: string }[]>([]);
+  const [currentCustodianId, setCurrentCustodianId] = useState<string | null>(null);
+  const [currentCustodianLabel, setCurrentCustodianLabel] = useState<string | null>(null);
 
-  const { result: objectsResult } = useList({
-    resource: "objects",
-    pagination: { currentPage: 1, pageSize: 200 },
-  });
+  useEffect(() => {
+    async function fetchFilters() {
+      const supabase = getSupabaseClient();
 
-  const { result: eventTypesResult } = useList({
-    resource: "event_types",
-    pagination: { currentPage: 1, pageSize: 100 },
-  });
+      const { data: groups } = await supabase.from("groups").select("id, title").order("title") as unknown as { data: { id: number; title: string }[] };
+      setGroupOptions((groups ?? []).map((g) => ({ value: String(g.id), label: g.title })));
 
-  const { result: usersResult } = useList({
-    resource: "user_profiles",
-    pagination: { currentPage: 1, pageSize: 200 },
-  });
+      const { data: objects } = await supabase.from("objects").select("id, name").order("name").limit(200) as unknown as { data: { id: number; name: string }[] };
+      setObjectOptions((objects ?? []).map((o) => ({ value: String(o.id), label: o.name })));
 
-  const groupOptions = groupsResult.data.map((g) => ({
-    value: String((g as Record<string, unknown>).id),
-    label: (g as Record<string, string>).title,
-  }));
+      const { data: eventTypes } = await supabase.from("event_types").select("id, label").order("label") as unknown as { data: { id: number; label: string }[] };
+      setEventTypeOptions((eventTypes ?? []).map((et) => ({ value: String(et.id), label: et.label })));
 
-  const objectOptions = objectsResult.data.map((o) => ({
-    value: String((o as Record<string, unknown>).id),
-    label: (o as Record<string, string>).name,
-  }));
+      const { data: users } = await supabase.from("user_profiles").select("id, first_name, last_name, email").limit(200) as unknown as { data: { id: string; first_name: string | null; last_name: string | null; email: string | null }[] };
+      setUserOptions((users ?? []).map((u) => {
+        const name = [u.first_name, u.last_name].filter(Boolean).join(" ");
+        return { value: u.id, label: name || u.email || u.id };
+      }));
+    }
 
-  const eventTypeOptions = eventTypesResult.data.map((et) => ({
-    value: String((et as Record<string, unknown>).id),
-    label: (et as Record<string, string>).label,
-  }));
-
-  const userOptions = usersResult.data.map((u) => {
-    const r = u as Record<string, string>;
-    const name = [r.first_name, r.last_name].filter(Boolean).join(" ");
-    return {
-      value: r.id,
-      label: name || r.email || r.id,
-    };
-  });
+    fetchFilters();
+  }, []);
 
   const form = useForm<EventFormValues>({
     initialValues: {
@@ -116,34 +102,41 @@ export default function EventCreatePage() {
     ? Number(form.values.object_id)
     : 0;
 
-  const { result: latestCustodyResult } = useList({
-    resource: "events",
-    filters: [
-      { field: "object_id", operator: "eq", value: selectedObjectId },
-      { field: "e_to", operator: "nnull", value: true },
-    ],
-    sorters: [{ field: "created_at", order: "desc" }],
-    pagination: { currentPage: 1, pageSize: 1 },
-    meta: {
-      select:
-        "id, object_id, e_from, e_to, created_at, to:user_profiles!events_e_to_fkey(first_name, last_name, email)",
-    },
-    queryOptions: {
-      enabled: selectedObjectId > 0,
-    },
-  });
+  useEffect(() => {
+    async function fetchLatestCustody() {
+      if (selectedObjectId <= 0) {
+        setCurrentCustodianId(null);
+        setCurrentCustodianLabel(null);
+        return;
+      }
 
-  const latestCustodyEvent = latestCustodyResult.data[0] as
-    | (Record<string, unknown> & { e_to?: string | null; e_from?: string | null })
-    | undefined;
-  const currentCustodianId =
-    typeof latestCustodyEvent?.e_to === "string" ? latestCustodyEvent.e_to : null;
-  const currentCustodianProfile = latestCustodyEvent?.to as Record<string, string> | null;
-  const currentCustodianLabel = currentCustodianProfile
-    ? [currentCustodianProfile.first_name, currentCustodianProfile.last_name]
-        .filter(Boolean)
-        .join(" ") || currentCustodianProfile.email || currentCustodianId
-    : currentCustodianId;
+      const supabase = getSupabaseClient();
+      const { data } = await supabase
+        .from("events")
+        .select("id, object_id, e_from, e_to, created_at, to:user_profiles!events_e_to_fkey(first_name, last_name, email)")
+        .eq("object_id", selectedObjectId)
+        .not("e_to", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      const latestCustodyEvent = (data ?? [])[0] as
+        | (Record<string, unknown> & { e_to?: string | null; e_from?: string | null })
+        | undefined;
+
+      const custodianId = typeof latestCustodyEvent?.e_to === "string" ? latestCustodyEvent.e_to : null;
+      setCurrentCustodianId(custodianId);
+
+      const custodianProfile = latestCustodyEvent?.to as Record<string, string> | null;
+      const label = custodianProfile
+        ? [custodianProfile.first_name, custodianProfile.last_name]
+            .filter(Boolean)
+            .join(" ") || custodianProfile.email || custodianId
+        : custodianId;
+      setCurrentCustodianLabel(label);
+    }
+
+    fetchLatestCustody();
+  }, [selectedObjectId]);
 
   useEffect(() => {
     if (!form.values.object_id) {
@@ -159,7 +152,7 @@ export default function EventCreatePage() {
     }
   }, [currentCustodianId, form]);
 
-  const handleSubmit = (values: EventFormValues) => {
+  const handleSubmit = async (values: EventFormValues) => {
     let extraJson: Record<string, unknown> | null = null;
     if (values.extra) {
       try {
@@ -219,36 +212,42 @@ export default function EventCreatePage() {
       }
     }
 
-    create(
-      {
-        resource: "events",
-        values: {
-          group_id: Number(values.group_id),
-          object_id: Number(values.object_id),
-          event_type_id: Number(values.event_type_id),
-          e_from: values.e_from || null,
-          e_to: values.e_to || null,
-          extra: extraJson,
-        },
-      },
-      {
-        onSuccess: () => {
-          showNotification({
-            color: "green",
-            title: "Success",
-            message: "Event recorded successfully",
-          });
-          router.push("/events");
-        },
-        onError: (error) => {
-          showNotification({
-            color: "red",
-            title: "Error",
-            message: error?.message ?? "Failed to record event",
-          });
-        },
+    setIsPending(true);
+    try {
+      const supabase = getSupabaseClient();
+      const { error } = await (supabase.from("events") as any).insert({
+        group_id: Number(values.group_id),
+        object_id: Number(values.object_id),
+        event_type_id: Number(values.event_type_id),
+        e_from: values.e_from || null,
+        e_to: values.e_to || null,
+        extra: extraJson,
+      });
+
+      if (error) {
+        showNotification({
+          color: "red",
+          title: "Error",
+          message: error.message ?? "Failed to record event",
+        });
+        return;
       }
-    );
+
+      showNotification({
+        color: "green",
+        title: "Success",
+        message: "Event recorded successfully",
+      });
+      router.push("/events");
+    } catch (err) {
+      showNotification({
+        color: "red",
+        title: "Error",
+        message: (err as Error)?.message ?? "Failed to record event",
+      });
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -321,7 +320,7 @@ export default function EventCreatePage() {
                 {...form.getInputProps("extra")}
               />
               <Group>
-                <Button type="submit" loading={createMutation.isPending}>
+                <Button type="submit" loading={isPending}>
                   Record Event
                 </Button>
                 <Button

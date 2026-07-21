@@ -2,10 +2,17 @@
 
 import { Center, Paper, Title, Text, Button, Stack } from "@mantine/core";
 import { IconShieldOff } from "@tabler/icons-react";
-import { useLogout } from "@refinedev/core";
+import { useRouter } from "next/navigation";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function UnauthorizedPage() {
-  const { mutate: logout } = useLogout();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    const supabase = getSupabaseClient();
+    await supabase.auth.signOut();
+    router.replace("/login");
+  };
 
   return (
     <Center h="100vh" bg="gray.1">
@@ -20,7 +27,7 @@ export default function UnauthorizedPage() {
           <Button
             variant="outline"
             color="red"
-            onClick={() => logout()}
+            onClick={handleLogout}
             fullWidth
           >
             Return to Login

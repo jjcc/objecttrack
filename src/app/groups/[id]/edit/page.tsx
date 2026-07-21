@@ -14,11 +14,11 @@ import {
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
-import { useOne, useUpdate } from "@refinedev/core";
 import { useParams, useRouter } from "next/navigation";
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const groupSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -32,12 +32,8 @@ export default function GroupEditPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const { query: groupQuery, result: groupResult } = useOne({
-    resource: "groups",
-    id,
-  });
-
-  const { mutate: update, mutation: updateMutation } = useUpdate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPending, setIsPending] = useState(false);
 
   const form = useForm<GroupFormValues>({
     initialValues: {
@@ -48,40 +44,63 @@ export default function GroupEditPage() {
   });
 
   useEffect(() => {
-    if (groupResult) {
-      form.setValues({
-        title: (groupResult as Record<string, string>).title ?? "",
-        description: (groupResult as Record<string, string>).description ?? "",
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupResult]);
+    async function fetchGroup() {
+      const supabase = getSupabaseClient();
+      const { data } = await supabase
+        .from("groups")
+        .select("*")
+        .eq("id", Number(id))
+        .single();
 
-  const handleSubmit = (values: GroupFormValues) => {
-    update(
-      {
-        resource: "groups",
-        id,
-        values,
-      },
-      {
-        onSuccess: () => {
-          showNotification({
-            color: "green",
-            title: "Success",
-            message: "Group updated successfully",
-          });
-          router.push("/groups");
-        },
-        onError: (error) => {
-          showNotification({
-            color: "red",
-            title: "Error",
-            message: error?.message ?? "Failed to update group",
-          });
-        },
+      if (data) {
+        const record = data as Record<string, string>;
+        form.setValues({
+          title: record.title ?? "",
+          description: record.description ?? "",
+        });
       }
-    );
+
+      setIsLoading(false);
+    }
+
+    fetchGroup();
+  }, [id, form]);
+
+  const handleSubmit = async (values: GroupFormValues) => {
+    setIsPending(true);
+    try {
+      const supabase = getSupabaseClient();
+      const { error } = await (supabase.from("groups") as any)
+        .update({
+          title: values.title,
+          description: values.description || null,
+        })
+        .eq("id", Number(id));
+
+      if (error) {
+        showNotification({
+          color: "red",
+          title: "Error",
+          message: error.message ?? "Failed to update group",
+        });
+        return;
+      }
+
+      showNotification({
+        color: "green",
+        title: "Success",
+        message: "Group updated successfully",
+      });
+      router.push("/groups");
+    } catch (err) {
+      showNotification({
+        color: "red",
+        title: "Error",
+        message: (err as Error)?.message ?? "Failed to update group",
+      });
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -96,7 +115,7 @@ export default function GroupEditPage() {
         <Title order={2}>Edit Group</Title>
 
         <Paper withBorder p="md" radius="md" maw={600} pos="relative">
-          <LoadingOverlay visible={groupQuery.isLoading} />
+          <LoadingOverlay visible={isLoading} />
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack>
               <TextInput
@@ -112,7 +131,7 @@ export default function GroupEditPage() {
                 {...form.getInputProps("description")}
               />
               <Group>
-                <Button type="submit" loading={updateMutation.isPending}>
+                <Button type="submit" loading={isPending}>
                   Save
                 </Button>
                 <Button

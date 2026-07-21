@@ -13,10 +13,11 @@ import {
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
-import { useCreate } from "@refinedev/core";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { z } from "zod";
 import { AppShell } from "@/components/layout/AppShell";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const groupSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -27,7 +28,7 @@ type GroupFormValues = z.infer<typeof groupSchema>;
 
 export default function GroupCreatePage() {
   const router = useRouter();
-  const { mutate: create, mutation: createMutation } = useCreate();
+  const [isPending, setIsPending] = useState(false);
 
   const form = useForm<GroupFormValues>({
     initialValues: {
@@ -37,30 +38,39 @@ export default function GroupCreatePage() {
     validate: zodResolver(groupSchema),
   });
 
-  const handleSubmit = (values: GroupFormValues) => {
-    create(
-      {
-        resource: "groups",
-        values,
-      },
-      {
-        onSuccess: () => {
-          showNotification({
-            color: "green",
-            title: "Success",
-            message: "Group created successfully",
-          });
-          router.push("/groups");
-        },
-        onError: (error) => {
-          showNotification({
-            color: "red",
-            title: "Error",
-            message: error?.message ?? "Failed to create group",
-          });
-        },
+  const handleSubmit = async (values: GroupFormValues) => {
+    setIsPending(true);
+    try {
+      const supabase = getSupabaseClient();
+      const { error } = await (supabase.from("groups") as any).insert({
+        title: values.title,
+        description: values.description || null,
+      });
+
+      if (error) {
+        showNotification({
+          color: "red",
+          title: "Error",
+          message: error.message ?? "Failed to create group",
+        });
+        return;
       }
-    );
+
+      showNotification({
+        color: "green",
+        title: "Success",
+        message: "Group created successfully",
+      });
+      router.push("/groups");
+    } catch (err) {
+      showNotification({
+        color: "red",
+        title: "Error",
+        message: (err as Error)?.message ?? "Failed to create group",
+      });
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -90,7 +100,7 @@ export default function GroupCreatePage() {
                 {...form.getInputProps("description")}
               />
               <Group>
-                <Button type="submit" loading={createMutation.isPending}>
+                <Button type="submit" loading={isPending}>
                   Create
                 </Button>
                 <Button

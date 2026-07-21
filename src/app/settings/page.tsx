@@ -17,11 +17,11 @@ import {
 import { useForm, zodResolver } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { showNotification } from "@mantine/notifications";
-import { useList, useCreate, useUpdate, useDelete } from "@refinedev/core";
 import { IconEdit, IconTrash, IconPlus } from "@tabler/icons-react";
 import { z } from "zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const categorySchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -36,26 +36,41 @@ type CategoryFormValues = z.infer<typeof categorySchema>;
 type EventTypeFormValues = z.infer<typeof eventTypeSchema>;
 
 export default function SettingsPage() {
-  // Categories
-  const { query: categoriesQuery, result: categoriesResult } = useList({
-    resource: "categories",
-    pagination: { currentPage: 1, pageSize: 100 },
-    sorters: [{ field: "name", order: "asc" }],
-  });
-  const refetchCategories = categoriesQuery.refetch;
+  const [categories, setCategories] = useState<Record<string, unknown>[]>([]);
+  const [eventTypes, setEventTypes] = useState<Record<string, unknown>[]>([]);
 
-  const { mutate: createCategory } = useCreate();
-  const { mutate: updateCategory } = useUpdate();
-  const { mutate: deleteCategory } = useDelete();
-
-  const [catModalOpened, { open: openCatModal, close: closeCatModal }] =
-    useDisclosure(false);
+  const [catModalOpened, { open: openCatModal, close: closeCatModal }] = useDisclosure(false);
   const [editingCatId, setEditingCatId] = useState<number | null>(null);
+
+  const [etModalOpened, { open: openEtModal, close: closeEtModal }] = useDisclosure(false);
+  const [editingEtId, setEditingEtId] = useState<number | null>(null);
 
   const categoryForm = useForm<CategoryFormValues>({
     initialValues: { name: "", description: "" },
     validate: zodResolver(categorySchema),
   });
+
+  const eventTypeForm = useForm<EventTypeFormValues>({
+    initialValues: { label: "" },
+    validate: zodResolver(eventTypeSchema),
+  });
+
+  const fetchCategories = async () => {
+    const supabase = getSupabaseClient();
+    const { data } = await supabase.from("categories").select("*").order("name");
+    setCategories((data ?? []) as unknown as Record<string, unknown>[]);
+  };
+
+  const fetchEventTypes = async () => {
+    const supabase = getSupabaseClient();
+    const { data } = await supabase.from("event_types").select("*").order("label");
+    setEventTypes((data ?? []) as unknown as Record<string, unknown>[]);
+  };
+
+  useEffect(() => {
+    fetchCategories();
+    fetchEventTypes();
+  }, []);
 
   const openCategoryCreate = () => {
     setEditingCatId(null);
@@ -72,73 +87,38 @@ export default function SettingsPage() {
     openCatModal();
   };
 
-  const handleCategorySubmit = (values: CategoryFormValues) => {
+  const handleCategorySubmit = async (values: CategoryFormValues) => {
+    const supabase = getSupabaseClient();
+    let error: { message: string } | null;
+
     if (editingCatId) {
-      updateCategory(
-        { resource: "categories", id: editingCatId, values },
-        {
-          onSuccess: () => {
-            showNotification({ color: "green", title: "Success", message: "Category updated" });
-            closeCatModal();
-            refetchCategories();
-          },
-          onError: (err) => {
-            showNotification({ color: "red", title: "Error", message: err?.message ?? "Failed to update category" });
-          },
-        }
-      );
+      ({ error } = await (supabase.from("categories") as any).update(values).eq("id", editingCatId));
     } else {
-      createCategory(
-        { resource: "categories", values },
-        {
-          onSuccess: () => {
-            showNotification({ color: "green", title: "Success", message: "Category created" });
-            closeCatModal();
-            refetchCategories();
-          },
-          onError: (err) => {
-            showNotification({ color: "red", title: "Error", message: err?.message ?? "Failed to create category" });
-          },
-        }
-      );
+      ({ error } = await (supabase.from("categories") as any).insert(values));
     }
+
+    if (error) {
+      showNotification({ color: "red", title: "Error", message: error.message });
+      return;
+    }
+
+    showNotification({ color: "green", title: "Success", message: editingCatId ? "Category updated" : "Category created" });
+    closeCatModal();
+    fetchCategories();
   };
 
-  const handleDeleteCategory = (id: number) => {
-    deleteCategory(
-      { resource: "categories", id },
-      {
-        onSuccess: () => {
-          showNotification({ color: "green", title: "Success", message: "Category deleted" });
-          refetchCategories();
-        },
-        onError: (err) => {
-          showNotification({ color: "red", title: "Error", message: err?.message ?? "Failed to delete category" });
-        },
-      }
-    );
+  const handleDeleteCategory = async (id: number) => {
+    const supabase = getSupabaseClient();
+    const { error } = await (supabase.from("categories") as any).delete().eq("id", id);
+
+    if (error) {
+      showNotification({ color: "red", title: "Error", message: error.message });
+      return;
+    }
+
+    showNotification({ color: "green", title: "Success", message: "Category deleted" });
+    fetchCategories();
   };
-
-  // Event Types
-  const { query: eventTypesQuery, result: eventTypesResult } = useList({
-    resource: "event_types",
-    pagination: { currentPage: 1, pageSize: 100 },
-    sorters: [{ field: "label", order: "asc" }],
-  });
-  const refetchEventTypes = eventTypesQuery.refetch;
-
-  const { mutate: createEventType } = useCreate();
-  const { mutate: updateEventType } = useUpdate();
-  const { mutate: deleteEventType } = useDelete();
-
-  const [etModalOpened, { open: openEtModal, close: closeEtModal }] =
-    useDisclosure(false);
-  const [editingEtId, setEditingEtId] = useState<number | null>(null);
-
-  const eventTypeForm = useForm<EventTypeFormValues>({
-    initialValues: { label: "" },
-    validate: zodResolver(eventTypeSchema),
-  });
 
   const openEventTypeCreate = () => {
     setEditingEtId(null);
@@ -152,55 +132,38 @@ export default function SettingsPage() {
     openEtModal();
   };
 
-  const handleEventTypeSubmit = (values: EventTypeFormValues) => {
+  const handleEventTypeSubmit = async (values: EventTypeFormValues) => {
+    const supabase = getSupabaseClient();
+    let error: { message: string } | null;
+
     if (editingEtId) {
-      updateEventType(
-        { resource: "event_types", id: editingEtId, values },
-        {
-          onSuccess: () => {
-            showNotification({ color: "green", title: "Success", message: "Event type updated" });
-            closeEtModal();
-            refetchEventTypes();
-          },
-          onError: (err) => {
-            showNotification({ color: "red", title: "Error", message: err?.message ?? "Failed to update event type" });
-          },
-        }
-      );
+      ({ error } = await (supabase.from("event_types") as any).update(values).eq("id", editingEtId));
     } else {
-      createEventType(
-        { resource: "event_types", values },
-        {
-          onSuccess: () => {
-            showNotification({ color: "green", title: "Success", message: "Event type created" });
-            closeEtModal();
-            refetchEventTypes();
-          },
-          onError: (err) => {
-            showNotification({ color: "red", title: "Error", message: err?.message ?? "Failed to create event type" });
-          },
-        }
-      );
+      ({ error } = await (supabase.from("event_types") as any).insert(values));
     }
+
+    if (error) {
+      showNotification({ color: "red", title: "Error", message: error.message });
+      return;
+    }
+
+    showNotification({ color: "green", title: "Success", message: editingEtId ? "Event type updated" : "Event type created" });
+    closeEtModal();
+    fetchEventTypes();
   };
 
-  const handleDeleteEventType = (id: number) => {
-    deleteEventType(
-      { resource: "event_types", id },
-      {
-        onSuccess: () => {
-          showNotification({ color: "green", title: "Success", message: "Event type deleted" });
-          refetchEventTypes();
-        },
-        onError: (err) => {
-          showNotification({ color: "red", title: "Error", message: err?.message ?? "Failed to delete event type" });
-        },
-      }
-    );
-  };
+  const handleDeleteEventType = async (id: number) => {
+    const supabase = getSupabaseClient();
+    const { error } = await (supabase.from("event_types") as any).delete().eq("id", id);
 
-  const categories = categoriesResult.data;
-  const eventTypes = eventTypesResult.data;
+    if (error) {
+      showNotification({ color: "red", title: "Error", message: error.message });
+      return;
+    }
+
+    showNotification({ color: "green", title: "Success", message: "Event type deleted" });
+    fetchEventTypes();
+  };
 
   return (
     <AppShell>
@@ -212,7 +175,6 @@ export default function SettingsPage() {
 
         <Title order={2}>Settings</Title>
 
-        {/* Categories Section */}
         <Paper withBorder p="md" radius="md">
           <Group justify="space-between" mb="md">
             <Title order={4}>Categories</Title>
@@ -270,7 +232,6 @@ export default function SettingsPage() {
           </Table>
         </Paper>
 
-        {/* Event Types Section */}
         <Paper withBorder p="md" radius="md">
           <Group justify="space-between" mb="md">
             <Title order={4}>Event Types</Title>
@@ -327,7 +288,6 @@ export default function SettingsPage() {
         </Paper>
       </Stack>
 
-      {/* Category Modal */}
       <Modal
         opened={catModalOpened}
         onClose={closeCatModal}
@@ -358,7 +318,6 @@ export default function SettingsPage() {
         </form>
       </Modal>
 
-      {/* Event Type Modal */}
       <Modal
         opened={etModalOpened}
         onClose={closeEtModal}

@@ -15,12 +15,12 @@ import {
 import { DatePickerInput } from "@mantine/dates";
 import { DataTable } from "mantine-datatable";
 import { IconPlus } from "@tabler/icons-react";
-import { useTable, useList, type CrudFilter } from "@refinedev/core";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { EventTypeBadge } from "@/components/shared/EventTypeBadge";
 import dayjs from "dayjs";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function EventsListPage() {
   const router = useRouter();
@@ -30,74 +30,70 @@ export default function EventsListPage() {
   const [dateFrom, setDateFrom] = useState<Date | null>(null);
   const [dateTo, setDateTo] = useState<Date | null>(null);
 
-  const { result: eventTypesResult } = useList({
-    resource: "event_types",
-    pagination: { currentPage: 1, pageSize: 100 },
-  });
+  const [eventTypeOptions, setEventTypeOptions] = useState<{ value: string; label: string }[]>([]);
+  const [groupOptions, setGroupOptions] = useState<{ value: string; label: string }[]>([]);
 
-  const { result: groupsResult } = useList({
-    resource: "groups",
-    pagination: { currentPage: 1, pageSize: 100 },
-  });
+  const [records, setRecords] = useState<Record<string, unknown>[]>([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
-  const eventTypeOptions = eventTypesResult.data.map((et) => ({
-    value: String((et as Record<string, unknown>).id),
-    label: (et as Record<string, string>).label,
-  }));
+  useEffect(() => {
+    async function fetchFilters() {
+      const supabase = getSupabaseClient();
 
-  const groupOptions = groupsResult.data.map((g) => ({
-    value: String((g as Record<string, unknown>).id),
-    label: (g as Record<string, string>).title,
-  }));
+      const { data: eventTypes } = await supabase
+        .from("event_types")
+        .select("id, label")
+        .order("label") as unknown as { data: { id: number; label: string }[] };
+      setEventTypeOptions((eventTypes ?? []).map((et) => ({ value: String(et.id), label: et.label })));
 
-  const filters: CrudFilter[] = [];
-  if (eventTypeFilter) {
-    filters.push({
-      field: "event_type_id",
-      operator: "eq",
-      value: Number(eventTypeFilter),
-    });
-  }
-  if (groupFilter) {
-    filters.push({
-      field: "group_id",
-      operator: "eq",
-      value: Number(groupFilter),
-    });
-  }
-  if (dateFrom) {
-    filters.push({
-      field: "created_at",
-      operator: "gte",
-      value: dayjs(dateFrom).startOf("day").toISOString(),
-    });
-  }
-  if (dateTo) {
-    filters.push({
-      field: "created_at",
-      operator: "lte",
-      value: dayjs(dateTo).endOf("day").toISOString(),
-    });
-  }
+      const { data: groups } = await supabase
+        .from("groups")
+        .select("id, title")
+        .order("title") as unknown as { data: { id: number; title: string }[] };
+      setGroupOptions((groups ?? []).map((g) => ({ value: String(g.id), label: g.title })));
+    }
 
-  const {
-    tableQuery,
-    result: tableResult,
-    currentPage,
-    setCurrentPage,
-    pageSize,
-  } = useTable({
-    resource: "events",
-    pagination: { currentPage: 1, pageSize: 20 },
-    sorters: { initial: [{ field: "created_at", order: "desc" }] },
-    filters: { permanent: filters },
-    meta: {
-      select:
-        "*, objects(name), event_types(label), groups(title), from:user_profiles!events_e_from_fkey(first_name, last_name), to:user_profiles!events_e_to_fkey(first_name, last_name)",
-    },
-  });
+    fetchFilters();
+  }, []);
 
-  const records = tableResult.data;
+  useEffect(() => {
+    async function fetchEvents() {
+      setIsLoading(true);
+      const supabase = getSupabaseClient();
+
+      let query = supabase
+        .from("events")
+        .select("*, objects(name), event_types(label), groups(title), from:user_profiles!events_e_from_fkey(first_name, last_name), to:user_profiles!events_e_to_fkey(first_name, last_name)", { count: "exact" });
+
+      if (eventTypeFilter) {
+        query = query.eq("event_type_id", Number(eventTypeFilter));
+      }
+      if (groupFilter) {
+        query = query.eq("group_id", Number(groupFilter));
+      }
+      if (dateFrom) {
+        query = query.gte("created_at", dayjs(dateFrom).startOf("day").toISOString());
+      }
+      if (dateTo) {
+        query = query.lte("created_at", dayjs(dateTo).endOf("day").toISOString());
+      }
+
+      const { data, count, error } = await query
+        .order("created_at", { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1);
+
+      if (!error) {
+        setRecords((data ?? []) as unknown as Record<string, unknown>[]);
+        setTotalRecords(count ?? 0);
+      }
+      setIsLoading(false);
+    }
+
+    fetchEvents();
+  }, [eventTypeFilter, groupFilter, dateFrom, dateTo, page]);
 
   return (
     <AppShell>
@@ -157,7 +153,7 @@ export default function EventsListPage() {
           borderRadius="md"
           striped
           highlightOnHover
-          fetching={tableQuery.isLoading}
+          fetching={isLoading}
           records={records}
           columns={[
             { accessor: "id", title: "ID", width: 70 },
@@ -224,10 +220,10 @@ export default function EventsListPage() {
                 dayjs((record as Record<string, string>).created_at).format("YYYY-MM-DD HH:mm"),
             },
           ]}
-          totalRecords={tableResult.total ?? 0}
+          totalRecords={totalRecords}
           recordsPerPage={pageSize}
-          page={currentPage}
-          onPageChange={setCurrentPage}
+          page={page}
+          onPageChange={setPage}
           paginationSize="sm"
           noRecordsText="No events found"
         />
