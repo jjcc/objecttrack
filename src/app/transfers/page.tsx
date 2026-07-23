@@ -10,119 +10,121 @@ import {
   Text,
   Badge,
   Paper,
+  Alert,
 } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import { DataTable } from "mantine-datatable";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { logTransferApproved, logTransferRejected } from "@/lib/supabase/events";
+import {
+  approveTransfer,
+  formatTransferProfile,
+  rejectTransfer,
+  resolveTransferProfiles,
+  type TransferQueryRecord,
+  type TransferRecord,
+} from "@/lib/supabase/transfers";
 import dayjs from "dayjs";
 
 export default function TransfersListPage() {
   const router = useRouter();
 
-  const [records, setRecords] = useState<Record<string, unknown>[]>([]);
+  const [records, setRecords] = useState<TransferRecord[]>([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [activeRequestId, setActiveRequestId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string | null>("pending");
   const pageSize = 20;
 
-  useEffect(() => {
-    async function fetchTransfers() {
-      setIsLoading(true);
-      const supabase = getSupabaseClient();
+  const fetchTransfers = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    const supabase = getSupabaseClient();
 
-      let query = (supabase.from("transfer_requests") as any)
-        .select(
-          "*, objects(name), from:user_profiles!transfer_requests_from_user_id_fkey(first_name, last_name), to:user_profiles!transfer_requests_to_user_id_fkey(first_name, last_name)",
-          { count: "exact" },
-        );
+    let query = supabase.from("transfer_requests").select(
+      "id, object_id, from_user_id, to_user_id, group_id, status, reason, created_at, updated_at, objects(name)",
+      { count: "exact" },
+    );
 
-      if (statusFilter) {
-        query = query.eq("status", statusFilter);
-      }
+    if (statusFilter) {
+      query = query.eq("status", statusFilter);
+    }
 
+    try {
       const { data, count, error } = await query
         .order("created_at", { ascending: false })
         .range((page - 1) * pageSize, page * pageSize - 1);
 
-      if (!error) {
-        setRecords((data ?? []) as unknown as Record<string, unknown>[]);
-        setTotalRecords(count ?? 0);
-      }
+      if (error) throw error;
+
+      const resolvedRecords = await resolveTransferProfiles(
+        supabase,
+        (data ?? []) as TransferQueryRecord[],
+      );
+      setRecords(resolvedRecords);
+      setTotalRecords(count ?? 0);
+    } catch (error) {
+      setRecords([]);
+      setTotalRecords(0);
+      setFetchError(error instanceof Error ? error.message : "Unable to load transfer requests");
+    } finally {
       setIsLoading(false);
     }
+  }, [page, statusFilter]);
 
+  useEffect(() => {
     fetchTransfers();
-  }, [statusFilter, page]);
+  }, [fetchTransfers]);
 
   const handleApprove = async (requestId: number) => {
     const supabase = getSupabaseClient();
+    setActiveRequestId(requestId);
+    try {
+      await approveTransfer(supabase, requestId);
 
-    const { data: request } = await (supabase.from("transfer_requests") as any)
-      .select("*")
-      .eq("id", requestId)
-      .single();
-
-    if (!request) {
-      showNotification({ color: "red", title: "Error", message: "Transfer request not found" });
-      return;
+      showNotification({ color: "green", title: "Success", message: "Transfer approved" });
+      if (page !== 1) {
+        setPage(1);
+      } else {
+        await fetchTransfers();
+      }
+    } catch (error) {
+      showNotification({
+        color: "red",
+        title: "Approval failed",
+        message: error instanceof Error ? error.message : "Unable to approve transfer",
+      });
+    } finally {
+      setActiveRequestId(null);
     }
-
-    const { error: updateError } = await (supabase.from("objects") as any)
-      .update({ current_owner_id: request.to_user_id })
-      .eq("id", request.object_id);
-
-    if (updateError) {
-      showNotification({ color: "red", title: "Error", message: updateError.message });
-      return;
-    }
-
-    const { error: statusError } = await (supabase.from("transfer_requests") as any)
-      .update({ status: "approved", updated_at: new Date().toISOString() })
-      .eq("id", requestId);
-
-    if (statusError) {
-      showNotification({ color: "red", title: "Error", message: statusError.message });
-      return;
-    }
-
-    await logTransferApproved(request.object_id, request.from_user_id, request.to_user_id);
-
-    showNotification({ color: "green", title: "Success", message: "Transfer approved" });
-    setPage(1);
   };
 
   const handleReject = async (requestId: number) => {
     const supabase = getSupabaseClient();
+    setActiveRequestId(requestId);
+    try {
+      await rejectTransfer(supabase, requestId);
 
-    const { data: request } = await (supabase.from("transfer_requests") as any)
-      .select("*")
-      .eq("id", requestId)
-      .single();
-
-    if (!request) {
-      showNotification({ color: "red", title: "Error", message: "Transfer request not found" });
-      return;
+      showNotification({ color: "green", title: "Success", message: "Transfer rejected" });
+      if (page !== 1) {
+        setPage(1);
+      } else {
+        await fetchTransfers();
+      }
+    } catch (error) {
+      showNotification({
+        color: "red",
+        title: "Rejection failed",
+        message: error instanceof Error ? error.message : "Unable to reject transfer",
+      });
+    } finally {
+      setActiveRequestId(null);
     }
-
-    const { error: statusError } = await (supabase.from("transfer_requests") as any)
-      .update({ status: "rejected", updated_at: new Date().toISOString() })
-      .eq("id", requestId);
-
-    if (statusError) {
-      showNotification({ color: "red", title: "Error", message: statusError.message });
-      return;
-    }
-
-    await logTransferRejected(request.object_id, request.from_user_id, request.to_user_id, null);
-
-    showNotification({ color: "green", title: "Success", message: "Transfer rejected" });
-    setPage(1);
   };
 
   const statusBadge = (status: string) => {
@@ -180,6 +182,12 @@ export default function TransfersListPage() {
           </Group>
         </Group>
 
+        {fetchError && (
+          <Alert color="red" title="Unable to load transfer requests">
+            {fetchError}
+          </Alert>
+        )}
+
         <Paper withBorder p="md" radius="md">
           <DataTable
             withTableBorder
@@ -193,64 +201,43 @@ export default function TransfersListPage() {
               {
                 accessor: "objects.name",
                 title: "Object",
-                render: (record) => {
-                  const obj = (record as Record<string, unknown>).objects as Record<string, string> | null;
-                  return <Text size="sm">{obj?.name ?? "—"}</Text>;
-                },
+                render: (record) => <Text size="sm">{record.objects?.name ?? "—"}</Text>,
               },
               {
                 accessor: "from",
-                title: "From",
-                render: (record) => {
-                  const fromUser = (record as Record<string, unknown>).from as Record<string, string> | null;
-                  return (
-                    <Text size="sm">
-                      {fromUser
-                        ? `${fromUser.first_name ?? ""} ${fromUser.last_name ?? ""}`.trim() || "—"
-                        : "—"}
-                    </Text>
-                  );
-                },
+                title: "Requester",
+                render: (record) => <Text size="sm">{formatTransferProfile(record.from)}</Text>,
               },
               {
                 accessor: "to",
-                title: "To",
-                render: (record) => {
-                  const toUser = (record as Record<string, unknown>).to as Record<string, string> | null;
-                  return (
-                    <Text size="sm">
-                      {toUser
-                        ? `${toUser.first_name ?? ""} ${toUser.last_name ?? ""}`.trim() || "—"
-                        : "—"}
-                    </Text>
-                  );
-                },
+                title: "Current Owner",
+                render: (record) => <Text size="sm">{formatTransferProfile(record.to)}</Text>,
               },
               {
                 accessor: "status",
                 title: "Status",
-                render: (record) => statusBadge((record as Record<string, string>).status),
+                render: (record) => statusBadge(record.status),
               },
               {
                 accessor: "created_at",
                 title: "Requested At",
-                render: (record) =>
-                  dayjs((record as Record<string, string>).created_at).format("YYYY-MM-DD HH:mm"),
+                render: (record) => dayjs(record.created_at).format("YYYY-MM-DD HH:mm"),
               },
               {
                 accessor: "actions",
                 title: "Actions",
                 width: 140,
                 render: (record) => {
-                  const r = record as Record<string, string>;
-                  if (r.status !== "pending") return null;
+                  if (record.status !== "pending") return null;
                   return (
                     <Group gap={4}>
                       <Button
                         size="xs"
                         color="green"
                         leftSection={<IconCheck size={14} />}
-                        onClick={() => handleApprove(Number(r.id))}
+                        loading={activeRequestId === record.id}
+                        disabled={activeRequestId !== null}
+                        onClick={() => handleApprove(record.id)}
                       >
                         Approve
                       </Button>
@@ -258,7 +245,8 @@ export default function TransfersListPage() {
                         size="xs"
                         color="red"
                         leftSection={<IconX size={14} />}
-                        onClick={() => handleReject(Number(r.id))}
+                        disabled={activeRequestId !== null}
+                        onClick={() => handleReject(record.id)}
                       >
                         Reject
                       </Button>

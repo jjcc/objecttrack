@@ -53,10 +53,9 @@ export default function GroupEditPage() {
         .single();
 
       if (data) {
-        const record = data as Record<string, string>;
         form.setValues({
-          title: record.title ?? "",
-          description: record.description ?? "",
+          title: data.title ?? "",
+          description: data.description ?? "",
         });
       }
 

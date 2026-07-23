@@ -11,14 +11,22 @@ import {
   Button,
   Badge,
   SimpleGrid,
+  Alert,
 } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import { IconCheck, IconX, IconArrowBack } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { logTransferApproved, logTransferRejected } from "@/lib/supabase/events";
+import {
+  approveTransfer,
+  formatTransferProfile,
+  rejectTransfer,
+  resolveTransferProfiles,
+  type TransferQueryRecord,
+  type TransferRecord,
+} from "@/lib/supabase/transfers";
 import dayjs from "dayjs";
 
 export default function TransferDetailPage() {
@@ -26,80 +34,87 @@ export default function TransferDetailPage() {
   const router = useRouter();
   const id = Number(params.id);
 
-  const [record, setRecord] = useState<Record<string, unknown> | null>(null);
+  const [record, setRecord] = useState<TransferRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [activeAction, setActiveAction] = useState<"approve" | "reject" | null>(null);
 
-  useEffect(() => {
-    async function fetchTransfer() {
-      setIsLoading(true);
-      const supabase = getSupabaseClient();
+  const fetchTransfer = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    const supabase = getSupabaseClient();
 
-      const { data } = await (supabase.from("transfer_requests") as any)
-        .select(
-          "*, objects(name, description, model), from:user_profiles!transfer_requests_from_user_id_fkey(first_name, last_name, email), to:user_profiles!transfer_requests_to_user_id_fkey(first_name, last_name, email)",
-        )
+    try {
+      const { data, error } = await supabase.from("transfer_requests")
+        .select("id, object_id, from_user_id, to_user_id, group_id, status, reason, created_at, updated_at, objects(name, description, model)")
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
-      setRecord((data ?? null) as unknown as Record<string, unknown> | null);
+      if (error) throw error;
+      if (!data) {
+        setRecord(null);
+        return;
+      }
+
+      const [resolvedRecord] = await resolveTransferProfiles(
+        supabase,
+        [data as TransferQueryRecord],
+      );
+      setRecord(resolvedRecord);
+    } catch (error) {
+      setRecord(null);
+      setFetchError(error instanceof Error ? error.message : "Unable to load transfer request");
+    } finally {
       setIsLoading(false);
     }
-
-    fetchTransfer();
   }, [id]);
+
+  useEffect(() => {
+    fetchTransfer();
+  }, [fetchTransfer]);
 
   const handleApprove = async () => {
     if (!record) return;
     const supabase = getSupabaseClient();
+    setActiveAction("approve");
+    try {
+      await approveTransfer(supabase, id);
 
-    const { error: updateError } = await (supabase.from("objects") as any)
-      .update({ current_owner_id: record.to_user_id })
-      .eq("id", record.object_id as number);
-
-    if (updateError) {
-      showNotification({ color: "red", title: "Error", message: updateError.message });
-      return;
+      showNotification({ color: "green", title: "Success", message: "Transfer approved" });
+      await fetchTransfer();
+    } catch (error) {
+      showNotification({
+        color: "red",
+        title: "Approval failed",
+        message: error instanceof Error ? error.message : "Unable to approve transfer",
+      });
+    } finally {
+      setActiveAction(null);
     }
-
-    const { error: statusError } = await (supabase.from("transfer_requests") as any)
-      .update({ status: "approved", updated_at: new Date().toISOString() })
-      .eq("id", id);
-
-    if (statusError) {
-      showNotification({ color: "red", title: "Error", message: statusError.message });
-      return;
-    }
-
-    await logTransferApproved(record.object_id as number, record.from_user_id as string, record.to_user_id as string);
-
-    showNotification({ color: "green", title: "Success", message: "Transfer approved" });
-    router.refresh();
   };
 
   const handleReject = async () => {
     if (!record) return;
     const supabase = getSupabaseClient();
+    setActiveAction("reject");
+    try {
+      await rejectTransfer(supabase, id);
 
-    const { error: statusError } = await (supabase.from("transfer_requests") as any)
-      .update({ status: "rejected", updated_at: new Date().toISOString() })
-      .eq("id", id);
-
-    if (statusError) {
-      showNotification({ color: "red", title: "Error", message: statusError.message });
-      return;
+      showNotification({ color: "green", title: "Success", message: "Transfer rejected" });
+      await fetchTransfer();
+    } catch (error) {
+      showNotification({
+        color: "red",
+        title: "Rejection failed",
+        message: error instanceof Error ? error.message : "Unable to reject transfer",
+      });
+    } finally {
+      setActiveAction(null);
     }
-
-    await logTransferRejected(record.object_id as number, record.from_user_id as string, record.to_user_id as string, null);
-
-    showNotification({ color: "green", title: "Success", message: "Transfer rejected" });
-    router.refresh();
   };
 
-  const r = record as Record<string, string> | null;
-  const status = r?.status ?? "";
-  const obj = record?.objects as Record<string, string> | null;
-  const fromUser = record?.from as Record<string, string> | null;
-  const toUser = record?.to as Record<string, string> | null;
+  const status = record?.status ?? "";
+  const obj = record?.objects;
 
   const statusColorMap: Record<string, string> = {
     pending: "yellow",
@@ -124,7 +139,13 @@ export default function TransferDetailPage() {
             <Anchor href="/transfers">Transfers</Anchor>
             <Anchor>Not Found</Anchor>
           </Breadcrumbs>
-          <Title order={2}>Transfer Request Not Found</Title>
+          {fetchError ? (
+            <Alert color="red" title="Unable to load transfer request">
+              {fetchError}
+            </Alert>
+          ) : (
+            <Title order={2}>Transfer Request Not Found</Title>
+          )}
           <Button
             variant="outline"
             leftSection={<IconArrowBack size={16} />}
@@ -161,6 +182,8 @@ export default function TransferDetailPage() {
                 <Button
                   color="green"
                   leftSection={<IconCheck size={16} />}
+                  loading={activeAction === "approve"}
+                  disabled={activeAction !== null}
                   onClick={handleApprove}
                 >
                   Approve
@@ -168,6 +191,8 @@ export default function TransferDetailPage() {
                 <Button
                   color="red"
                   leftSection={<IconX size={16} />}
+                  loading={activeAction === "reject"}
+                  disabled={activeAction !== null}
                   onClick={handleReject}
                 >
                   Reject
@@ -199,38 +224,30 @@ export default function TransferDetailPage() {
               </div>
 
               <div>
-                <Text size="sm" c="dimmed">From User</Text>
-                <Text fw={500}>
-                  {fromUser
-                    ? `${fromUser.first_name ?? ""} ${fromUser.last_name ?? ""}`.trim() || fromUser.email || "—"
-                    : "—"}
-                </Text>
+                <Text size="sm" c="dimmed">Requester / New Owner</Text>
+                <Text fw={500}>{formatTransferProfile(record.from)}</Text>
               </div>
 
               <div>
-                <Text size="sm" c="dimmed">To User</Text>
-                <Text fw={500}>
-                  {toUser
-                    ? `${toUser.first_name ?? ""} ${toUser.last_name ?? ""}`.trim() || toUser.email || "—"
-                    : "—"}
-                </Text>
+                <Text size="sm" c="dimmed">Current Owner / Recipient</Text>
+                <Text fw={500}>{formatTransferProfile(record.to)}</Text>
               </div>
 
-              {r?.reason && (
+              {record.reason && (
                 <div>
                   <Text size="sm" c="dimmed">Reason</Text>
-                  <Text fw={500}>{r.reason}</Text>
+                  <Text fw={500}>{record.reason}</Text>
                 </div>
               )}
 
               <div>
                 <Text size="sm" c="dimmed">Requested At</Text>
-                <Text fw={500}>{dayjs(r?.created_at).format("YYYY-MM-DD HH:mm")}</Text>
+                <Text fw={500}>{dayjs(record.created_at).format("YYYY-MM-DD HH:mm")}</Text>
               </div>
 
               <div>
                 <Text size="sm" c="dimmed">Last Updated</Text>
-                <Text fw={500}>{dayjs(r?.updated_at).format("YYYY-MM-DD HH:mm")}</Text>
+                <Text fw={500}>{dayjs(record.updated_at).format("YYYY-MM-DD HH:mm")}</Text>
               </div>
             </SimpleGrid>
           </Stack>
