@@ -160,3 +160,47 @@ The current mobile `approve_transfer` implementation assigns ownership to
     26 application pages were generated.
 - Marked the tenant, object image, and custom-object-field tasks complete in
   `docs/new_tasks_20260729.md`.
+
+## 2026-07-29 — Shareable object information page
+
+- Added and deployed
+  `20260729214459_add_public_object_info.sql`.
+- Added the tenant setting
+  `show_object_info_without_authentication`, defaulting to `true`.
+- Added the “Show Object Info Without Authentication” checkbox to
+  `/settings/tenant`. Administrators can enable or disable anonymous object
+  information for their tenant.
+- Added the display-safe `object_info` RPC:
+  - Returns the object ID, name, category, model, creation date, institution,
+    current owner's display name, image path, description, and custom fields.
+  - Truncates descriptions longer than 100 characters to 100 characters plus
+    an ellipsis.
+  - Returns public data only when the object's tenant has anonymous sharing
+    enabled.
+  - When public sharing is disabled, only an authenticated member of the same
+    tenant can retrieve the record.
+- Added a narrowly scoped object-image access function and Storage read policy
+  so images on shareable records can be loaded from the private
+  `object-images` bucket without exposing unrelated tenant images.
+- Added `/object-info/[id]` as a standalone public-capable page. It displays
+  institution and owner information, normal object fields, the image, and all
+  JSON custom fields after the normal fields.
+- Added `/object-info/*` to the authentication gate's public route handling.
+  The database RPC remains the source of truth for whether the requested
+  record is actually public.
+- Added an “Object Info” link to the authenticated object detail page.
+- Regenerated `src/types/database.ts` from the deployed schema.
+- Verification completed:
+  - An anonymous rollback-only database test received the object when sharing
+    was enabled.
+  - The returned 120-character test description was truncated to 101 display
+    characters: 100 content characters and one ellipsis.
+  - The same test returned the institution and JSON custom-field value.
+  - An anonymous test returned zero rows after sharing was disabled.
+  - TypeScript validation and the production build completed successfully,
+    including the new dynamic `/object-info/[id]` route.
+  - Supabase security advisors reported no errors. The warnings for the two
+    anonymous display helper functions are intentional because their internal
+    visibility checks implement this public-sharing feature.
+- Marked the shareable object-information task complete in
+  `docs/new_tasks_20260729.md`.
