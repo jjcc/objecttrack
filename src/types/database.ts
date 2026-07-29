@@ -288,6 +288,7 @@ export type Database = {
           id: number
           institution_name: string
           phone: string | null
+          show_object_info_without_authentication: boolean
           social_media: Json
           updated_at: string
           website: string | null
@@ -301,6 +302,7 @@ export type Database = {
           id?: never
           institution_name: string
           phone?: string | null
+          show_object_info_without_authentication?: boolean
           social_media?: Json
           updated_at?: string
           website?: string | null
@@ -314,6 +316,7 @@ export type Database = {
           id?: never
           institution_name?: string
           phone?: string | null
+          show_object_info_without_authentication?: boolean
           social_media?: Json
           updated_at?: string
           website?: string | null
@@ -457,6 +460,7 @@ export type Database = {
     }
     Functions: {
       approve_transfer: { Args: { p_request_id: number }; Returns: undefined }
+      can_view_object_image: { Args: { p_name: string }; Returns: boolean }
       current_tenant_id: { Args: never; Returns: number }
       group_profile_directory: {
         Args: never
@@ -467,6 +471,21 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      object_info: {
+        Args: { p_object_id: number }
+        Returns: {
+          category_name: string
+          created_at: string
+          description: string
+          extra: Json
+          id: number
+          image: string
+          institution_name: string
+          model: string
+          name: string
+          owner_name: string
+        }[]
+      }
       profile_names: {
         Args: { p_user_ids: string[] }
         Returns: {

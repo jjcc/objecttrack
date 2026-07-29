@@ -22,7 +22,9 @@ export function AuthGate({ children }: AuthGateProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const isPublicPath = pathname ? publicPaths.has(pathname) : false;
+  const isPublicPath = pathname
+    ? publicPaths.has(pathname) || pathname.startsWith("/object-info/")
+    : false;
 
   useEffect(() => {
     async function checkAuth() {

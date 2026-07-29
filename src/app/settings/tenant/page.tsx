@@ -5,6 +5,7 @@ import {
   Anchor,
   Breadcrumbs,
   Button,
+  Checkbox,
   Paper,
   SimpleGrid,
   Stack,
@@ -29,6 +30,7 @@ type TenantForm = {
   email: string;
   website: string;
   social_media: string;
+  show_object_info_without_authentication: boolean;
 };
 
 const emptyValues: TenantForm = {
@@ -40,6 +42,7 @@ const emptyValues: TenantForm = {
   email: "",
   website: "",
   social_media: "",
+  show_object_info_without_authentication: true,
 };
 
 export default function TenantSettingsPage() {
@@ -92,6 +95,8 @@ export default function TenantSettingsPage() {
             data.social_media && Object.keys(data.social_media).length
               ? JSON.stringify(data.social_media, null, 2)
               : "",
+          show_object_info_without_authentication:
+            data.show_object_info_without_authentication ?? true,
         });
         form.resetDirty();
       }
@@ -116,6 +121,8 @@ export default function TenantSettingsPage() {
         social_media: values.social_media.trim()
           ? JSON.parse(values.social_media)
           : {},
+        show_object_info_without_authentication:
+          values.show_object_info_without_authentication,
         updated_at: new Date().toISOString(),
       })
       .eq("id", tenantId);
@@ -164,6 +171,15 @@ export default function TenantSettingsPage() {
                 rows={4}
                 disabled={isLoading}
                 {...form.getInputProps("social_media")}
+              />
+              <Checkbox
+                label="Show Object Info Without Authentication"
+                description="When enabled, anyone with an object info link can view its display information."
+                disabled={isLoading}
+                {...form.getInputProps(
+                  "show_object_info_without_authentication",
+                  { type: "checkbox" }
+                )}
               />
               <Button type="submit" loading={isSaving} disabled={isLoading || tenantId === null}>
                 Save

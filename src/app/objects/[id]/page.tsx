@@ -14,7 +14,7 @@ import {
   LoadingOverlay,
   Image,
 } from "@mantine/core";
-import { IconEdit } from "@tabler/icons-react";
+import { IconEdit, IconExternalLink } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -80,13 +80,22 @@ export default function ObjectShowPage() {
 
         <Group justify="space-between">
           <Title order={2}>{record?.name as string ?? "Object Detail"}</Title>
-          <Button
-            leftSection={<IconEdit size={16} />}
-            variant="outline"
-            onClick={() => router.push(`/objects/${id}/edit`)}
-          >
-            Edit
-          </Button>
+          <Group>
+            <Button
+              leftSection={<IconExternalLink size={16} />}
+              variant="subtle"
+              onClick={() => router.push(`/object-info/${id}`)}
+            >
+              Object Info
+            </Button>
+            <Button
+              leftSection={<IconEdit size={16} />}
+              variant="outline"
+              onClick={() => router.push(`/objects/${id}/edit`)}
+            >
+              Edit
+            </Button>
+          </Group>
         </Group>
 
         <Paper withBorder p="md" radius="md" pos="relative">
