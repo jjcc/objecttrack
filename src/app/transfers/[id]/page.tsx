@@ -12,6 +12,7 @@ import {
   Badge,
   SimpleGrid,
   Alert,
+  Textarea,
 } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import { IconCheck, IconX, IconArrowBack } from "@tabler/icons-react";
@@ -21,11 +22,10 @@ import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import {
   approveTransfer,
-  formatTransferProfile,
   rejectTransfer,
-  resolveTransferProfiles,
-  type TransferQueryRecord,
-  type TransferRecord,
+  transferDisplayClient,
+  type TransferDisplayRecord,
+  type TransferStatus,
 } from "@/lib/supabase/transfers";
 import dayjs from "dayjs";
 
@@ -34,10 +34,11 @@ export default function TransferDetailPage() {
   const router = useRouter();
   const id = Number(params.id);
 
-  const [record, setRecord] = useState<TransferRecord | null>(null);
+  const [record, setRecord] = useState<TransferDisplayRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeAction, setActiveAction] = useState<"approve" | "reject" | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const fetchTransfer = useCallback(async () => {
     setIsLoading(true);
@@ -45,8 +46,9 @@ export default function TransferDetailPage() {
     const supabase = getSupabaseClient();
 
     try {
-      const { data, error } = await supabase.from("transfer_requests")
-        .select("id, object_id, from_user_id, to_user_id, group_id, status, reason, created_at, updated_at, objects(name, description, model)")
+      const { data, error } = await transferDisplayClient(supabase)
+        .from("transfer_requests_display")
+        .select("id, status, reason, created_at, updated_at, object_name, object_description, object_model, from_user_full_name, to_user_full_name")
         .eq("id", id)
         .maybeSingle();
 
@@ -56,11 +58,7 @@ export default function TransferDetailPage() {
         return;
       }
 
-      const [resolvedRecord] = await resolveTransferProfiles(
-        supabase,
-        [data as TransferQueryRecord],
-      );
-      setRecord(resolvedRecord);
+      setRecord(data);
     } catch (error) {
       setRecord(null);
       setFetchError(error instanceof Error ? error.message : "Unable to load transfer request");
@@ -98,7 +96,7 @@ export default function TransferDetailPage() {
     const supabase = getSupabaseClient();
     setActiveAction("reject");
     try {
-      await rejectTransfer(supabase, id);
+      await rejectTransfer(supabase, id, rejectReason.trim() || null);
 
       showNotification({ color: "green", title: "Success", message: "Transfer rejected" });
       await fetchTransfer();
@@ -114,9 +112,7 @@ export default function TransferDetailPage() {
   };
 
   const status = record?.status ?? "";
-  const obj = record?.objects;
-
-  const statusColorMap: Record<string, string> = {
+  const statusColorMap: Record<TransferStatus, string> = {
     pending: "yellow",
     approved: "green",
     rejected: "red",
@@ -202,11 +198,22 @@ export default function TransferDetailPage() {
           </Group>
         </Group>
 
+        {status === "pending" && (
+          <Textarea
+            label="Rejection reason"
+            placeholder="Enter a reason before rejecting this transfer"
+            value={rejectReason}
+            onChange={(event) => setRejectReason(event.currentTarget.value)}
+            autosize
+            minRows={3}
+          />
+        )}
+
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <Group>
               <Text fw={600}>Status:</Text>
-              <Badge color={statusColorMap[status] ?? "gray"} variant="light" size="lg">
+              <Badge color={statusColorMap[record.status] ?? "gray"} variant="light" size="lg">
                 {status}
               </Badge>
             </Group>
@@ -214,23 +221,23 @@ export default function TransferDetailPage() {
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
               <div>
                 <Text size="sm" c="dimmed">Object</Text>
-                <Text fw={500}>{obj?.name ?? "—"}</Text>
-                {obj?.description && (
-                  <Text size="sm" c="dimmed">{obj.description}</Text>
+                <Text fw={500}>{record.object_name}</Text>
+                {record.object_description && (
+                  <Text size="sm" c="dimmed">{record.object_description}</Text>
                 )}
-                {obj?.model && (
-                  <Text size="sm" c="dimmed">Model: {obj.model}</Text>
+                {record.object_model && (
+                  <Text size="sm" c="dimmed">Model: {record.object_model}</Text>
                 )}
               </div>
 
               <div>
                 <Text size="sm" c="dimmed">Requester / New Owner</Text>
-                <Text fw={500}>{formatTransferProfile(record.from)}</Text>
+                <Text fw={500}>{record.from_user_full_name ?? "—"}</Text>
               </div>
 
               <div>
                 <Text size="sm" c="dimmed">Current Owner / Recipient</Text>
-                <Text fw={500}>{formatTransferProfile(record.to)}</Text>
+                <Text fw={500}>{record.to_user_full_name ?? "—"}</Text>
               </div>
 
               {record.reason && (

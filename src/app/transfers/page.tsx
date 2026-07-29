@@ -11,6 +11,8 @@ import {
   Badge,
   Paper,
   Alert,
+  Modal,
+  Textarea,
 } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import { DataTable } from "mantine-datatable";
@@ -21,24 +23,25 @@ import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import {
   approveTransfer,
-  formatTransferProfile,
   rejectTransfer,
-  resolveTransferProfiles,
-  type TransferQueryRecord,
-  type TransferRecord,
+  transferDisplayClient,
+  type TransferDisplayRecord,
+  type TransferStatus,
 } from "@/lib/supabase/transfers";
 import dayjs from "dayjs";
 
 export default function TransfersListPage() {
   const router = useRouter();
 
-  const [records, setRecords] = useState<TransferRecord[]>([]);
+  const [records, setRecords] = useState<TransferDisplayRecord[]>([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeRequestId, setActiveRequestId] = useState<number | null>(null);
+  const [rejectRequestId, setRejectRequestId] = useState<number | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
   const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string | null>("pending");
+  const [statusFilter, setStatusFilter] = useState<TransferStatus | null>("pending");
   const pageSize = 20;
 
   const fetchTransfers = useCallback(async () => {
@@ -46,8 +49,8 @@ export default function TransfersListPage() {
     setFetchError(null);
     const supabase = getSupabaseClient();
 
-    let query = supabase.from("transfer_requests").select(
-      "id, object_id, from_user_id, to_user_id, group_id, status, reason, created_at, updated_at, objects(name)",
+    let query = transferDisplayClient(supabase).from("transfer_requests_display").select(
+      "id, status, reason, created_at, updated_at, object_name, object_description, object_model, from_user_full_name, to_user_full_name",
       { count: "exact" },
     );
 
@@ -62,11 +65,7 @@ export default function TransfersListPage() {
 
       if (error) throw error;
 
-      const resolvedRecords = await resolveTransferProfiles(
-        supabase,
-        (data ?? []) as TransferQueryRecord[],
-      );
-      setRecords(resolvedRecords);
+      setRecords(data ?? []);
       setTotalRecords(count ?? 0);
     } catch (error) {
       setRecords([]);
@@ -104,13 +103,16 @@ export default function TransfersListPage() {
     }
   };
 
-  const handleReject = async (requestId: number) => {
+  const handleReject = async () => {
+    if (rejectRequestId === null) return;
     const supabase = getSupabaseClient();
-    setActiveRequestId(requestId);
+    setActiveRequestId(rejectRequestId);
     try {
-      await rejectTransfer(supabase, requestId);
+      await rejectTransfer(supabase, rejectRequestId, rejectReason.trim() || null);
 
       showNotification({ color: "green", title: "Success", message: "Transfer rejected" });
+      setRejectRequestId(null);
+      setRejectReason("");
       if (page !== 1) {
         setPage(1);
       } else {
@@ -127,8 +129,8 @@ export default function TransfersListPage() {
     }
   };
 
-  const statusBadge = (status: string) => {
-    const colorMap: Record<string, string> = {
+  const statusBadge = (status: TransferStatus) => {
+    const colorMap: Record<TransferStatus, string> = {
       pending: "yellow",
       approved: "green",
       rejected: "red",
@@ -199,19 +201,19 @@ export default function TransfersListPage() {
             columns={[
               { accessor: "id", title: "ID", width: 70 },
               {
-                accessor: "objects.name",
+                accessor: "object_name",
                 title: "Object",
-                render: (record) => <Text size="sm">{record.objects?.name ?? "—"}</Text>,
+                render: (record) => <Text size="sm">{record.object_name}</Text>,
               },
               {
-                accessor: "from",
+                accessor: "from_user_full_name",
                 title: "Requester",
-                render: (record) => <Text size="sm">{formatTransferProfile(record.from)}</Text>,
+                render: (record) => <Text size="sm">{record.from_user_full_name ?? "—"}</Text>,
               },
               {
-                accessor: "to",
+                accessor: "to_user_full_name",
                 title: "Current Owner",
-                render: (record) => <Text size="sm">{formatTransferProfile(record.to)}</Text>,
+                render: (record) => <Text size="sm">{record.to_user_full_name ?? "—"}</Text>,
               },
               {
                 accessor: "status",
@@ -246,7 +248,10 @@ export default function TransfersListPage() {
                         color="red"
                         leftSection={<IconX size={14} />}
                         disabled={activeRequestId !== null}
-                        onClick={() => handleReject(record.id)}
+                        onClick={() => {
+                          setRejectRequestId(record.id);
+                          setRejectReason("");
+                        }}
                       >
                         Reject
                       </Button>
@@ -263,6 +268,45 @@ export default function TransfersListPage() {
             noRecordsText="No transfer requests found"
           />
         </Paper>
+
+        <Modal
+          opened={rejectRequestId !== null}
+          onClose={() => {
+            setRejectRequestId(null);
+            setRejectReason("");
+          }}
+          title={`Reject transfer #${rejectRequestId ?? ""}`}
+          centered
+        >
+          <Stack>
+            <Textarea
+              label="Rejection reason"
+              placeholder="Enter a reason for rejecting this transfer"
+              value={rejectReason}
+              onChange={(event) => setRejectReason(event.currentTarget.value)}
+              autosize
+              minRows={3}
+            />
+            <Group justify="flex-end">
+              <Button
+                variant="default"
+                onClick={() => {
+                  setRejectRequestId(null);
+                  setRejectReason("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                color="red"
+                loading={activeRequestId === rejectRequestId}
+                onClick={handleReject}
+              >
+                Reject transfer
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
       </Stack>
     </AppShell>
   );

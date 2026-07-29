@@ -3,32 +3,35 @@ import type { Database } from "@/types/database";
 
 export type TransferStatus = "pending" | "approved" | "rejected";
 
-export interface TransferProfile {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-}
-
-export interface TransferRecord {
+export interface TransferDisplayRecord {
   id: number;
-  object_id: number;
-  from_user_id: string;
-  to_user_id: string;
-  group_id: number | null;
-  status: string;
+  status: TransferStatus;
   reason: string | null;
   created_at: string;
   updated_at: string;
-  objects: {
-    name: string;
-    description?: string | null;
-    model?: string | null;
-  } | null;
-  from: TransferProfile | null;
-  to: TransferProfile | null;
+  object_name: string;
+  object_description: string | null;
+  object_model: string | null;
+  from_user_full_name: string | null;
+  to_user_full_name: string | null;
 }
 
-export type TransferQueryRecord = Omit<TransferRecord, "from" | "to">;
+type TransferDisplayDatabase = Omit<Database, "public"> & {
+  public: Omit<Database["public"], "Views"> & {
+    Views: Database["public"]["Views"] & {
+      transfer_requests_display: {
+        Row: TransferDisplayRecord;
+        Relationships: [];
+      };
+    };
+  };
+};
+
+export function transferDisplayClient(
+  supabase: SupabaseClient<Database>,
+): SupabaseClient<TransferDisplayDatabase> {
+  return supabase as unknown as SupabaseClient<TransferDisplayDatabase>;
+}
 
 export async function approveTransfer(
   supabase: SupabaseClient<Database>,
@@ -50,45 +53,4 @@ export async function rejectTransfer(
     p_reason: reason ?? undefined,
   });
   if (error) throw error;
-}
-
-export async function resolveTransferProfiles(
-  supabase: SupabaseClient<Database>,
-  records: TransferQueryRecord[],
-): Promise<TransferRecord[]> {
-  const userIds = Array.from(
-    new Set(records.flatMap((record) => [record.from_user_id, record.to_user_id])),
-  );
-
-  if (userIds.length === 0) {
-    return records.map((record) => ({ ...record, from: null, to: null }));
-  }
-
-  const { data, error } = await supabase.rpc("profile_names", {
-    p_user_ids: userIds,
-  });
-
-  if (error) throw error;
-
-  const profiles = new Map(
-    (data ?? []).map((profile) => [
-      profile.id,
-      {
-        id: profile.id,
-        first_name: profile.first_name,
-        last_name: profile.last_name,
-      },
-    ]),
-  );
-
-  return records.map((record) => ({
-    ...record,
-    from: profiles.get(record.from_user_id) ?? null,
-    to: profiles.get(record.to_user_id) ?? null,
-  }));
-}
-
-export function formatTransferProfile(profile: TransferProfile | null): string {
-  if (!profile) return "—";
-  return `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() || "—";
 }
