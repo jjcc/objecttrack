@@ -32,35 +32,57 @@ export type Database = {
           description: string | null
           id: number
           name: string
+          tenant_id: number
         }
         Insert: {
           created_at?: string
           description?: string | null
           id?: never
           name: string
+          tenant_id: number
         }
         Update: {
           created_at?: string
           description?: string | null
           id?: never
           name?: string
+          tenant_id?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       event_types: {
         Row: {
           id: number
           label: string
+          tenant_id: number
         }
         Insert: {
           id?: never
           label: string
+          tenant_id: number
         }
         Update: {
           id?: never
           label?: string
+          tenant_id?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "event_types_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       events: {
         Row: {
@@ -136,21 +158,64 @@ export type Database = {
           created_at: string
           description: string | null
           id: number
+          tenant_id: number
           title: string
         }
         Insert: {
           created_at?: string
           description?: string | null
           id?: never
+          tenant_id: number
           title: string
         }
         Update: {
           created_at?: string
           description?: string | null
           id?: never
+          tenant_id?: number
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "groups_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      object_custom_schemas: {
+        Row: {
+          created_at: string
+          fields: Json
+          id: number
+          tenant_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fields?: Json
+          id?: never
+          tenant_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fields?: Json
+          id?: never
+          tenant_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "object_custom_schemas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       objects: {
         Row: {
@@ -158,27 +223,36 @@ export type Database = {
           created_at: string
           current_owner_id: string | null
           description: string | null
+          extra: Json
           id: number
+          image: string | null
           model: string | null
           name: string
+          tenant_id: number
         }
         Insert: {
           category_id?: number | null
           created_at?: string
           current_owner_id?: string | null
           description?: string | null
+          extra?: Json
           id?: never
+          image?: string | null
           model?: string | null
           name: string
+          tenant_id: number
         }
         Update: {
           category_id?: number | null
           created_at?: string
           current_owner_id?: string | null
           description?: string | null
+          extra?: Json
           id?: never
+          image?: string | null
           model?: string | null
           name?: string
+          tenant_id?: number
         }
         Relationships: [
           {
@@ -195,7 +269,56 @@ export type Database = {
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "objects_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      tenant: {
+        Row: {
+          address: string | null
+          contact: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          id: number
+          institution_name: string
+          phone: string | null
+          social_media: Json
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          contact?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: never
+          institution_name: string
+          phone?: string | null
+          social_media?: Json
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          contact?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: never
+          institution_name?: string
+          phone?: string | null
+          social_media?: Json
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
       }
       transfer_requests: {
         Row: {
@@ -260,6 +383,7 @@ export type Database = {
           last_name: string | null
           phone: string | null
           province: string | null
+          tenant_id: number
           title: string | null
           wechat_id: string | null
           zipcode: string | null
@@ -275,6 +399,7 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           province?: string | null
+          tenant_id: number
           title?: string | null
           wechat_id?: string | null
           zipcode?: string | null
@@ -290,6 +415,7 @@ export type Database = {
           last_name?: string | null
           phone?: string | null
           province?: string | null
+          tenant_id?: number
           title?: string | null
           wechat_id?: string | null
           zipcode?: string | null
@@ -300,6 +426,13 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
             referencedColumns: ["id"]
           },
         ]
@@ -324,6 +457,7 @@ export type Database = {
     }
     Functions: {
       approve_transfer: { Args: { p_request_id: number }; Returns: undefined }
+      current_tenant_id: { Args: never; Returns: number }
       group_profile_directory: {
         Args: never
         Returns: {

@@ -12,6 +12,7 @@ import {
   Table,
   SimpleGrid,
   LoadingOverlay,
+  Image,
 } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
@@ -29,6 +30,7 @@ export default function ObjectShowPage() {
   const [record, setRecord] = useState<Record<string, unknown> | null>(null);
   const [events, setEvents] = useState<Record<string, unknown>[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -42,6 +44,13 @@ export default function ObjectShowPage() {
         .single();
 
       setRecord(objectData as unknown as Record<string, unknown> | null);
+      const imagePath = (objectData as unknown as Record<string, unknown> | null)?.image;
+      if (typeof imagePath === "string" && imagePath) {
+        const { data } = await supabase.storage
+          .from("object-images")
+          .createSignedUrl(imagePath, 60 * 60);
+        setImageUrl(data?.signedUrl ?? null);
+      }
 
       const { data: eventsData } = await supabase
         .from("events")
@@ -58,6 +67,7 @@ export default function ObjectShowPage() {
   }, [id]);
 
   const category = record?.categories as Record<string, string> | null;
+  const extra = (record?.extra as Record<string, unknown> | null) ?? {};
 
   return (
     <AppShell>
@@ -81,6 +91,16 @@ export default function ObjectShowPage() {
 
         <Paper withBorder p="md" radius="md" pos="relative">
           <LoadingOverlay visible={isLoading} />
+          {imageUrl && (
+            <Image
+              src={imageUrl}
+              alt={`${(record?.name as string) ?? "Object"} image`}
+              maw={360}
+              mah={260}
+              fit="contain"
+              mb="lg"
+            />
+          )}
           <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <div>
               <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
@@ -116,6 +136,14 @@ export default function ObjectShowPage() {
               </Text>
               <Text>{(record?.description as string) ?? "—"}</Text>
             </div>
+            {Object.entries(extra).map(([name, value]) => (
+              <div key={name}>
+                <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+                  {name}
+                </Text>
+                <Text>{String(value || "—")}</Text>
+              </div>
+            ))}
           </SimpleGrid>
         </Paper>
 

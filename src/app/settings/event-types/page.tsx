@@ -94,7 +94,7 @@ export default function EventTypeSettingsPage() {
 
     const { error } =
       editingId === null
-        ? await supabase.from("event_types").insert(payload)
+        ? await (supabase.from("event_types") as any).insert(payload)
         : await supabase.from("event_types").update(payload).eq("id", editingId);
 
     setIsSaving(false);

@@ -11,7 +11,9 @@ import {
 } from "@mantine/core";
 import {
   IconArrowRight,
+  IconBuilding,
   IconCategory,
+  IconForms,
   IconTimelineEvent,
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
@@ -25,10 +27,22 @@ const settingEntries = [
     icon: IconCategory,
   },
   {
+    title: "Institution",
+    description: "Manage your tenant's institution and contact information.",
+    href: "/settings/tenant",
+    icon: IconBuilding,
+  },
+  {
     title: "Event Types",
     description: "Manage the event labels available throughout the system.",
     href: "/settings/event-types",
     icon: IconTimelineEvent,
+  },
+  {
+    title: "Custom Object Fields",
+    description: "Define additional fields collected for objects in your tenant.",
+    href: "/settings/custom-fields",
+    icon: IconForms,
   },
 ];
 

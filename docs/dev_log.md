@@ -62,3 +62,101 @@ The current mobile `approve_transfer` implementation assigns ownership to
   integration verification covering recipient approval, administrator
   approval, unauthorized approval, repeated approval, rejection, ownership,
   status, and audit metadata.
+
+## 2026-07-29 — Transfer display deployment reconciliation
+
+- Diagnosed the deployed Transfers-page loading failure from live Supabase API
+  logs. The frontend request to `transfer_requests_display` returned HTTP 404
+  because the corresponding database migration had not been applied.
+- Applied the two pending migrations to live Supabase:
+  - `20260729001241_align_transfer_requests_id_identity_to_by_default.sql`
+  - `20260729010000_add_transfer_requests_display_view.sql`
+- Verified that local and remote migration histories match.
+- Verified that `transfer_requests_display` exists and can be queried by an
+  authenticated administrator.
+
+## 2026-07-29 — Self-service profile management
+
+- Enabled the Profile entry in the top-right user menu and linked it to the new
+  `/profile` route.
+- Added a profile form matching the `user_profiles` schema:
+  - Editable personal fields: first name, last name, contact email, title,
+    phone, WeChat ID, city, province/state, country, and zip/postal code.
+  - Read-only system fields: account ID, authentication email, group, and
+    profile creation time.
+- Added and deployed
+  `20260729145834_add_self_profile_update_rpc.sql`.
+- Added the authenticated `update_own_profile` RPC. It updates only the
+  caller's personal fields and cannot change identity, group membership, or
+  creation metadata.
+- Regenerated the Supabase TypeScript database types from the live schema.
+- Verified:
+  - Anonymous callers cannot execute the profile RPC.
+  - Authenticated callers can execute it.
+  - A rollback-only live test confirmed protected fields remain unchanged.
+  - TypeScript validation and the production build completed successfully.
+
+## 2026-07-29 — Settings navigation and route split
+
+- Replaced the combined Categories/Event Types tables on `/settings` with two
+  navigation entries:
+  - Categories
+  - Event Types
+- Added `/settings/categories` with the existing category list, create, edit,
+  and delete functionality.
+- Added `/settings/event-types` with the existing event-type list, create,
+  edit, and delete functionality.
+- Added explicit loading, empty, error, save, and delete-in-progress states to
+  both management pages.
+- Added accessible labels to edit and delete action buttons.
+- Verified authenticated live reads for both underlying Supabase tables.
+- Verified TypeScript and the production build; all 24 application routes were
+  generated successfully.
+- Marked both July 29 tasks complete in `docs/new_tasks_20260729.md`.
+
+## 2026-07-29 — Tenant architecture, object images, and custom fields
+
+- Added and deployed the tenant/data migrations:
+  - `20260729170703_add_tenants_object_images_and_custom_fields.sql`
+  - `20260729171116_harden_tenant_isolation.sql`
+  - `20260729171348_allow_trusted_tenant_maintenance.sql`
+- Added the `tenant` table with institution name, description, address,
+  contact, phone, email, website, and JSON social-media fields.
+- Created a default tenant and assigned every existing profile, group,
+  category, event type, and object to it so the deployed data remains usable.
+- Added tenant IDs and indexes to tenant-owned records. Insert triggers assign
+  the acting user's tenant and reject cross-tenant Data API writes.
+- Replaced legacy global RLS access on profiles, groups, categories, event
+  types, objects, events, and transfer requests with tenant-scoped policies.
+- Changed `transfer_requests_display` to a security-invoker view so its base
+  table RLS policies are honored.
+- Added `/settings/tenant` for editing the current tenant's institution and
+  contact information, plus an Institution entry on `/settings`.
+- Added an `image` path field to objects and a private `object-images` Storage
+  bucket. The bucket enforces a 2 MB maximum and accepts JPEG, PNG, WebP, and
+  GIF files. Storage policies restrict reads and writes to the current tenant.
+- Added image selection and client-side 2 MB validation to object create/edit
+  forms. Images use unique paths, and object details load them with temporary
+  signed URLs.
+- Added the JSONB `objects.extra` field and a one-schema-per-tenant
+  `object_custom_schemas` table.
+- Added `/settings/custom-fields`, where administrators can add unique field
+  names and optional notes/comments, and linked it from `/settings`.
+- Object create/edit forms load the current tenant's custom schema, append its
+  fields to the normal form, and store entered values in `objects.extra`.
+  Object details display the saved custom values.
+- Regenerated `src/types/database.ts` from the deployed Supabase schema.
+- Verification completed:
+  - Applied all three migrations to the linked project and confirmed local and
+    remote migration histories.
+  - Confirmed all existing tenant-owned records have a tenant assignment.
+  - Confirmed the private image bucket has the 2,097,152-byte limit.
+  - Confirmed the object `image` and `extra` columns, tenant policies, and
+    security-invoker transfer view exist.
+  - Ran a rollback-only live SQL test that created a tenant, its custom schema,
+    and an object with custom JSON successfully.
+  - Supabase security advisors report no errors introduced by this work.
+  - TypeScript validation and the production build completed successfully; all
+    26 application pages were generated.
+- Marked the tenant, object image, and custom-object-field tasks complete in
+  `docs/new_tasks_20260729.md`.

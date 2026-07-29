@@ -19,7 +19,13 @@ import { useParams, useRouter } from "next/navigation";
 import { z } from "zod";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import {
+  ObjectExtendedFields,
+  type CustomFieldDefinition,
+} from "@/components/objects/ObjectExtendedFields";
 import { getSupabaseClient } from "@/lib/supabase/client";
+
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 
 const objectSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -38,6 +44,11 @@ export default function ObjectEditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, setIsPending] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
+  const [tenantId, setTenantId] = useState<number | null>(null);
+  const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>([]);
+  const [extraValues, setExtraValues] = useState<Record<string, string>>({});
+  const [image, setImage] = useState<File | null>(null);
+  const [currentImage, setCurrentImage] = useState<string | null>(null);
 
   const form = useForm<ObjectFormValues>({
     initialValues: {
@@ -52,6 +63,19 @@ export default function ObjectEditPage() {
   useEffect(() => {
     async function fetchData() {
       const supabase = getSupabaseClient();
+
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("tenant_id")
+        .single() as any;
+      if (profile?.tenant_id) {
+        setTenantId(profile.tenant_id);
+        const { data: schema } = await (supabase as any).from("object_custom_schemas")
+          .select("fields")
+          .eq("tenant_id", profile.tenant_id)
+          .maybeSingle();
+        setCustomFields(Array.isArray(schema?.fields) ? schema.fields : []);
+      }
 
       const { data: categories } = await supabase.from("categories").select("id, name").order("name") as unknown as { data: { id: number; name: string }[] };
       setCategoryOptions((categories ?? []).map((cat) => ({ value: String(cat.id), label: cat.name })));
@@ -70,6 +94,8 @@ export default function ObjectEditPage() {
           category_id: record.category_id ? String(record.category_id) : "",
           model: (record.model as string) ?? "",
         });
+        setExtraValues((record.extra as Record<string, string> | null) ?? {});
+        setCurrentImage((record.image as string | null) ?? null);
       }
 
       setIsLoading(false);
@@ -79,15 +105,34 @@ export default function ObjectEditPage() {
   }, [id, form]);
 
   const handleSubmit = async (values: ObjectFormValues) => {
+    if (image && image.size > MAX_IMAGE_SIZE) {
+      showNotification({ color: "red", title: "Image too large", message: "Choose an image no larger than 2 MB." });
+      return;
+    }
     setIsPending(true);
     try {
       const supabase = getSupabaseClient();
+      const extra = Object.fromEntries(
+        customFields.map((field) => [field.name, extraValues[field.name] ?? ""])
+      );
+      let imagePath = currentImage;
+      if (image) {
+        if (tenantId === null) throw new Error("Your profile is not assigned to a tenant.");
+        const extension = image.name.split(".").pop()?.toLowerCase() || "jpg";
+        imagePath = `${tenantId}/${id}/${crypto.randomUUID()}.${extension}`;
+        const { error: uploadError } = await supabase.storage
+          .from("object-images")
+          .upload(imagePath, image, { contentType: image.type });
+        if (uploadError) throw uploadError;
+      }
       const { error } = await (supabase.from("objects") as any)
         .update({
           name: values.name,
           description: values.description || null,
           category_id: values.category_id ? Number(values.category_id) : null,
           model: values.model || null,
+          extra,
+          image: imagePath,
         })
         .eq("id", Number(id));
 
@@ -98,6 +143,10 @@ export default function ObjectEditPage() {
           message: error.message ?? "Failed to update object",
         });
         return;
+      }
+
+      if (image && currentImage) {
+        await supabase.storage.from("object-images").remove([currentImage]);
       }
 
       showNotification({
@@ -156,6 +205,16 @@ export default function ObjectEditPage() {
                 placeholder="Enter description"
                 rows={3}
                 {...form.getInputProps("description")}
+              />
+              <ObjectExtendedFields
+                fields={customFields}
+                values={extraValues}
+                onValueChange={(name, value) =>
+                  setExtraValues((current) => ({ ...current, [name]: value }))
+                }
+                image={image}
+                onImageChange={setImage}
+                currentImage={currentImage}
               />
               <Group>
                 <Button type="submit" loading={isPending}>

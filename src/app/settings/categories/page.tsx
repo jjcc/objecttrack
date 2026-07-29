@@ -101,7 +101,7 @@ export default function CategorySettingsPage() {
 
     const { error } =
       editingId === null
-        ? await supabase.from("categories").insert(payload)
+        ? await (supabase.from("categories") as any).insert(payload)
         : await supabase.from("categories").update(payload).eq("id", editingId);
 
     setIsSaving(false);
