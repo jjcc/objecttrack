@@ -102,7 +102,7 @@ export function Header({ opened, toggle }: HeaderProps) {
             <Menu.Divider />
             <Menu.Item
               leftSection={<IconUser size={14} />}
-              disabled
+              onClick={() => router.push("/profile")}
             >
               Profile
             </Menu.Item>

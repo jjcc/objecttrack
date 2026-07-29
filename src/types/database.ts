@@ -306,7 +306,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      transfer_requests_display: {
+        Row: {
+          created_at: string | null
+          from_user_full_name: string | null
+          id: number | null
+          object_description: string | null
+          object_model: string | null
+          object_name: string | null
+          reason: string | null
+          status: string | null
+          to_user_full_name: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       approve_transfer: { Args: { p_request_id: number }; Returns: undefined }
@@ -334,6 +348,21 @@ export type Database = {
       request_transfer: {
         Args: { p_object_id: number; p_to_user_id: string }
         Returns: number
+      }
+      update_own_profile: {
+        Args: {
+          p_city?: string
+          p_country?: string
+          p_email?: string
+          p_first_name?: string
+          p_last_name?: string
+          p_phone?: string
+          p_province?: string
+          p_title?: string
+          p_wechat_id?: string
+          p_zipcode?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
