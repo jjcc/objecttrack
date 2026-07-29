@@ -56,3 +56,8 @@ Then:
 - `/api/qr/9999` returns 404 when missing
 - `/barcode` still loads and can select an object
 - `/scan` loads as a stub
+
+Status: Complete
+- `/api/qr/[id]` generates PNG QR images on demand.
+- Object QR components share the API link.
+- `/scan` stub page exists.

@@ -86,3 +86,10 @@ Then:
 - Approve button updates `transfer_requests.status` and inserts event row
 - Reject button updates `transfer_requests.status` and inserts event row
 - All other pages still load and build passes
+
+Status: Complete
+- `/transfers` list + approve/reject implemented.
+
+- `/transfers/[id]` detail page implemented.
+- Dashboard KPI cards implemented.
+- Transfers use atomic `approve_transfer` / `reject_transfer` RPCs.
