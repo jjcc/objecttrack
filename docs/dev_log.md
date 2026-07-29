@@ -204,3 +204,13 @@ The current mobile `approve_transfer` implementation assigns ownership to
     visibility checks implement this public-sharing feature.
 - Marked the shareable object-information task complete in
   `docs/new_tasks_20260729.md`.
+
+## 2026-07-29 — Custom object field edit stability
+
+- Fixed custom field inputs on `/objects/[id]/edit` clearing immediately after
+  each keystroke.
+- The edit page's loading effect incorrectly depended on the Mantine form
+  object. Because that object changes during renders, typing a custom value
+  retriggered the database fetch and restored the previously saved JSON.
+- Restricted the loading effect to the object ID, so the record is loaded when
+  navigation selects an object but local form edits no longer cause a refetch.

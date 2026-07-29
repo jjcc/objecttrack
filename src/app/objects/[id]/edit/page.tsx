@@ -102,7 +102,7 @@ export default function ObjectEditPage() {
     }
 
     fetchData();
-  }, [id, form]);
+  }, [id]);
 
   const handleSubmit = async (values: ObjectFormValues) => {
     if (image && image.size > MAX_IMAGE_SIZE) {
