@@ -136,7 +136,8 @@ export function ObjectBarcodeGenerator() {
         <Stack gap="md">
           <Text fw={600}>2D Barcode</Text>
           <Text c="dimmed" size="sm">
-            Select an object from the table to generate its 16-digit 2D barcode.
+            Select an object to generate a 2D barcode that opens its object
+            information page.
           </Text>
 
           {selectedObjectId ? (
@@ -147,7 +148,7 @@ export function ObjectBarcodeGenerator() {
                   <Text fw={600}>Barcode Details</Text>
                   <Text size="sm">Selected object ID: {selectedObjectId}</Text>
                   <Text size="sm">
-                    Encoded value: {selectedObjectId.toString().padStart(16, "0")}
+                    Destination: /object-info/{selectedObjectId}
                   </Text>
                 </Stack>
               </Paper>

@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import * as qrcode from "qrcode";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -24,7 +24,7 @@ export async function GET(
     return new NextResponse("Object not found", { status: 404 });
   }
 
-  const payload = `https://objecttrack.vercel.app/objects/${objectId}`;
+  const payload = new URL(`/object-info/${objectId}`, request.nextUrl.origin).toString();
 
   const buffer = await qrcode.toBuffer(payload, {
     type: "png",

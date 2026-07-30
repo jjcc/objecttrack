@@ -9,6 +9,7 @@ import {
   Paper,
   SimpleGrid,
   Stack,
+  Table,
   Text,
   Title,
 } from "@mantine/core";
@@ -32,6 +33,15 @@ type ObjectInfo = {
   created_at: string;
 };
 
+type ObjectInfoEvent = {
+  id: number;
+  event_type_label: string | null;
+  group_name: string | null;
+  from_user_name: string | null;
+  to_user_name: string | null;
+  created_at: string;
+};
+
 function InfoField({ label, value }: { label: string; value: string | number | null }) {
   return (
     <div>
@@ -45,6 +55,7 @@ export default function PublicObjectInfoPage() {
   const params = useParams();
   const id = Number(params.id);
   const [record, setRecord] = useState<ObjectInfo | null>(null);
+  const [events, setEvents] = useState<ObjectInfoEvent[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +79,14 @@ export default function PublicObjectInfoPage() {
         setError("This object does not exist or its information is private.");
       } else {
         setRecord(objectInfo);
+        const { data: eventData, error: eventError } = await supabase
+          .rpc("object_info_events", { p_object_id: id });
+        if (eventError) {
+          setError(eventError.message);
+          setIsLoading(false);
+          return;
+        }
+        setEvents((eventData ?? []) as ObjectInfoEvent[]);
         if (objectInfo.image) {
           const { data: signedImage } = await supabase.storage
             .from("object-images")
@@ -140,6 +159,40 @@ export default function PublicObjectInfoPage() {
               />
             ))}
           </SimpleGrid>
+        </Paper>
+        <Paper withBorder p="lg" radius="md">
+          <Title order={3} mb="md">Event History</Title>
+          <Table striped highlightOnHover>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Event</Table.Th>
+                <Table.Th>Group</Table.Th>
+                <Table.Th>From</Table.Th>
+                <Table.Th>To</Table.Th>
+                <Table.Th>Date</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {events.map((event) => (
+                <Table.Tr key={event.id}>
+                  <Table.Td>{event.event_type_label ?? "—"}</Table.Td>
+                  <Table.Td>{event.group_name ?? "—"}</Table.Td>
+                  <Table.Td>{event.from_user_name ?? "— (initial)"}</Table.Td>
+                  <Table.Td>{event.to_user_name ?? "—"}</Table.Td>
+                  <Table.Td>
+                    {dayjs(event.created_at).format("YYYY-MM-DD HH:mm")}
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+              {events.length === 0 && (
+                <Table.Tr>
+                  <Table.Td colSpan={5}>
+                    <Text ta="center" c="dimmed">No events recorded for this object</Text>
+                  </Table.Td>
+                </Table.Tr>
+              )}
+            </Table.Tbody>
+          </Table>
         </Paper>
       </Stack>
     </Container>

@@ -112,27 +112,19 @@ export default function ObjectShowPage() {
           )}
           <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <div>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                Name
-              </Text>
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Name</Text>
               <Text>{record?.name as string ?? "—"}</Text>
             </div>
             <div>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                Category
-              </Text>
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Category</Text>
               <Text>{category?.name ?? "—"}</Text>
             </div>
             <div>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                Model
-              </Text>
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Model</Text>
               <Text>{(record?.model as string) ?? "—"}</Text>
             </div>
             <div>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                Created
-              </Text>
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Created</Text>
               <Text>
                 {record?.created_at
                   ? dayjs(record.created_at as string).format("YYYY-MM-DD HH:mm")
@@ -140,16 +132,12 @@ export default function ObjectShowPage() {
               </Text>
             </div>
             <div>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                Description
-              </Text>
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Description</Text>
               <Text>{(record?.description as string) ?? "—"}</Text>
             </div>
             {Object.entries(extra).map(([name, value]) => (
               <div key={name}>
-                <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                  {name}
-                </Text>
+                <Text size="xs" c="dimmed" tt="uppercase" fw={700}>{name}</Text>
                 <Text>{String(value || "—")}</Text>
               </div>
             ))}

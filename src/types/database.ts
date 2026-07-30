@@ -486,6 +486,17 @@ export type Database = {
           owner_name: string
         }[]
       }
+      object_info_events: {
+        Args: { p_object_id: number }
+        Returns: {
+          created_at: string
+          event_type_label: string
+          from_user_name: string
+          group_name: string
+          id: number
+          to_user_name: string
+        }[]
+      }
       profile_names: {
         Args: { p_user_ids: string[] }
         Returns: {

@@ -214,3 +214,34 @@ The current mobile `approve_transfer` implementation assigns ownership to
   retriggered the database fetch and restored the previously saved JSON.
 - Restricted the loading effect to the object ID, so the record is loaded when
   navigation selects an object but local form edits no longer cause a refetch.
+
+## 2026-07-30 — Object-info QR destinations
+
+- Changed the interactive 2D barcode payload from a padded object ID to the
+  absolute `/object-info/[id]` URL.
+- Changed the QR “Open” and “Copy link” actions to use the same object
+  information page. Copied links are absolute and use the current deployment
+  origin.
+- Updated the downloadable PNG QR endpoint at `/api/qr/[id]` so its encoded
+  destination is also `/object-info/[id]`, derived from the request origin
+  instead of a hard-coded object-detail URL.
+- Updated the barcode screen's explanatory text and destination details to
+  describe the shareable object-information behavior.
+- Marked the QR object-information destination task complete in
+  `docs/new_tasks_20260729.md`.
+
+## 2026-07-30 — Object Info event history
+
+- Kept the authenticated `/objects/[id]` detail page in its original layout.
+- Added `object_info_events`, a display-only RPC returning the latest 50 object
+  events with event type, group, from/to display names, and timestamp.
+- Applied the same tenant visibility rule as `object_info`: anonymous history
+  is available only when the tenant enables unauthenticated Object Info;
+  otherwise the caller must be an authenticated member of the object's tenant.
+- Added an Event History card to `/object-info/[id]` below the object
+  information card, including an explicit empty state.
+- Deployed `20260730041056_add_object_info_event_history.sql` and regenerated
+  the live Supabase TypeScript types.
+- Verified with a rollback-only anonymous database test that a publicly
+  shareable object returns its event type and group through the new RPC.
+- TypeScript validation and the production build completed successfully.
