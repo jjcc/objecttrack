@@ -10,6 +10,7 @@ declare
   v_recipient uuid := '10000000-0000-4000-8000-000000000002';
   v_other uuid := '10000000-0000-4000-8000-000000000003';
   v_admin uuid := '10000000-0000-4000-8000-000000000004';
+  v_tenant_id bigint;
   v_group_id bigint;
   v_object_id bigint;
   v_request_id bigint;
@@ -17,6 +18,10 @@ declare
   v_status text;
   v_extra jsonb;
 begin
+  insert into public.tenant (institution_name, description)
+  values ('Transfer verification tenant', 'Rollback-only fixture')
+  returning id into v_tenant_id;
+
   insert into auth.users (id, aud, role, is_sso_user, is_anonymous)
   values
     (v_requester, 'authenticated', 'authenticated', false, false),
@@ -24,22 +29,29 @@ begin
     (v_other, 'authenticated', 'authenticated', false, false),
     (v_admin, 'authenticated', 'authenticated', false, false);
 
-  insert into public.groups (title)
-  values ('transfer-rpc-rollback-test')
+  insert into public.groups (tenant_id, title)
+  values (v_tenant_id, 'transfer-rpc-rollback-test')
   returning id into v_group_id;
 
-  insert into public.user_profiles (id, group_id, first_name)
+  insert into public.user_profiles (
+    id,
+    tenant_id,
+    tenant_role,
+    group_id,
+    first_name
+  )
   values
-    (v_requester, v_group_id, 'Requester'),
-    (v_recipient, v_group_id, 'Recipient'),
-    (v_other, v_group_id, 'Other'),
-    (v_admin, v_group_id, 'Admin');
+    (v_requester, v_tenant_id, 'member', v_group_id, 'Requester'),
+    (v_recipient, v_tenant_id, 'member', v_group_id, 'Recipient'),
+    (v_other, v_tenant_id, 'member', v_group_id, 'Other'),
+    (v_admin, v_tenant_id, 'admin', v_group_id, 'Admin');
 
-  insert into public.admin_users (id) values (v_admin);
+  insert into public.event_types (tenant_id, label)
+  values (v_tenant_id, 'transfer');
 
   -- The recipient can approve and ownership moves to the requester.
-  insert into public.objects (name, current_owner_id)
-  values ('recipient-approval-test', v_recipient)
+  insert into public.objects (tenant_id, name, current_owner_id)
+  values (v_tenant_id, 'recipient-approval-test', v_recipient)
   returning id into v_object_id;
 
   perform set_config('request.jwt.claim.sub', v_requester::text, true);
@@ -81,8 +93,8 @@ begin
   end;
 
   -- An administrator can approve on the recipient's behalf.
-  insert into public.objects (name, current_owner_id)
-  values ('administrator-approval-test', v_recipient)
+  insert into public.objects (tenant_id, name, current_owner_id)
+  values (v_tenant_id, 'administrator-approval-test', v_recipient)
   returning id into v_object_id;
 
   perform set_config('request.jwt.claim.sub', v_requester::text, true);
@@ -103,8 +115,8 @@ begin
   end if;
 
   -- Rejection preserves ownership and is audited in the same transaction.
-  insert into public.objects (name, current_owner_id)
-  values ('recipient-rejection-test', v_recipient)
+  insert into public.objects (tenant_id, name, current_owner_id)
+  values (v_tenant_id, 'recipient-rejection-test', v_recipient)
   returning id into v_object_id;
 
   perform set_config('request.jwt.claim.sub', v_requester::text, true);
