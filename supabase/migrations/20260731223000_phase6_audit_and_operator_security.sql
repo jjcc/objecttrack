@@ -94,7 +94,7 @@ BEGIN
   SELECT
     event.id,
     event.actor_id,
-    actor.email,
+    actor.email::text,
     event.action,
     event.target_type,
     event.target_id,
@@ -170,7 +170,7 @@ BEGIN
   SELECT
     event.id,
     event.actor_id,
-    actor.email,
+    actor.email::text,
     event.tenant_id,
     event.action,
     event.target_type,
@@ -202,9 +202,9 @@ BEGIN
 
   RETURN QUERY
   SELECT 'invitation_delivery_failures_24h'::text, count(*)::bigint
-  FROM private.invitation_delivery_attempts AS attempt
-  WHERE NOT attempt.succeeded
-    AND attempt.attempted_at >= now() - interval '24 hours'
+  FROM private.tenant_invitations AS invitation
+  WHERE invitation.delivery_status = 'failed'
+    AND invitation.last_sent_at >= now() - interval '24 hours'
   UNION ALL
   SELECT 'report_failures_24h'::text, count(*)::bigint
   FROM private.tenant_report_jobs AS job

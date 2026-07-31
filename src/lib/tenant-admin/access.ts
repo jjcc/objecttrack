@@ -6,6 +6,7 @@ import {
   requireTenantPermission,
 } from "@/lib/auth/tenant-context";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { logSecurityEvent } from "@/lib/observability/security";
 
 type TenantPermission = Extract<
   Permission,
@@ -26,11 +27,29 @@ export async function requireTenantAdminAccess(
   } = await supabase.auth.getUser();
 
   if (error || !user) {
+    logSecurityEvent({
+      event: "authorization_denied",
+      area: "tenant_admin",
+      permission,
+      reason: "unauthenticated",
+    });
     throw new Error("Authentication is required.");
   }
 
-  const context = await getAuthenticatedAccessContext(supabase, user);
-  const tenantId = requireTenantPermission(context, permission);
+  try {
+    const context = await getAuthenticatedAccessContext(supabase, user);
+    const tenantId = requireTenantPermission(context, permission);
 
-  return { supabase, context, tenantId };
+    return { supabase, context, tenantId };
+  } catch (accessError) {
+    logSecurityEvent({
+      event: "authorization_denied",
+      area: "tenant_admin",
+      permission,
+      actorId: user.id,
+      reason:
+        accessError instanceof Error ? accessError.message : "access denied",
+    });
+    throw accessError;
+  }
 }

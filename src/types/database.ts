@@ -689,6 +689,28 @@ export type Database = {
           to_user_name: string
         }[]
       }
+      platform_audit_events: {
+        Args: { p_limit?: number; p_tenant_id?: number }
+        Returns: {
+          action: string
+          actor_email: string
+          actor_id: string
+          created_at: string
+          id: number
+          metadata: Json
+          request_id: string
+          target_id: string
+          target_type: string
+          tenant_id: number
+        }[]
+      }
+      platform_operational_metrics: {
+        Args: never
+        Returns: {
+          metric: string
+          value: number
+        }[]
+      }
       platform_tenant: {
         Args: { p_tenant_id: number }
         Returns: {
@@ -759,6 +781,10 @@ export type Database = {
         }
         Returns: number
       }
+      record_platform_operator_access: {
+        Args: { p_path: string; p_target_tenant_id?: number }
+        Returns: undefined
+      }
       record_tenant_invitation_delivery: {
         Args: {
           p_error?: string
@@ -805,6 +831,20 @@ export type Database = {
           show_object_info_without_authentication: boolean
           social_media: Json
           website: string
+        }[]
+      }
+      tenant_audit_events: {
+        Args: { p_limit?: number }
+        Returns: {
+          action: string
+          actor_email: string
+          actor_id: string
+          created_at: string
+          id: number
+          metadata: Json
+          request_id: string
+          target_id: string
+          target_type: string
         }[]
       }
       tenant_inventory_report: {

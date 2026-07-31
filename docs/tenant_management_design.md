@@ -154,3 +154,6 @@ Even after a deployment split, keep tenant-management rules in a well-defined se
 ## Summary
 
 Embed tenant-facing administration in the main product, but treat it as a distinct authorization area. Keep the internal cross-tenant operations interface separate. Begin with a shared backend and modular codebase, then split deployments only when security, compliance, scale, or organizational requirements justify the additional complexity.
+
+Operational procedures, monitoring thresholds, MFA handling, retention, and
+deployment-split criteria are maintained in tenant_management_runbook.md.
