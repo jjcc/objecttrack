@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       admin_users: {
@@ -105,7 +100,7 @@ export type Database = {
           group_id: number
           id?: never
           object_id: number
-          tenant_id?: number
+          tenant_id: number
         }
         Update: {
           created_at?: string
@@ -141,6 +136,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "events_event_type_tenant_fkey"
+            columns: ["event_type_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "event_types"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "events_from_profile_tenant_fkey"
+            columns: ["e_from", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
             foreignKeyName: "events_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
@@ -148,11 +157,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "events_group_tenant_fkey"
+            columns: ["group_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
             foreignKeyName: "events_object_id_fkey"
             columns: ["object_id"]
             isOneToOne: false
             referencedRelation: "objects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_object_tenant_fkey"
+            columns: ["object_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "objects"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_to_profile_tenant_fkey"
+            columns: ["e_to", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id", "tenant_id"]
           },
         ]
       }
@@ -266,11 +303,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "objects_category_tenant_fkey"
+            columns: ["category_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
             foreignKeyName: "objects_current_owner_id_fkey"
             columns: ["current_owner_id"]
             isOneToOne: false
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "objects_owner_tenant_fkey"
+            columns: ["current_owner_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id", "tenant_id"]
           },
           {
             foreignKeyName: "objects_tenant_id_fkey"
@@ -284,8 +335,10 @@ export type Database = {
       tenant: {
         Row: {
           address: string | null
+          billing_owner_id: string | null
           contact: string | null
           created_at: string
+          defaults_version: number
           description: string | null
           email: string | null
           id: number
@@ -293,13 +346,18 @@ export type Database = {
           phone: string | null
           show_object_info_without_authentication: boolean
           social_media: Json
+          status: string
+          status_reason: string | null
+          suspended_at: string | null
           updated_at: string
           website: string | null
         }
         Insert: {
           address?: string | null
+          billing_owner_id?: string | null
           contact?: string | null
           created_at?: string
+          defaults_version?: number
           description?: string | null
           email?: string | null
           id?: never
@@ -307,13 +365,18 @@ export type Database = {
           phone?: string | null
           show_object_info_without_authentication?: boolean
           social_media?: Json
+          status?: string
+          status_reason?: string | null
+          suspended_at?: string | null
           updated_at?: string
           website?: string | null
         }
         Update: {
           address?: string | null
+          billing_owner_id?: string | null
           contact?: string | null
           created_at?: string
+          defaults_version?: number
           description?: string | null
           email?: string | null
           id?: never
@@ -321,6 +384,9 @@ export type Database = {
           phone?: string | null
           show_object_info_without_authentication?: boolean
           social_media?: Json
+          status?: string
+          status_reason?: string | null
+          suspended_at?: string | null
           updated_at?: string
           website?: string | null
         }
@@ -347,7 +413,7 @@ export type Database = {
           object_id: number
           reason?: string | null
           status?: string
-          tenant_id?: number
+          tenant_id: number
           to_user_id: string
           updated_at?: string
         }
@@ -365,6 +431,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "transfer_requests_from_profile_tenant_fkey"
+            columns: ["from_user_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
             foreignKeyName: "transfer_requests_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
@@ -372,11 +445,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "transfer_requests_group_tenant_fkey"
+            columns: ["group_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
             foreignKeyName: "transfer_requests_object_id_fkey"
             columns: ["object_id"]
             isOneToOne: false
             referencedRelation: "objects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_object_tenant_fkey"
+            columns: ["object_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "objects"
+            referencedColumns: ["id", "tenant_id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_to_profile_tenant_fkey"
+            columns: ["to_user_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id", "tenant_id"]
           },
         ]
       }
@@ -393,7 +494,7 @@ export type Database = {
           phone: string | null
           province: string | null
           tenant_id: number
-          tenant_role: "member" | "admin" | "owner"
+          tenant_role: string
           title: string | null
           wechat_id: string | null
           zipcode: string | null
@@ -410,7 +511,7 @@ export type Database = {
           phone?: string | null
           province?: string | null
           tenant_id: number
-          tenant_role?: "member" | "admin" | "owner"
+          tenant_role?: string
           title?: string | null
           wechat_id?: string | null
           zipcode?: string | null
@@ -427,7 +528,7 @@ export type Database = {
           phone?: string | null
           province?: string | null
           tenant_id?: number
-          tenant_role?: "member" | "admin" | "owner"
+          tenant_role?: string
           title?: string | null
           wechat_id?: string | null
           zipcode?: string | null
@@ -439,6 +540,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "groups"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_profiles_group_tenant_fkey"
+            columns: ["group_id", "tenant_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id", "tenant_id"]
           },
           {
             foreignKeyName: "user_profiles_tenant_id_fkey"
@@ -468,8 +576,27 @@ export type Database = {
       }
     }
     Functions: {
+      accept_tenant_invitation: {
+        Args: { p_token_hash: string }
+        Returns: number
+      }
       approve_transfer: { Args: { p_request_id: number }; Returns: undefined }
       can_view_object_image: { Args: { p_name: string }; Returns: boolean }
+      create_tenant_invitation: {
+        Args: {
+          p_expires_at: string
+          p_intended_role: string
+          p_invited_email: string
+          p_token_hash: string
+        }
+        Returns: {
+          expires_at: string
+          intended_role: string
+          invitation_id: string
+          invited_email: string
+          tenant_name: string
+        }[]
+      }
       current_tenant_id: { Args: never; Returns: number }
       current_tenant_role: { Args: never; Returns: string }
       group_profile_directory: {
@@ -480,11 +607,23 @@ export type Database = {
           last_name: string
         }[]
       }
-      is_admin: { Args: never; Returns: boolean }
-      is_platform_operator: { Args: never; Returns: boolean }
       has_permission: {
         Args: { p_permission: string; p_tenant_id?: number }
         Returns: boolean
+      }
+      invitation_link_status: {
+        Args: { p_token_hash: string }
+        Returns: {
+          invited_email_masked: string
+          status: string
+          tenant_name: string
+        }[]
+      }
+      is_admin: { Args: never; Returns: boolean }
+      is_platform_operator: { Args: never; Returns: boolean }
+      migrate_tenant_defaults: {
+        Args: { p_target_version: number; p_tenant_id: number }
+        Returns: undefined
       }
       object_info: {
         Args: { p_object_id: number }
@@ -512,6 +651,55 @@ export type Database = {
           to_user_name: string
         }[]
       }
+      platform_tenant: {
+        Args: { p_tenant_id: number }
+        Returns: {
+          address: string
+          billing_owner_id: string
+          contact: string
+          created_at: string
+          defaults_version: number
+          description: string
+          email: string
+          id: number
+          initial_owner_email: string
+          initial_owner_status: string
+          institution_name: string
+          phone: string
+          social_media: Json
+          status: string
+          status_reason: string
+          suspended_at: string
+          updated_at: string
+          website: string
+        }[]
+      }
+      platform_tenants: {
+        Args: { p_search?: string }
+        Returns: {
+          created_at: string
+          defaults_version: number
+          email: string
+          id: number
+          initial_owner_email: string
+          institution_name: string
+          status: string
+          updated_at: string
+        }[]
+      }
+      prepare_tenant_invitation_resend: {
+        Args: {
+          p_expires_at: string
+          p_invitation_id: string
+          p_token_hash: string
+        }
+        Returns: {
+          expires_at: string
+          intended_role: string
+          invited_email: string
+          tenant_name: string
+        }[]
+      }
       profile_names: {
         Args: { p_user_ids: string[] }
         Returns: {
@@ -520,13 +708,99 @@ export type Database = {
           last_name: string
         }[]
       }
+      provision_tenant: {
+        Args: {
+          p_address?: string
+          p_contact?: string
+          p_description?: string
+          p_email?: string
+          p_institution_name: string
+          p_owner_email: string
+          p_phone?: string
+          p_website?: string
+        }
+        Returns: number
+      }
+      record_tenant_invitation_delivery: {
+        Args: {
+          p_error?: string
+          p_invitation_id: string
+          p_succeeded: boolean
+        }
+        Returns: undefined
+      }
       reject_transfer: {
         Args: { p_reason?: string; p_request_id: number }
         Returns: undefined
       }
+      remove_tenant_member: { Args: { p_user_id: string }; Returns: undefined }
       request_transfer: {
         Args: { p_object_id: number; p_to_user_id: string }
         Returns: number
+      }
+      revoke_tenant_invitation: {
+        Args: { p_invitation_id: string }
+        Returns: undefined
+      }
+      set_tenant_status: {
+        Args: { p_reason: string; p_status: string; p_tenant_id: number }
+        Returns: undefined
+      }
+      tenant_admin_profile: {
+        Args: never
+        Returns: {
+          address: string
+          contact: string
+          description: string
+          email: string
+          id: number
+          institution_name: string
+          phone: string
+          show_object_info_without_authentication: boolean
+          social_media: Json
+          website: string
+        }[]
+      }
+      tenant_invitations: {
+        Args: never
+        Returns: {
+          accepted_at: string
+          created_at: string
+          delivery_status: string
+          expires_at: string
+          id: string
+          intended_role: string
+          invited_email: string
+          last_sent_at: string
+          revoked_at: string
+          status: string
+        }[]
+      }
+      tenant_members: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          tenant_role: string
+          title: string
+        }[]
+      }
+      update_current_tenant_profile: {
+        Args: {
+          p_address?: string
+          p_contact?: string
+          p_description?: string
+          p_email?: string
+          p_institution_name: string
+          p_phone?: string
+          p_show_object_info_without_authentication?: boolean
+          p_social_media?: Json
+          p_website?: string
+        }
+        Returns: undefined
       }
       update_own_profile: {
         Args: {
@@ -541,6 +815,24 @@ export type Database = {
           p_wechat_id?: string
           p_zipcode?: string
         }
+        Returns: undefined
+      }
+      update_platform_tenant: {
+        Args: {
+          p_address?: string
+          p_contact?: string
+          p_description?: string
+          p_email?: string
+          p_institution_name: string
+          p_phone?: string
+          p_social_media?: Json
+          p_tenant_id: number
+          p_website?: string
+        }
+        Returns: undefined
+      }
+      update_tenant_member_role: {
+        Args: { p_tenant_role: string; p_user_id: string }
         Returns: undefined
       }
     }

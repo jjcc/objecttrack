@@ -11,7 +11,6 @@ import {
 } from "@mantine/core";
 import {
   IconArrowRight,
-  IconBuilding,
   IconCategory,
   IconForms,
   IconTimelineEvent,
@@ -25,12 +24,6 @@ const settingEntries = [
     description: "Manage the categories used to classify tracked objects.",
     href: "/settings/categories",
     icon: IconCategory,
-  },
-  {
-    title: "Institution",
-    description: "Manage your tenant's institution and contact information.",
-    href: "/settings/tenant",
-    icon: IconBuilding,
   },
   {
     title: "Event Types",

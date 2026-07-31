@@ -2,14 +2,17 @@
 
 import { NavLink, Stack, ScrollArea } from "@mantine/core";
 import {
-  IconDashboard,
   IconBox,
-  IconUsers,
-  IconTransfer,
   IconCategory,
+  IconDashboard,
   IconSettings,
+  IconShieldLock,
+  IconTransfer,
+  IconUsers,
 } from "@tabler/icons-react";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const navItems = [
   { label: "Dashboard", icon: IconDashboard, href: "/dashboard" },
@@ -21,14 +24,42 @@ const navItems = [
   { label: "Settings", icon: IconSettings, href: "/settings" },
 ];
 
+const tenantAdminItem = {
+  label: "Tenant Admin",
+  icon: IconShieldLock,
+  href: "/admin",
+};
+
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [showTenantAdmin, setShowTenantAdmin] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function resolveTenantRole() {
+      const supabase = getSupabaseClient();
+      const { data } = await supabase.rpc("current_tenant_role");
+      if (!cancelled) {
+        setShowTenantAdmin(data === "admin" || data === "owner");
+      }
+    }
+
+    void resolveTenantRole();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const visibleItems = showTenantAdmin
+    ? [...navItems, tenantAdminItem]
+    : navItems;
 
   return (
     <ScrollArea>
       <Stack gap={0} mt="md">
-        {navItems.map((item) => (
+        {visibleItems.map((item) => (
           <NavLink
             key={item.href}
             label={item.label}

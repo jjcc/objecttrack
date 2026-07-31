@@ -15,7 +15,7 @@ import { IconAlertCircle } from "@tabler/icons-react";
 import { z } from "zod";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 const loginSchema = z.object({
@@ -27,6 +27,12 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedNext = searchParams.get("next");
+  const nextPath =
+    requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
+      ? requestedNext
+      : "/dashboard";
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +59,7 @@ export function LoginForm() {
         return;
       }
 
-      router.replace("/dashboard");
+      router.replace(nextPath);
     } catch (err) {
       setError((err as Error)?.message ?? "Login failed. Please try again.");
     } finally {
@@ -102,7 +108,12 @@ export function LoginForm() {
           <Anchor component={Link} href="/forgot-password" size="sm" ta="center">
             Forgot your password?
           </Anchor>
-          <Anchor component={Link} href="/register" size="sm" ta="center">
+          <Anchor
+            component={Link}
+            href={`/register?next=${encodeURIComponent(nextPath)}`}
+            size="sm"
+            ta="center"
+          >
             Need an account?
           </Anchor>
         </Stack>

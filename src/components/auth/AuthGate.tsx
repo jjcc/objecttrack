@@ -24,6 +24,7 @@ export function AuthGate({ children }: AuthGateProps) {
 
   const isPublicPath = pathname
     ? publicPaths.has(pathname) || pathname.startsWith("/object-info/")
+      || pathname.startsWith("/invitations/accept")
     : false;
 
   useEffect(() => {

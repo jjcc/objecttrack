@@ -15,7 +15,7 @@ import {
 import { useForm, zodResolver } from "@mantine/form";
 import { IconAlertCircle } from "@tabler/icons-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -34,6 +34,12 @@ const registerSchema = z
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
+  const searchParams = useSearchParams();
+  const requestedNext = searchParams.get("next");
+  const nextPath =
+    requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
+      ? requestedNext
+      : "/dashboard";
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,10 +59,11 @@ export default function RegisterPage() {
     setIsPending(true);
     try {
       const supabase = getSupabaseClient();
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
+          emailRedirectTo: `${window.location.origin}${nextPath}`,
           data: {
             email: values.email,
           },
@@ -65,6 +72,11 @@ export default function RegisterPage() {
 
       if (signUpError) {
         setError(signUpError.message);
+        return;
+      }
+
+      if (data.session) {
+        router.replace(nextPath);
         return;
       }
 
@@ -103,9 +115,19 @@ export default function RegisterPage() {
         )}
 
         {success ? (
-          <Alert color="green" mb="md">
-            Account created! Check your email for a confirmation link.
-          </Alert>
+          <Stack>
+            <Alert color="green" mb="md">
+              Account created! Check your email for a confirmation link.
+            </Alert>
+            <Anchor
+              component={Link}
+              href={`/login?next=${encodeURIComponent(nextPath)}`}
+              size="sm"
+              ta="center"
+            >
+              Continue to sign in
+            </Anchor>
+          </Stack>
         ) : (
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack>
@@ -130,7 +152,12 @@ export default function RegisterPage() {
               <Button type="submit" fullWidth loading={isPending}>
                 Register
               </Button>
-              <Anchor component={Link} href="/login" size="sm" ta="center">
+              <Anchor
+                component={Link}
+                href={`/login?next=${encodeURIComponent(nextPath)}`}
+                size="sm"
+                ta="center"
+              >
                 Back to login
               </Anchor>
             </Stack>

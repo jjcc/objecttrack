@@ -100,7 +100,7 @@ export default function ProfilePage() {
         const { data: profile, error: profileError } = await supabase
           .from("user_profiles")
           .select(
-            "id, group_id, first_name, last_name, title, city, province, country, zipcode, phone, wechat_id, email, created_at, groups(title)",
+            "id, group_id, first_name, last_name, title, city, province, country, zipcode, phone, wechat_id, email, created_at, groups!user_profiles_group_id_fkey(title)",
           )
           .eq("id", user.id)
           .maybeSingle();

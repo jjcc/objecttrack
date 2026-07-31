@@ -1,0 +1,171 @@
+"use client";
+
+import {
+  Alert,
+  Button,
+  Checkbox,
+  Group,
+  NativeSelect,
+  Paper,
+  Stack,
+  Table,
+  Text,
+} from "@mantine/core";
+import { useFormState, useFormStatus } from "react-dom";
+import {
+  removeTenantMemberAction,
+  updateTenantMemberRoleAction,
+  type TenantAdminActionState,
+} from "@/app/admin/actions";
+
+const initialState: TenantAdminActionState = { status: "idle", message: "" };
+
+export type TenantMember = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  title: string | null;
+  tenant_role: string;
+  created_at: string;
+};
+
+function PendingButton({
+  children,
+  color,
+}: {
+  children: React.ReactNode;
+  color?: string;
+}) {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" size="xs" loading={pending} color={color}>
+      {children}
+    </Button>
+  );
+}
+
+function MemberRow({
+  member,
+  actorRole,
+  actorId,
+}: {
+  member: TenantMember;
+  actorRole: "admin" | "owner";
+  actorId: string;
+}) {
+  const [roleState, roleAction] = useFormState(
+    updateTenantMemberRoleAction,
+    initialState
+  );
+  const [removeState, removeAction] = useFormState(
+    removeTenantMemberAction,
+    initialState
+  );
+  const roles =
+    actorRole === "owner"
+      ? ["member", "admin", "owner"]
+      : ["member", "admin"];
+  const isSelf = member.id === actorId;
+
+  return (
+    <Table.Tr>
+      <Table.Td>
+        <Text fw={600}>
+          {[member.first_name, member.last_name].filter(Boolean).join(" ") ||
+            member.email ||
+            member.id}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {member.email ?? member.id}
+        </Text>
+        {(roleState.status === "error" || removeState.status === "error") && (
+          <Alert color="red" mt="xs" py="xs">
+            {roleState.status === "error"
+              ? roleState.message
+              : removeState.message}
+          </Alert>
+        )}
+        {(roleState.status === "success" || removeState.status === "success") && (
+          <Text size="xs" c="green" mt="xs">
+            {roleState.status === "success"
+              ? roleState.message
+              : removeState.message}
+          </Text>
+        )}
+      </Table.Td>
+      <Table.Td>{member.title ?? "—"}</Table.Td>
+      <Table.Td>
+        <form action={roleAction}>
+          <input type="hidden" name="userId" value={member.id} />
+          <Group gap="xs" wrap="nowrap">
+            <NativeSelect
+              name="tenantRole"
+              defaultValue={member.tenant_role}
+              data={roles}
+              size="xs"
+              disabled={
+                isSelf ||
+                (actorRole !== "owner" && member.tenant_role === "owner")
+              }
+            />
+            <PendingButton>Save</PendingButton>
+          </Group>
+        </form>
+      </Table.Td>
+      <Table.Td>
+        <form action={removeAction}>
+          <Stack gap="xs">
+            <input type="hidden" name="userId" value={member.id} />
+            <Checkbox
+              name="confirmation"
+              value="confirmed"
+              label="Confirm"
+              size="xs"
+              disabled={isSelf}
+              required
+            />
+            <PendingButton color="red">Remove</PendingButton>
+          </Stack>
+        </form>
+      </Table.Td>
+    </Table.Tr>
+  );
+}
+
+export function TenantMembersTable({
+  members,
+  actorRole,
+  actorId,
+}: {
+  members: TenantMember[];
+  actorRole: "admin" | "owner";
+  actorId: string;
+}) {
+  return (
+    <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+      <Table.ScrollContainer minWidth={850}>
+        <Table striped highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Member</Table.Th>
+              <Table.Th>Title</Table.Th>
+              <Table.Th>Tenant role</Table.Th>
+              <Table.Th>Remove membership</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {members.map((member) => (
+              <MemberRow
+                key={member.id}
+                member={member}
+                actorRole={actorRole}
+                actorId={actorId}
+              />
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
+    </Paper>
+  );
+}

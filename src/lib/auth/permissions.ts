@@ -20,6 +20,7 @@ export const PERMISSIONS = [
   "tenant.data.update",
   "tenant.reports.generate",
   "platform.tenants.create",
+  "platform.tenants.update",
   "platform.tenants.suspend",
 ] as const;
 
@@ -43,7 +44,11 @@ export const ROLE_PERMISSIONS = {
   tenant_member: tenantMemberPermissions,
   tenant_admin: tenantAdminPermissions,
   tenant_owner: tenantAdminPermissions,
-  platform_operator: ["platform.tenants.create", "platform.tenants.suspend"],
+  platform_operator: [
+    "platform.tenants.create",
+    "platform.tenants.update",
+    "platform.tenants.suspend",
+  ],
 } as const satisfies Record<AppRole, readonly Permission[]>;
 
 export function toAppTenantRole(role: TenantRole): AppRole {
