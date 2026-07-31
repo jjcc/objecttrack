@@ -1,6 +1,17 @@
 "use client";
 
-import { Badge, Paper, Table, Text } from "@mantine/core";
+import {
+  Badge,
+  Paper,
+  Table,
+  TableScrollContainer,
+  TableTbody,
+  TableTd,
+  TableTh,
+  TableThead,
+  TableTr,
+  Text,
+} from "@mantine/core";
 import type { Database } from "@/types/database";
 
 type AuditEvent =
@@ -9,45 +20,43 @@ type AuditEvent =
 export function PlatformAuditTable({ events }: { events: AuditEvent[] }) {
   return (
     <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
-      <Table.ScrollContainer minWidth={1200}>
+      <TableScrollContainer minWidth={1200}>
         <Table striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Time</Table.Th>
-              <Table.Th>Tenant</Table.Th>
-              <Table.Th>Action</Table.Th>
-              <Table.Th>Actor</Table.Th>
-              <Table.Th>Target</Table.Th>
-              <Table.Th>Request ID</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
+          <TableThead>
+            <TableTr>
+              <TableTh>Time</TableTh>
+              <TableTh>Tenant</TableTh>
+              <TableTh>Action</TableTh>
+              <TableTh>Actor</TableTh>
+              <TableTh>Target</TableTh>
+              <TableTh>Request ID</TableTh>
+            </TableTr>
+          </TableThead>
+          <TableTbody>
             {events.map((event) => (
-              <Table.Tr key={event.id}>
-                <Table.Td>
-                  {new Date(event.created_at).toLocaleString()}
-                </Table.Td>
-                <Table.Td>{event.tenant_id ?? "Platform"}</Table.Td>
-                <Table.Td>
+              <TableTr key={event.id}>
+                <TableTd>{new Date(event.created_at).toLocaleString()}</TableTd>
+                <TableTd>{event.tenant_id ?? "Platform"}</TableTd>
+                <TableTd>
                   <Badge variant="light">{event.action}</Badge>
-                </Table.Td>
-                <Table.Td>
+                </TableTd>
+                <TableTd>
                   {event.actor_email ?? event.actor_id ?? "System"}
-                </Table.Td>
-                <Table.Td>
+                </TableTd>
+                <TableTd>
                   {event.target_type}
                   {event.target_id ? ` / ${event.target_id}` : ""}
-                </Table.Td>
-                <Table.Td>
+                </TableTd>
+                <TableTd>
                   <Text ff="monospace" size="xs">
                     {event.request_id}
                   </Text>
-                </Table.Td>
-              </Table.Tr>
+                </TableTd>
+              </TableTr>
             ))}
-          </Table.Tbody>
+          </TableTbody>
         </Table>
-      </Table.ScrollContainer>
+      </TableScrollContainer>
     </Paper>
   );
 }

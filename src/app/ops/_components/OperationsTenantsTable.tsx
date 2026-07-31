@@ -1,7 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Badge, Paper, Table, Text } from "@mantine/core";
+import {
+  Badge,
+  Paper,
+  Table,
+  TableScrollContainer,
+  TableTbody,
+  TableTd,
+  TableTh,
+  TableThead,
+  TableTr,
+  Text,
+} from "@mantine/core";
 import type { Database } from "@/types/database";
 
 type Tenant =
@@ -16,21 +27,21 @@ export function OperationsTenantsTable({
 }) {
   return (
     <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
-      <Table.ScrollContainer minWidth={850}>
+      <TableScrollContainer minWidth={850}>
         <Table striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Institution</Table.Th>
-              <Table.Th>Status</Table.Th>
-              <Table.Th>Owner invitation</Table.Th>
-              <Table.Th>Defaults</Table.Th>
-              <Table.Th>Created</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
+          <TableThead>
+            <TableTr>
+              <TableTh>Institution</TableTh>
+              <TableTh>Status</TableTh>
+              <TableTh>Owner invitation</TableTh>
+              <TableTh>Defaults</TableTh>
+              <TableTh>Created</TableTh>
+            </TableTr>
+          </TableThead>
+          <TableTbody>
             {tenants.map((tenant) => (
-              <Table.Tr key={tenant.id}>
-                <Table.Td>
+              <TableTr key={tenant.id}>
+                <TableTd>
                   <Text
                     component={Link}
                     href={`/ops/tenants/${tenant.id}`}
@@ -41,33 +52,33 @@ export function OperationsTenantsTable({
                   <Text size="xs" c="dimmed">
                     {tenant.email ?? "No institution email"}
                   </Text>
-                </Table.Td>
-                <Table.Td>
+                </TableTd>
+                <TableTd>
                   <Badge color={tenant.status === "active" ? "green" : "red"}>
                     {tenant.status}
                   </Badge>
-                </Table.Td>
-                <Table.Td>
+                </TableTd>
+                <TableTd>
                   {tenant.initial_owner_email ?? "Legacy tenant"}
-                </Table.Td>
-                <Table.Td>v{tenant.defaults_version}</Table.Td>
-                <Table.Td>
+                </TableTd>
+                <TableTd>v{tenant.defaults_version}</TableTd>
+                <TableTd>
                   {new Date(tenant.created_at).toLocaleDateString()}
-                </Table.Td>
-              </Table.Tr>
+                </TableTd>
+              </TableTr>
             ))}
             {!hasError && tenants.length === 0 ? (
-              <Table.Tr>
-                <Table.Td colSpan={5}>
+              <TableTr>
+                <TableTd colSpan={5}>
                   <Text ta="center" c="dimmed" py="xl">
                     No tenants found.
                   </Text>
-                </Table.Td>
-              </Table.Tr>
+                </TableTd>
+              </TableTr>
             ) : null}
-          </Table.Tbody>
+          </TableTbody>
         </Table>
-      </Table.ScrollContainer>
+      </TableScrollContainer>
     </Paper>
   );
 }
