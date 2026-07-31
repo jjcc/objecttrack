@@ -86,8 +86,8 @@ export default function RegisterPage() {
           Request Access
         </Title>
         <Text size="sm" c="dimmed" ta="center" mb="lg">
-          Creating an account does not grant admin access automatically. An existing
-          admin must add your user to `admin_users`.
+          Creating an account does not grant tenant access automatically. An authorized
+          tenant administrator or owner must add you as a member of their tenant.
         </Text>
 
         {error && (

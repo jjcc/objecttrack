@@ -94,6 +94,7 @@ export type Database = {
           group_id: number
           id: number
           object_id: number
+          tenant_id: number
         }
         Insert: {
           created_at?: string
@@ -104,6 +105,7 @@ export type Database = {
           group_id: number
           id?: never
           object_id: number
+          tenant_id?: number
         }
         Update: {
           created_at?: string
@@ -114,6 +116,7 @@ export type Database = {
           group_id?: number
           id?: never
           object_id?: number
+          tenant_id?: number
         }
         Relationships: [
           {
@@ -332,6 +335,7 @@ export type Database = {
           object_id: number
           reason: string | null
           status: string
+          tenant_id: number
           to_user_id: string
           updated_at: string
         }
@@ -343,6 +347,7 @@ export type Database = {
           object_id: number
           reason?: string | null
           status?: string
+          tenant_id?: number
           to_user_id: string
           updated_at?: string
         }
@@ -354,6 +359,7 @@ export type Database = {
           object_id?: number
           reason?: string | null
           status?: string
+          tenant_id?: number
           to_user_id?: string
           updated_at?: string
         }
@@ -387,6 +393,7 @@ export type Database = {
           phone: string | null
           province: string | null
           tenant_id: number
+          tenant_role: "member" | "admin" | "owner"
           title: string | null
           wechat_id: string | null
           zipcode: string | null
@@ -403,6 +410,7 @@ export type Database = {
           phone?: string | null
           province?: string | null
           tenant_id: number
+          tenant_role?: "member" | "admin" | "owner"
           title?: string | null
           wechat_id?: string | null
           zipcode?: string | null
@@ -419,6 +427,7 @@ export type Database = {
           phone?: string | null
           province?: string | null
           tenant_id?: number
+          tenant_role?: "member" | "admin" | "owner"
           title?: string | null
           wechat_id?: string | null
           zipcode?: string | null
@@ -462,6 +471,7 @@ export type Database = {
       approve_transfer: { Args: { p_request_id: number }; Returns: undefined }
       can_view_object_image: { Args: { p_name: string }; Returns: boolean }
       current_tenant_id: { Args: never; Returns: number }
+      current_tenant_role: { Args: never; Returns: string }
       group_profile_directory: {
         Args: never
         Returns: {
@@ -471,6 +481,11 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      is_platform_operator: { Args: never; Returns: boolean }
+      has_permission: {
+        Args: { p_permission: string; p_tenant_id?: number }
+        Returns: boolean
+      }
       object_info: {
         Args: { p_object_id: number }
         Returns: {

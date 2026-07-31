@@ -40,21 +40,8 @@ export function AuthGate({ children }: AuthGateProps) {
         return;
       }
 
-      const { data: adminData } = await supabase
-        .from("admin_users")
-        .select("id")
-        .eq("id", session.user.id)
-        .maybeSingle();
-
-      if (!adminData) {
-        setIsAuthenticated(false);
-        setIsLoading(false);
-        if (!isPublicPath) {
-          router.replace("/unauthorized");
-        }
-        return;
-      }
-
+      // Rendering convenience only. The server and RLS remain authoritative
+      // for membership, tenant scope, and permissions.
       setIsAuthenticated(true);
       setIsLoading(false);
     }
