@@ -56,6 +56,7 @@ const { data: jobs, error: claimError } = await supabase.rpc(
 if (claimError) throw claimError;
 
 for (const job of jobs ?? []) {
+  let uploadedPath = null;
   try {
     if (job.report_type !== "inventory") {
       throw new Error(`Unsupported report type: ${job.report_type}`);
@@ -82,6 +83,7 @@ for (const job of jobs ?? []) {
         upsert: false,
       });
     if (uploadError) throw uploadError;
+    uploadedPath = storagePath;
 
     const { error: completeError } = await supabase.rpc(
       "complete_tenant_report_job",
@@ -95,6 +97,12 @@ for (const job of jobs ?? []) {
     );
     if (completeError) throw completeError;
   } catch (error) {
+    if (uploadedPath) {
+      const { error: cleanupError } = await supabase.storage
+        .from("tenant-reports")
+        .remove([uploadedPath]);
+      if (cleanupError) console.error(cleanupError);
+    }
     const { error: failError } = await supabase.rpc("fail_tenant_report_job", {
       p_report_job_id: job.id,
       p_failure_message:

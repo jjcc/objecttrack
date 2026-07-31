@@ -581,7 +581,34 @@ export type Database = {
         Returns: number
       }
       approve_transfer: { Args: { p_request_id: number }; Returns: undefined }
+      authorize_tenant_report_download: {
+        Args: { p_report_job_id: string }
+        Returns: string
+      }
+      can_download_tenant_report: {
+        Args: { p_storage_path: string }
+        Returns: boolean
+      }
       can_view_object_image: { Args: { p_name: string }; Returns: boolean }
+      claim_tenant_report_jobs: {
+        Args: { p_limit?: number }
+        Returns: {
+          id: string
+          report_type: string
+          requested_by: string
+          tenant_id: number
+        }[]
+      }
+      complete_tenant_report_job: {
+        Args: {
+          p_checksum_sha256: string
+          p_file_size_bytes: number
+          p_report_job_id: string
+          p_row_count: number
+          p_storage_path: string
+        }
+        Returns: undefined
+      }
       create_tenant_invitation: {
         Args: {
           p_expires_at: string
@@ -599,6 +626,17 @@ export type Database = {
       }
       current_tenant_id: { Args: never; Returns: number }
       current_tenant_role: { Args: never; Returns: string }
+      expire_tenant_report_jobs: {
+        Args: never
+        Returns: {
+          report_job_id: string
+          storage_path: string
+        }[]
+      }
+      fail_tenant_report_job: {
+        Args: { p_failure_message: string; p_report_job_id: string }
+        Returns: undefined
+      }
       group_profile_directory: {
         Args: never
         Returns: {
@@ -734,6 +772,14 @@ export type Database = {
         Returns: undefined
       }
       remove_tenant_member: { Args: { p_user_id: string }; Returns: undefined }
+      request_tenant_report: {
+        Args: { p_force_background?: boolean; p_report_type?: string }
+        Returns: {
+          delivery_mode: string
+          report_job_id: string
+          report_row_count: number
+        }[]
+      }
       request_transfer: {
         Args: { p_object_id: number; p_to_user_id: string }
         Returns: number
@@ -761,6 +807,18 @@ export type Database = {
           website: string
         }[]
       }
+      tenant_inventory_report: {
+        Args: never
+        Returns: {
+          category_name: string
+          created_at: string
+          description: string
+          model: string
+          object_id: number
+          object_name: string
+          owner_email: string
+        }[]
+      }
       tenant_invitations: {
         Args: never
         Returns: {
@@ -786,6 +844,20 @@ export type Database = {
           last_name: string
           tenant_role: string
           title: string
+        }[]
+      }
+      tenant_report_jobs: {
+        Args: never
+        Returns: {
+          completed_at: string
+          download_count: number
+          failure_message: string
+          id: string
+          report_type: string
+          requested_at: string
+          retention_until: string
+          row_count: number
+          status: string
         }[]
       }
       update_current_tenant_profile: {
