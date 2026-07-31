@@ -257,6 +257,27 @@ begin
     raise exception 'Transfer request read isolation failed for member';
   end if;
 
+  select count(*) into v_count
+  from public.profile_names(
+    array['91000000-0000-4000-8000-000000000004'::uuid]
+  );
+  if v_count <> 0 then
+    raise exception 'Profile name helper exposed another tenant';
+  end if;
+
+  v_denied := false;
+  begin
+    perform public.request_transfer(
+      910000002,
+      '91000000-0000-4000-8000-000000000004'
+    );
+  exception
+    when sqlstate 'P0002' then v_denied := true;
+  end;
+  if not v_denied then
+    raise exception 'Transfer RPC accepted another tenant object';
+  end if;
+
   update public.tenant
   set description = 'member update must not apply'
   where id = 910000001;
@@ -319,6 +340,18 @@ begin
      or public.has_permission('platform.tenants.suspend')
      or public.has_permission('tenant.data.update', 910000002) then
     raise exception 'Tenant admin received platform or cross-tenant permission';
+  end if;
+
+  v_denied := false;
+  begin
+    update public.user_profiles
+    set tenant_role = 'owner'
+    where id = '91000000-0000-4000-8000-000000000001';
+  exception
+    when sqlstate '42501' then v_denied := true;
+  end;
+  if not v_denied then
+    raise exception 'Tenant admin granted the owner role';
   end if;
 
   insert into public.groups (title)

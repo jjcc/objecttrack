@@ -311,8 +311,36 @@ ALTER TABLE public.transfer_requests
 
 CREATE INDEX events_tenant_id_created_at_idx
   ON public.events (tenant_id, created_at DESC);
+CREATE INDEX events_group_tenant_idx
+  ON public.events (group_id, tenant_id);
+CREATE INDEX events_object_tenant_idx
+  ON public.events (object_id, tenant_id);
+CREATE INDEX events_event_type_tenant_idx
+  ON public.events (event_type_id, tenant_id);
+CREATE INDEX events_from_profile_tenant_idx
+  ON public.events (e_from, tenant_id);
+CREATE INDEX events_to_profile_tenant_idx
+  ON public.events (e_to, tenant_id);
+CREATE INDEX objects_category_tenant_idx
+  ON public.objects (category_id, tenant_id);
+CREATE INDEX objects_owner_tenant_idx
+  ON public.objects (current_owner_id, tenant_id);
 CREATE INDEX transfer_requests_tenant_id_status_created_at_idx
   ON public.transfer_requests (tenant_id, status, created_at DESC);
+CREATE INDEX transfer_requests_object_tenant_idx
+  ON public.transfer_requests (object_id, tenant_id);
+CREATE INDEX transfer_requests_group_tenant_idx
+  ON public.transfer_requests (group_id, tenant_id);
+CREATE INDEX transfer_requests_from_profile_tenant_idx
+  ON public.transfer_requests (from_user_id, tenant_id);
+CREATE INDEX transfer_requests_to_profile_tenant_idx
+  ON public.transfer_requests (to_user_id, tenant_id);
+CREATE INDEX user_profiles_group_tenant_idx
+  ON public.user_profiles (group_id, tenant_id);
+CREATE INDEX role_permissions_permission_idx
+  ON private.role_permissions (permission);
+CREATE INDEX platform_operators_created_by_idx
+  ON private.platform_operators (created_by);
 
 CREATE TRIGGER events_assign_current_tenant
 BEFORE INSERT ON public.events
@@ -811,7 +839,19 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.admin_users,
   public.object_custom_schemas, public.objects, public.tenant,
   public.transfer_requests, public.user_profiles TO service_role;
 
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated, service_role;
+-- Authenticated callers need sequence access only for tables they may insert
+-- into directly. Do not expose tenant/transfer sequence state or let arbitrary
+-- callers advance sequences owned by service-only workflows.
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon, authenticated;
+GRANT USAGE ON SEQUENCE
+  public.categories_id_seq,
+  public.event_types_id_seq,
+  public.events_id_seq,
+  public.groups_id_seq,
+  public.object_custom_schemas_id_seq,
+  public.objects_id_seq
+TO authenticated;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO service_role;
 
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
   REVOKE SELECT, INSERT, UPDATE, DELETE ON TABLES FROM anon, authenticated, service_role;
