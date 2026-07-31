@@ -67,6 +67,7 @@ SELECT set_config(
   '92000000-0000-4000-8000-000000000001',
   true
 );
+SELECT set_config('request.jwt.claim.aal', 'aal2', true);
 
 INSERT INTO phase2_result (tenant_id)
 SELECT public.provision_tenant(

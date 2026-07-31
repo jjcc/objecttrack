@@ -2,6 +2,7 @@ import "server-only";
 
 import type { Permission } from "@/lib/auth/permissions";
 import {
+  AuthorizationError,
   getAuthenticatedAccessContext,
   requirePlatformPermission,
 } from "@/lib/auth/tenant-context";
@@ -17,7 +18,21 @@ export async function requirePlatformAccess(permission: PlatformPermission) {
   } = await supabase.auth.getUser();
 
   if (error || !user) {
-    throw new Error("Authentication is required.");
+    throw new AuthorizationError("unauthenticated", "Authentication is required.");
+  }
+
+  const { data: assurance, error: assuranceError } =
+    await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (assuranceError) {
+    throw new Error(
+      `Unable to verify operator authentication strength: ${assuranceError.message}`
+    );
+  }
+  if (assurance.currentLevel !== "aal2") {
+    throw new AuthorizationError(
+      "mfa_required",
+      "Platform operations require multi-factor authentication at AAL2."
+    );
   }
 
   const context = await getAuthenticatedAccessContext(supabase, user);

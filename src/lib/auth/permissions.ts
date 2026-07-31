@@ -19,9 +19,11 @@ export const PERMISSIONS = [
   "tenant.data.read",
   "tenant.data.update",
   "tenant.reports.generate",
+  "tenant.audit.read",
   "platform.tenants.create",
   "platform.tenants.update",
   "platform.tenants.suspend",
+  "platform.audit.read",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -38,6 +40,7 @@ const tenantAdminPermissions = [
   "tenant.users.roles.update",
   "tenant.data.update",
   "tenant.reports.generate",
+  "tenant.audit.read",
 ] as const satisfies readonly Permission[];
 
 export const ROLE_PERMISSIONS = {
@@ -48,6 +51,7 @@ export const ROLE_PERMISSIONS = {
     "platform.tenants.create",
     "platform.tenants.update",
     "platform.tenants.suspend",
+    "platform.audit.read",
   ],
 } as const satisfies Record<AppRole, readonly Permission[]>;
 

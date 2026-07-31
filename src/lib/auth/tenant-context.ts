@@ -15,7 +15,8 @@ export type AuthorizationErrorCode =
   | "unauthenticated"
   | "membership_required"
   | "forbidden"
-  | "tenant_mismatch";
+  | "tenant_mismatch"
+  | "mfa_required";
 
 export class AuthorizationError extends Error {
   readonly status: 401 | 403;

@@ -11,6 +11,7 @@ const adminLinks = [
   { href: "/admin/members", label: "Members" },
   { href: "/admin/invitations", label: "Invitations" },
   { href: "/admin/reports", label: "Reports" },
+  { href: "/admin/audit", label: "Audit" },
 ];
 
 export default async function TenantAdminLayout({

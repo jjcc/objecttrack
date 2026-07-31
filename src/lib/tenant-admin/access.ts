@@ -13,6 +13,7 @@ type TenantPermission = Extract<
   | "tenant.users.roles.update"
   | "tenant.users.invite"
   | "tenant.reports.generate"
+  | "tenant.audit.read"
 >;
 
 export async function requireTenantAdminAccess(

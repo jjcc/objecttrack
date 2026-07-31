@@ -10,13 +10,23 @@ export default async function OperationsLayout({
   children: React.ReactNode;
 }) {
   let authorized = false;
+  let mfaRequired = false;
   try {
-    await requirePlatformAccess("platform.tenants.update");
+    const { supabase } = await requirePlatformAccess("platform.tenants.update");
+    const { error: auditError } = await supabase.rpc(
+      "record_platform_operator_access",
+      { p_path: "/ops" }
+    );
+    if (auditError) throw new Error(auditError.message);
     authorized = true;
   } catch (error) {
+    if (error instanceof AuthorizationError && error.code === "mfa_required") {
+      mfaRequired = true;
+    }
     if (!(error instanceof AuthorizationError)) throw error;
   }
 
+  if (mfaRequired) redirect("/mfa?next=/ops");
   if (!authorized) redirect("/unauthorized");
 
   return (
@@ -37,6 +47,9 @@ export default async function OperationsLayout({
           <Group>
             <Anchor component={Link} href="/ops">
               Tenants
+            </Anchor>
+            <Anchor component={Link} href="/ops/audit">
+              Audit & monitoring
             </Anchor>
             <Anchor component={Link} href="/dashboard">
               Customer application

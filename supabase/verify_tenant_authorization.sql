@@ -465,6 +465,7 @@ select set_config(
   '91000000-0000-4000-8000-000000000005',
   true
 );
+select set_config('request.jwt.claim.aal', 'aal2', true);
 
 do $$
 declare
