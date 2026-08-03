@@ -12,6 +12,7 @@ import {
   Table,
   SimpleGrid,
   LoadingOverlay,
+  Alert,
 } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
@@ -32,33 +33,53 @@ export default function UserShowPage() {
   const [record, setRecord] = useState<Record<string, unknown> | null>(null);
   const [events, setEvents] = useState<Record<string, unknown>[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true);
+      setLoadError(null);
       const supabase = getSupabaseClient();
 
-      const { data: userData } = await supabase
-        .from("user_profiles")
-        .select("*, groups(title)")
-        .eq("id", id)
-        .single();
+      try {
+        const [userResult, eventsResult] = await Promise.all([
+          supabase
+            .from("user_profiles")
+            .select("*, groups!user_profiles_group_tenant_fkey(title)")
+            .eq("id", id)
+            .single(),
+          supabase
+            .from("events")
+            .select("*, objects!events_object_tenant_fkey(name), event_types!events_event_type_tenant_fkey(label), from:user_profiles!events_from_profile_tenant_fkey(first_name, last_name), to:user_profiles!events_to_profile_tenant_fkey(first_name, last_name)")
+            .or(`e_from.eq.${id},e_to.eq.${id}`)
+            .order("created_at", { ascending: false })
+            .limit(50),
+        ]);
 
-      setRecord(userData as unknown as Record<string, unknown> | null);
-
-      const { data: eventsData } = await supabase
-        .from("events")
-        .select("*, objects(name), event_types(label), from:user_profiles!events_e_from_fkey(first_name, last_name), to:user_profiles!events_e_to_fkey(first_name, last_name)")
-        .or(`e_from.eq.${id},e_to.eq.${id}`)
-        .order("created_at", { ascending: false })
-        .limit(50);
-
-      setEvents((eventsData ?? []) as unknown as Record<string, unknown>[]);
-      setIsLoading(false);
+        if (userResult.error || eventsResult.error) {
+          setLoadError(t("loadFailed"));
+        }
+        setRecord(
+          userResult.error
+            ? null
+            : (userResult.data as unknown as Record<string, unknown> | null)
+        );
+        setEvents(
+          eventsResult.error
+            ? []
+            : ((eventsResult.data ?? []) as unknown as Record<string, unknown>[])
+        );
+      } catch {
+        setRecord(null);
+        setEvents([]);
+        setLoadError(t("loadFailed"));
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     fetchData();
-  }, [id]);
+  }, [id, t]);
 
   const group = record?.groups as Record<string, string> | null;
 
@@ -85,6 +106,8 @@ export default function UserShowPage() {
             {t("edit")}
           </Button>
         </Group>
+
+        {loadError ? <Alert color="red">{loadError}</Alert> : null}
 
         <Paper withBorder p="md" radius="md" pos="relative">
           <LoadingOverlay visible={isLoading} />

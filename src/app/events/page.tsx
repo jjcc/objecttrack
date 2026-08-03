@@ -11,6 +11,7 @@ import {
   Select,
   SimpleGrid,
   Paper,
+  Alert,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { DataTable } from "mantine-datatable";
@@ -39,6 +40,7 @@ export default function EventsListPage() {
   const [records, setRecords] = useState<Record<string, unknown>[]>([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
@@ -65,11 +67,12 @@ export default function EventsListPage() {
   useEffect(() => {
     async function fetchEvents() {
       setIsLoading(true);
+      setLoadError(null);
       const supabase = getSupabaseClient();
 
       let query = supabase
         .from("events")
-        .select("*, objects(name), event_types(label), groups(title), from:user_profiles!events_e_from_fkey(first_name, last_name), to:user_profiles!events_e_to_fkey(first_name, last_name)", { count: "exact" });
+        .select("*, objects!events_object_tenant_fkey(name), event_types!events_event_type_tenant_fkey(label), groups!events_group_tenant_fkey(title), from:user_profiles!events_from_profile_tenant_fkey(first_name, last_name), to:user_profiles!events_to_profile_tenant_fkey(first_name, last_name)", { count: "exact" });
 
       if (eventTypeFilter) {
         query = query.eq("event_type_id", Number(eventTypeFilter));
@@ -88,7 +91,11 @@ export default function EventsListPage() {
         .order("created_at", { ascending: false })
         .range((page - 1) * pageSize, page * pageSize - 1);
 
-      if (!error) {
+      if (error) {
+        setRecords([]);
+        setTotalRecords(0);
+        setLoadError(t("loadFailed"));
+      } else {
         setRecords((data ?? []) as unknown as Record<string, unknown>[]);
         setTotalRecords(count ?? 0);
       }
@@ -96,7 +103,7 @@ export default function EventsListPage() {
     }
 
     fetchEvents();
-  }, [eventTypeFilter, groupFilter, dateFrom, dateTo, page]);
+  }, [eventTypeFilter, groupFilter, dateFrom, dateTo, page, t]);
 
   return (
     <AppShell>
@@ -150,6 +157,8 @@ export default function EventsListPage() {
             />
           </SimpleGrid>
         </Paper>
+
+        {loadError ? <Alert color="red">{loadError}</Alert> : null}
 
         <DataTable
           withTableBorder

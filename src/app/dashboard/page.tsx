@@ -11,6 +11,7 @@ import {
   Anchor,
   Stack,
   Badge,
+  Alert,
 } from "@mantine/core";
 import {
   IconBox,
@@ -59,41 +60,50 @@ export default function DashboardPage() {
   const [totalUsers, setTotalUsers] = useState(0);
   const [pendingTransfers, setPendingTransfers] = useState(0);
   const [recentEvents, setRecentEvents] = useState<Record<string, unknown>[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       const supabase = getSupabaseClient();
-
-      const { count: objCount } = await supabase
-        .from("objects")
-        .select("*", { count: "exact", head: true });
-      setTotalObjects(objCount ?? 0);
-
-      const { count: userCount } = await supabase
-        .from("user_profiles")
-        .select("*", { count: "exact", head: true });
-      setTotalUsers(userCount ?? 0);
-
-      const { count: transferCount } = await supabase
-        .from("transfer_requests")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "pending");
-      setPendingTransfers(transferCount ?? 0);
-
+      setLoadError(null);
       const weekStart = dayjs().subtract(7, "day").toISOString();
 
-      const { data: events } = await supabase
-        .from("events")
-        .select("*, objects(name), event_types(label), from:user_profiles!events_e_from_fkey(first_name, last_name), to:user_profiles!events_e_to_fkey(first_name, last_name)")
-        .gte("created_at", weekStart)
-        .order("created_at", { ascending: false })
-        .limit(15);
+      const [objectsResult, usersResult, transfersResult, eventsResult] =
+        await Promise.all([
+          supabase.from("objects").select("*", { count: "exact", head: true }),
+          supabase.from("user_profiles").select("*", { count: "exact", head: true }),
+          supabase
+            .from("transfer_requests")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "pending"),
+          supabase
+            .from("events")
+            .select("*, objects!events_object_tenant_fkey(name), event_types!events_event_type_tenant_fkey(label), from:user_profiles!events_from_profile_tenant_fkey(first_name, last_name), to:user_profiles!events_to_profile_tenant_fkey(first_name, last_name)")
+            .gte("created_at", weekStart)
+            .order("created_at", { ascending: false })
+            .limit(15),
+        ]);
 
-      setRecentEvents((events ?? []) as unknown as Record<string, unknown>[]);
+      if (
+        objectsResult.error ||
+        usersResult.error ||
+        transfersResult.error ||
+        eventsResult.error
+      ) {
+        setLoadError(t("loadFailed"));
+      }
+      setTotalObjects(objectsResult.count ?? 0);
+      setTotalUsers(usersResult.count ?? 0);
+      setPendingTransfers(transfersResult.count ?? 0);
+      setRecentEvents(
+        eventsResult.error
+          ? []
+          : ((eventsResult.data ?? []) as unknown as Record<string, unknown>[])
+      );
     }
 
     fetchData();
-  }, []);
+  }, [t]);
 
   return (
     <AppShell>
@@ -103,6 +113,8 @@ export default function DashboardPage() {
         </Breadcrumbs>
 
         <Title order={2}>{t("title")}</Title>
+
+        {loadError ? <Alert color="red">{loadError}</Alert> : null}
 
         <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
           <StatCard

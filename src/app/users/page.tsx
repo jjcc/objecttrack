@@ -8,6 +8,7 @@ import {
   Group,
   Button,
   ActionIcon,
+  Alert,
   Text,
 } from "@mantine/core";
 import { DataTable } from "mantine-datatable";
@@ -25,21 +26,27 @@ export default function UsersListPage() {
   const [records, setRecords] = useState<Record<string, unknown>[]>([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
   useEffect(() => {
     async function fetchUsers() {
       setIsLoading(true);
+      setLoadError(null);
       const supabase = getSupabaseClient();
 
       const { data, count, error } = await supabase
         .from("user_profiles")
-        .select("*, groups(title)", { count: "exact" })
+        .select("*, groups!user_profiles_group_tenant_fkey(title)", { count: "exact" })
         .order("created_at", { ascending: false })
         .range((page - 1) * pageSize, page * pageSize - 1);
 
-      if (!error) {
+      if (error) {
+        setRecords([]);
+        setTotalRecords(0);
+        setLoadError(t("loadFailed"));
+      } else {
         setRecords((data ?? []) as unknown as Record<string, unknown>[]);
         setTotalRecords(count ?? 0);
       }
@@ -47,7 +54,7 @@ export default function UsersListPage() {
     }
 
     fetchUsers();
-  }, [page]);
+  }, [page, t]);
 
   return (
     <AppShell>
@@ -66,6 +73,8 @@ export default function UsersListPage() {
             {t("create")}
           </Button>
         </Group>
+
+        {loadError ? <Alert color="red">{loadError}</Alert> : null}
 
         <DataTable
           withTableBorder

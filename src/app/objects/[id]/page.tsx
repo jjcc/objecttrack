@@ -13,6 +13,7 @@ import {
   SimpleGrid,
   LoadingOverlay,
   Image,
+  Alert,
 } from "@mantine/core";
 import { IconEdit, IconExternalLink } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
@@ -34,40 +35,62 @@ export default function ObjectShowPage() {
   const [events, setEvents] = useState<Record<string, unknown>[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true);
+      setLoadError(null);
       const supabase = getSupabaseClient();
 
-      const { data: objectData } = await supabase
-        .from("objects")
-        .select("*, categories(name)")
-        .eq("id", Number(id))
-        .single();
+      try {
+        const [objectResult, eventsResult] = await Promise.all([
+          supabase
+            .from("objects")
+            .select("*, categories!objects_category_tenant_fkey(name)")
+            .eq("id", Number(id))
+            .single(),
+          supabase
+            .from("events")
+            .select("*, event_types!events_event_type_tenant_fkey(label), from:user_profiles!events_from_profile_tenant_fkey(first_name, last_name), to:user_profiles!events_to_profile_tenant_fkey(first_name, last_name), groups!events_group_tenant_fkey(title)")
+            .eq("object_id", Number(id))
+            .order("created_at", { ascending: false })
+            .limit(50),
+        ]);
 
-      setRecord(objectData as unknown as Record<string, unknown> | null);
-      const imagePath = (objectData as unknown as Record<string, unknown> | null)?.image;
-      if (typeof imagePath === "string" && imagePath) {
-        const { data } = await supabase.storage
-          .from("object-images")
-          .createSignedUrl(imagePath, 60 * 60);
-        setImageUrl(data?.signedUrl ?? null);
+        if (objectResult.error || eventsResult.error) {
+          setLoadError(t("loadFailed"));
+        }
+
+        const objectData = objectResult.error ? null : objectResult.data;
+        setRecord(objectData as unknown as Record<string, unknown> | null);
+        setEvents(
+          eventsResult.error
+            ? []
+            : ((eventsResult.data ?? []) as unknown as Record<string, unknown>[])
+        );
+
+        const imagePath = (objectData as unknown as Record<string, unknown> | null)?.image;
+        if (typeof imagePath === "string" && imagePath) {
+          const { data } = await supabase.storage
+            .from("object-images")
+            .createSignedUrl(imagePath, 60 * 60);
+          setImageUrl(data?.signedUrl ?? null);
+        } else {
+          setImageUrl(null);
+        }
+      } catch {
+        setRecord(null);
+        setEvents([]);
+        setImageUrl(null);
+        setLoadError(t("loadFailed"));
+      } finally {
+        setIsLoading(false);
       }
-
-      const { data: eventsData } = await supabase
-        .from("events")
-        .select("*, event_types(label), from:user_profiles!events_e_from_fkey(first_name, last_name), to:user_profiles!events_e_to_fkey(first_name, last_name), groups(title)")
-        .eq("object_id", Number(id))
-        .order("created_at", { ascending: false })
-        .limit(50);
-
-      setEvents((eventsData ?? []) as unknown as Record<string, unknown>[]);
-      setIsLoading(false);
     }
 
     fetchData();
-  }, [id]);
+  }, [id, t]);
 
   const category = record?.categories as Record<string, string> | null;
   const extra = (record?.extra as Record<string, unknown> | null) ?? {};
@@ -100,6 +123,8 @@ export default function ObjectShowPage() {
             </Button>
           </Group>
         </Group>
+
+        {loadError ? <Alert color="red">{loadError}</Alert> : null}
 
         <Paper withBorder p="md" radius="md" pos="relative">
           <LoadingOverlay visible={isLoading} />

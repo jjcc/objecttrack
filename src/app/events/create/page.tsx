@@ -96,7 +96,7 @@ export default function EventCreatePage() {
       const supabase = getSupabaseClient();
       const { data } = await supabase
         .from("events")
-        .select("id, object_id, e_from, e_to, created_at, to:user_profiles!events_e_to_fkey(first_name, last_name, email)")
+        .select("id, object_id, e_from, e_to, created_at, to:user_profiles!events_to_profile_tenant_fkey(first_name, last_name, email)")
         .eq("object_id", selectedObjectId)
         .not("e_to", "is", null)
         .order("created_at", { ascending: false })

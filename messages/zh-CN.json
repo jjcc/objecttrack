@@ -127,7 +127,8 @@
       "eventType": "事件类型", "allTypes": "所有类型", "group": "群组", "allGroups": "所有群组",
       "dateFrom": "开始日期", "startDate": "选择开始日期", "dateTo": "结束日期", "endDate": "选择结束日期",
       "object": "物品", "type": "类型", "from": "来自", "to": "去向", "date": "日期",
-      "initial": "—（初始）", "noEvents": "未找到事件"
+      "initial": "—（初始）", "noEvents": "未找到事件",
+      "loadFailed": "无法加载事件，请重试。"
     },
     "form": {
       "dashboard": "控制面板", "events": "事件", "record": "记录事件", "group": "群组",
@@ -172,7 +173,7 @@
       "dashboard": "控制面板", "title": "用户", "create": "创建用户", "name": "姓名",
       "jobTitle": "职务", "group": "群组", "email": "电子邮箱", "phone": "电话",
       "location": "位置", "actions": "操作", "view": "查看用户", "edit": "编辑用户",
-      "noUsers": "未找到用户"
+      "noUsers": "未找到用户", "loadFailed": "无法加载用户，请重试。"
     },
     "detail": {
       "dashboard": "控制面板", "users": "用户", "detail": "详情", "title": "用户详情",
@@ -180,7 +181,8 @@
       "jobTitle": "职务", "group": "群组", "phone": "电话", "city": "城市", "country": "国家",
       "wechatId": "微信号", "eventHistory": "事件历史", "object": "物品",
       "eventType": "事件类型", "from": "来自", "to": "去向", "date": "日期",
-      "noEvents": "暂无涉及此用户的事件"
+      "noEvents": "暂无涉及此用户的事件",
+      "loadFailed": "无法加载用户详情，请重试。"
     },
     "form": {
       "dashboard": "控制面板", "users": "用户", "create": "创建", "edit": "编辑",
@@ -227,7 +229,8 @@
     "from": "来自",
     "to": "去向",
     "date": "日期",
-    "noEvents": "暂无事件"
+    "noEvents": "暂无事件",
+    "loadFailed": "无法加载控制面板数据，请重试。"
   },
   "Objects": {
     "dashboard": "控制面板",
@@ -294,7 +297,8 @@
       "to": "去向",
       "date": "日期",
       "initial": "—（初始）",
-      "noEvents": "此物品暂无事件记录"
+      "noEvents": "此物品暂无事件记录",
+      "loadFailed": "无法加载物品详情，请重试。"
     },
     "publicInfo": {
       "invalid": "此物品链接无效。",
@@ -341,6 +345,7 @@
       "view": "查看物品",
       "edit": "编辑物品",
       "noObjects": "未找到物品",
+      "loadFailed": "无法加载物品，请重试。",
       "title": "二维条码",
       "description": "选择一个物品，生成可打开其信息页面的二维条码。",
       "details": "条码详情",

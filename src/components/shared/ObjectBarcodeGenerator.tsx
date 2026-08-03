@@ -2,6 +2,7 @@
 
 import {
   ActionIcon,
+  Alert,
   Group,
   Paper,
   Radio,
@@ -27,21 +28,27 @@ export function ObjectBarcodeGenerator() {
   const [records, setRecords] = useState<Record<string, unknown>[]>([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
   useEffect(() => {
     async function fetchObjects() {
       setIsLoading(true);
+      setLoadError(null);
       const supabase = getSupabaseClient();
 
       const { data, count, error } = await supabase
         .from("objects")
-        .select("*, categories(name)", { count: "exact" })
+        .select("*, categories!objects_category_tenant_fkey(name)", { count: "exact" })
         .order("created_at", { ascending: false })
         .range((page - 1) * pageSize, page * pageSize - 1);
 
-      if (!error) {
+      if (error) {
+        setRecords([]);
+        setTotalRecords(0);
+        setLoadError(t("loadFailed"));
+      } else {
         setRecords((data ?? []) as unknown as Record<string, unknown>[]);
         setTotalRecords(count ?? 0);
       }
@@ -49,10 +56,11 @@ export function ObjectBarcodeGenerator() {
     }
 
     fetchObjects();
-  }, [page]);
+  }, [page, t]);
 
   return (
     <Stack gap="lg">
+      {loadError ? <Alert color="red">{loadError}</Alert> : null}
       <DataTable
         withTableBorder
         borderRadius="md"

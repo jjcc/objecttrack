@@ -127,7 +127,8 @@
       "eventType": "Event Type", "allTypes": "All types", "group": "Group", "allGroups": "All groups",
       "dateFrom": "Date From", "startDate": "Start date", "dateTo": "Date To", "endDate": "End date",
       "object": "Object", "type": "Type", "from": "From", "to": "To", "date": "Date",
-      "initial": "— (initial)", "noEvents": "No events found"
+      "initial": "— (initial)", "noEvents": "No events found",
+      "loadFailed": "Unable to load events. Please try again."
     },
     "form": {
       "dashboard": "Dashboard", "events": "Events", "record": "Record Event", "group": "Group",
@@ -172,7 +173,7 @@
       "dashboard": "Dashboard", "title": "Users", "create": "Create User", "name": "Name",
       "jobTitle": "Title", "group": "Group", "email": "Email", "phone": "Phone",
       "location": "Location", "actions": "Actions", "view": "View user", "edit": "Edit user",
-      "noUsers": "No users found"
+      "noUsers": "No users found", "loadFailed": "Unable to load users. Please try again."
     },
     "detail": {
       "dashboard": "Dashboard", "users": "Users", "detail": "Detail", "title": "User Detail",
@@ -180,7 +181,8 @@
       "jobTitle": "Title", "group": "Group", "phone": "Phone", "city": "City", "country": "Country",
       "wechatId": "WeChat ID", "eventHistory": "Event History", "object": "Object",
       "eventType": "Event Type", "from": "From", "to": "To", "date": "Date",
-      "noEvents": "No events involving this user"
+      "noEvents": "No events involving this user",
+      "loadFailed": "Unable to load the user details. Please try again."
     },
     "form": {
       "dashboard": "Dashboard", "users": "Users", "create": "Create", "edit": "Edit",
@@ -227,7 +229,8 @@
     "from": "From",
     "to": "To",
     "date": "Date",
-    "noEvents": "No events yet"
+    "noEvents": "No events yet",
+    "loadFailed": "Unable to load dashboard data. Please try again."
   },
   "Objects": {
     "dashboard": "Dashboard",
@@ -294,7 +297,8 @@
       "to": "To",
       "date": "Date",
       "initial": "— (initial)",
-      "noEvents": "No events recorded for this object"
+      "noEvents": "No events recorded for this object",
+      "loadFailed": "Unable to load the object details. Please try again."
     },
     "publicInfo": {
       "invalid": "This object link is invalid.",
@@ -341,6 +345,7 @@
       "view": "View object",
       "edit": "Edit object",
       "noObjects": "No objects found",
+      "loadFailed": "Unable to load objects. Please try again.",
       "title": "2D Barcode",
       "description": "Select an object to generate a 2D barcode that opens its object information page.",
       "details": "Barcode Details",
