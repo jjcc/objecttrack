@@ -15,6 +15,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useFormState, useFormStatus } from "react-dom";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   createTenantInvitationAction,
   resendTenantInvitationAction,
@@ -61,6 +62,8 @@ function ActionButton({
 }
 
 function InvitationRow({ invitation }: { invitation: TenantInvitation }) {
+  const t = useTranslations("Admin.invitationManager");
+  const format = useFormatter();
   const [resendState, resendAction] = useFormState(
     resendTenantInvitationAction,
     initialState
@@ -78,7 +81,7 @@ function InvitationRow({ invitation }: { invitation: TenantInvitation }) {
       <Table.Td>
         <Text fw={600}>{invitation.invited_email}</Text>
         <Text size="xs" c="dimmed">
-          Created {new Date(invitation.created_at).toLocaleString()}
+          {t("createdAt", { date: format.dateTime(new Date(invitation.created_at), "dateTime") })}
         </Text>
         {feedback.status !== "idle" && (
           <Alert
@@ -96,7 +99,7 @@ function InvitationRow({ invitation }: { invitation: TenantInvitation }) {
           </Alert>
         )}
       </Table.Td>
-      <Table.Td>{invitation.intended_role}</Table.Td>
+      <Table.Td>{invitation.intended_role === "member" || invitation.intended_role === "admin" || invitation.intended_role === "owner" ? t(`roles.${invitation.intended_role}`) : invitation.intended_role}</Table.Td>
       <Table.Td>
         <Badge
           color={
@@ -107,30 +110,30 @@ function InvitationRow({ invitation }: { invitation: TenantInvitation }) {
                 : "gray"
           }
         >
-          {invitation.status}
+          {invitation.status === "pending" || invitation.status === "accepted" || invitation.status === "revoked" || invitation.status === "expired" ? t(`statuses.${invitation.status}`) : invitation.status}
         </Badge>
         <Text size="xs" c="dimmed" mt="xs">
-          Delivery: {invitation.delivery_status}
+          {t("delivery")}: {invitation.delivery_status === "pending" || invitation.delivery_status === "sent" || invitation.delivery_status === "failed" ? t(`deliveryStatuses.${invitation.delivery_status}`) : invitation.delivery_status}
         </Text>
       </Table.Td>
-      <Table.Td>{new Date(invitation.expires_at).toLocaleString()}</Table.Td>
+      <Table.Td>{format.dateTime(new Date(invitation.expires_at), "dateTime")}</Table.Td>
       <Table.Td>
         {pending ? (
           <Group gap="xs">
             <form action={resendAction}>
               <input type="hidden" name="invitationId" value={invitation.id} />
-              <ActionButton variant="light">Resend</ActionButton>
+              <ActionButton variant="light">{t("resend")}</ActionButton>
             </form>
             <form action={revokeAction}>
               <input type="hidden" name="invitationId" value={invitation.id} />
               <ActionButton color="red" variant="light">
-                Revoke
+                {t("revoke")}
               </ActionButton>
             </form>
           </Group>
         ) : (
           <Text size="xs" c="dimmed" mt="xs">
-            No pending actions
+            {t("noPendingActions")}
           </Text>
         )}
       </Table.Td>
@@ -145,21 +148,23 @@ export function InvitationManager({
   invitations: TenantInvitation[];
   actorRole: "admin" | "owner";
 }) {
+  const t = useTranslations("Admin.invitationManager");
   const [createState, createAction] = useFormState(
     createTenantInvitationAction,
     initialState
   );
-  const roles =
+  const roleValues: Array<"member" | "admin" | "owner"> =
     actorRole === "owner"
       ? ["member", "admin", "owner"]
       : ["member", "admin"];
+  const roles = roleValues.map((role) => ({ value: role, label: t(`roles.${role}`) }));
 
   return (
     <Stack gap="lg">
       <Paper withBorder p="lg" radius="md">
         <form action={createAction}>
           <Stack>
-            <Title order={3}>Create invitation</Title>
+            <Title order={3}>{t("createTitle")}</Title>
             {createState.status !== "idle" && (
               <Alert
                 color={
@@ -177,26 +182,26 @@ export function InvitationManager({
               <TextInput
                 name="email"
                 type="email"
-                label="Invited email"
+                label={t("email")}
                 required
               />
               <NativeSelect
                 name="intendedRole"
-                label="Tenant role"
+                label={t("tenantRole")}
                 data={roles}
                 defaultValue="member"
               />
               <TextInput
                 name="expiresInDays"
                 type="number"
-                label="Expires in days"
+                label={t("expiresInDays")}
                 min={1}
                 max={30}
                 defaultValue={7}
                 required
               />
             </SimpleGrid>
-            <ActionButton>Send invitation</ActionButton>
+            <ActionButton>{t("send")}</ActionButton>
           </Stack>
         </form>
       </Paper>
@@ -206,11 +211,9 @@ export function InvitationManager({
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Recipient</Table.Th>
-                <Table.Th>Role</Table.Th>
-                <Table.Th>Status</Table.Th>
-                <Table.Th>Expires</Table.Th>
-                <Table.Th>Actions</Table.Th>
+                <Table.Th>{t("recipient")}</Table.Th><Table.Th>{t("role")}</Table.Th>
+                <Table.Th>{t("status")}</Table.Th><Table.Th>{t("expires")}</Table.Th>
+                <Table.Th>{t("actions")}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -221,7 +224,7 @@ export function InvitationManager({
                 <Table.Tr>
                   <Table.Td colSpan={5}>
                     <Text ta="center" c="dimmed" py="xl">
-                      No invitations yet.
+                      {t("none")}
                     </Text>
                   </Table.Td>
                 </Table.Tr>

@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import { requirePlatformAccess } from "@/lib/ops/access";
 import { OperationsTenantsTable } from "./_components/OperationsTenantsTable";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function OperationsTenantsPage({
 }: {
   searchParams?: { q?: string };
 }) {
+  const t = await getTranslations("Ops.tenants");
   const query = searchParams?.q?.trim() ?? "";
   const { supabase } = await requirePlatformAccess("platform.tenants.update");
   const { data: tenants, error } = await supabase.rpc("platform_tenants", {
@@ -29,13 +31,13 @@ export default async function OperationsTenantsPage({
     <Stack gap="lg">
       <Group justify="space-between" align="end">
         <div>
-          <Title order={2}>Tenants</Title>
+          <Title order={2}>{t("title")}</Title>
           <Text c="dimmed" size="sm">
-            Search, inspect, provision, and control tenant status.
+            {t("description")}
           </Text>
         </div>
         <Button component={Link} href="/ops/tenants/new">
-          Create tenant
+          {t("create")}
         </Button>
       </Group>
 
@@ -44,21 +46,21 @@ export default async function OperationsTenantsPage({
           <Group align="end">
             <TextInput
               name="q"
-              label="Search tenants"
-              placeholder="Institution or email"
+              label={t("searchLabel")}
+              placeholder={t("searchPlaceholder")}
               defaultValue={query}
               style={{ flex: 1 }}
             />
             <Button type="submit" variant="light">
-              Search
+              {t("search")}
             </Button>
           </Group>
         </form>
       </Paper>
 
       {error && (
-        <Alert color="red" title="Unable to load tenants">
-          {error.message}
+        <Alert color="red" title={t("loadFailedTitle")}>
+          {t("loadFailed")}
         </Alert>
       )}
 

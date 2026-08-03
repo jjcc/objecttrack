@@ -12,9 +12,32 @@ const publicPaths = new Set([
   "/unauthorized"
 ]);
 
+const appShellPaths = [
+  "/dashboard",
+  "/objects",
+  "/users",
+  "/groups",
+  "/transfers",
+  "/events",
+  "/settings",
+  "/profile",
+  "/barcode",
+  "/scan",
+  "/admin"
+];
+
+function matchesPath(pathname: string, basePath: string) {
+  return pathname === basePath || pathname.startsWith(`${basePath}/`);
+}
+
 export function PublicLocaleSwitcher() {
   const pathname = usePathname();
-  const isPublic = publicPaths.has(pathname) || pathname.startsWith("/object-info/") || pathname.startsWith("/invitations/accept");
+  const usesAppShell = appShellPaths.some((path) => matchesPath(pathname, path));
+  const isPublic =
+    publicPaths.has(pathname) ||
+    pathname.startsWith("/object-info/") ||
+    pathname.startsWith("/invitations/accept") ||
+    (!usesAppShell && !matchesPath(pathname, "/ops"));
 
   if (!isPublic) return null;
 

@@ -26,19 +26,17 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { z } from "zod";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
 
-const eventTypeSchema = z.object({
-  label: z.string().trim().min(1, "Label is required"),
-});
-
 type EventType = Database["public"]["Tables"]["event_types"]["Row"];
-type EventTypeFormValues = z.infer<typeof eventTypeSchema>;
+type EventTypeFormValues = { label: string };
 
 export default function EventTypeSettingsPage() {
+  const t = useTranslations("Settings.eventTypes");
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -46,6 +44,7 @@ export default function EventTypeSettingsPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [opened, { open, close }] = useDisclosure(false);
+  const eventTypeSchema = z.object({ label: z.string().trim().min(1, t("labelRequired")) });
 
   const form = useForm<EventTypeFormValues>({
     initialValues: { label: "" },
@@ -62,13 +61,13 @@ export default function EventTypeSettingsPage() {
       .order("label");
 
     if (error) {
-      setLoadError(error.message);
+      setLoadError(t("loadFailed"));
       setEventTypes([]);
     } else {
       setEventTypes(data ?? []);
     }
     setIsLoading(false);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchEventTypes();
@@ -102,16 +101,16 @@ export default function EventTypeSettingsPage() {
     if (error) {
       showNotification({
         color: "red",
-        title: "Unable to save event type",
-        message: error.message,
+        title: t("saveFailed"),
+        message: t("saveFailedMessage"),
       });
       return;
     }
 
     showNotification({
       color: "green",
-      title: editingId === null ? "Event type created" : "Event type updated",
-      message: `${payload.label} was saved successfully.`,
+      title: editingId === null ? t("created") : t("updated"),
+      message: t("saved", { label: payload.label }),
     });
     close();
     await fetchEventTypes();
@@ -129,16 +128,16 @@ export default function EventTypeSettingsPage() {
     if (error) {
       showNotification({
         color: "red",
-        title: "Unable to delete event type",
-        message: error.message,
+        title: t("deleteFailed"),
+        message: t("deleteFailedMessage"),
       });
       return;
     }
 
     showNotification({
       color: "green",
-      title: "Event type deleted",
-      message: `${eventType.label} was deleted.`,
+      title: t("deleted"),
+      message: t("deletedMessage", { label: eventType.label }),
     });
     await fetchEventTypes();
   };
@@ -147,27 +146,27 @@ export default function EventTypeSettingsPage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/settings">Settings</Anchor>
-          <Text>Event Types</Text>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/settings">{t("settings")}</Anchor>
+          <Text>{t("title")}</Text>
         </Breadcrumbs>
 
         <Group justify="space-between">
           <div>
-            <Title order={2}>Event Types</Title>
+            <Title order={2}>{t("title")}</Title>
             <Text c="dimmed" size="sm">
-              Manage labels used for object history events.
+              {t("description")}
             </Text>
           </div>
           <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
-            Add Event Type
+            {t("add")}
           </Button>
         </Group>
 
         {loadError && (
           <Alert
             color="red"
-            title="Unable to load event types"
+            title={t("loadFailed")}
             icon={<IconAlertCircle size={18} />}
           >
             {loadError}
@@ -184,8 +183,8 @@ export default function EventTypeSettingsPage() {
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>ID</Table.Th>
-                  <Table.Th>Label</Table.Th>
-                  <Table.Th w={100}>Actions</Table.Th>
+                  <Table.Th>{t("label")}</Table.Th>
+                  <Table.Th w={100}>{t("actions")}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -197,7 +196,7 @@ export default function EventTypeSettingsPage() {
                       <Group gap={4}>
                         <ActionIcon
                           variant="subtle"
-                          aria-label={`Edit ${eventType.label}`}
+                          aria-label={t("editLabel", { label: eventType.label })}
                           onClick={() => openEdit(eventType)}
                         >
                           <IconEdit size={16} />
@@ -205,7 +204,7 @@ export default function EventTypeSettingsPage() {
                         <ActionIcon
                           variant="subtle"
                           color="red"
-                          aria-label={`Delete ${eventType.label}`}
+                          aria-label={t("deleteLabel", { label: eventType.label })}
                           loading={deletingId === eventType.id}
                           disabled={deletingId !== null}
                           onClick={() => handleDelete(eventType)}
@@ -220,7 +219,7 @@ export default function EventTypeSettingsPage() {
                   <Table.Tr>
                     <Table.Td colSpan={3}>
                       <Text ta="center" c="dimmed">
-                        No event types
+                        {t("none")}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -234,22 +233,22 @@ export default function EventTypeSettingsPage() {
       <Modal
         opened={opened}
         onClose={close}
-        title={editingId === null ? "Add Event Type" : "Edit Event Type"}
+        title={editingId === null ? t("add") : t("edit")}
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack>
             <TextInput
-              label="Label"
-              placeholder="Event type label"
+              label={t("label")}
+              placeholder={t("labelPlaceholder")}
               required
               {...form.getInputProps("label")}
             />
             <Group justify="flex-end">
               <Button type="button" variant="outline" onClick={close}>
-                Cancel
+                {t("cancel")}
               </Button>
               <Button type="submit" loading={isSaving}>
-                {editingId === null ? "Create" : "Save"}
+                {editingId === null ? t("create") : t("save")}
               </Button>
             </Group>
           </Stack>

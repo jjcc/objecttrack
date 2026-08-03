@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Json } from "@/types/database";
 import { requireTenantAdminAccess } from "@/lib/tenant-admin/access";
+import { getTranslations } from "next-intl/server";
 
 export type TenantAdminActionState = {
   status: "idle" | "error" | "success";
@@ -40,21 +41,11 @@ function formValue(formData: FormData, key: string): string {
   return typeof value === "string" ? value : "";
 }
 
-function actionError(error: unknown): TenantAdminActionState {
-  return {
-    status: "error",
-    message: error instanceof Error ? error.message : "The operation failed.",
-  };
-}
-
-function firstValidationMessage(error: z.ZodError): string {
-  return error.issues[0]?.message ?? "Check the submitted values.";
-}
-
 export async function updateCurrentTenantProfileAction(
   _previousState: TenantAdminActionState,
   formData: FormData
 ): Promise<TenantAdminActionState> {
+  const t = await getTranslations("Admin.actions");
   const parsed = profileSchema.safeParse({
     institutionName: formValue(formData, "institutionName"),
     description: formValue(formData, "description"),
@@ -67,7 +58,7 @@ export async function updateCurrentTenantProfileAction(
     publicObjectInfo: formData.get("publicObjectInfo") === "on",
   });
   if (!parsed.success) {
-    return { status: "error", message: firstValidationMessage(parsed.error) };
+    return { status: "error", message: t("invalidValues") };
   }
 
   let socialMedia: Json = {};
@@ -75,11 +66,11 @@ export async function updateCurrentTenantProfileAction(
     try {
       const candidate: unknown = JSON.parse(parsed.data.socialMedia);
       if (!candidate || Array.isArray(candidate) || typeof candidate !== "object") {
-        return { status: "error", message: "Social media must be a JSON object." };
+        return { status: "error", message: t("socialObject") };
       }
       socialMedia = candidate as Json;
     } catch {
-      return { status: "error", message: "Social media must be valid JSON." };
+      return { status: "error", message: t("socialJson") };
     }
   }
 
@@ -99,25 +90,26 @@ export async function updateCurrentTenantProfileAction(
       p_show_object_info_without_authentication: parsed.data.publicObjectInfo,
     });
     if (error) throw new Error(error.message);
-  } catch (error) {
-    return actionError(error);
+  } catch {
+    return { status: "error", message: t("failed") };
   }
 
   revalidatePath("/admin");
   revalidatePath("/admin/profile");
-  return { status: "success", message: "Tenant profile and settings updated." };
+  return { status: "success", message: t("profileUpdated") };
 }
 
 export async function updateTenantMemberRoleAction(
   _previousState: TenantAdminActionState,
   formData: FormData
 ): Promise<TenantAdminActionState> {
+  const t = await getTranslations("Admin.actions");
   const parsed = roleSchema.safeParse({
     userId: formValue(formData, "userId"),
     tenantRole: formValue(formData, "tenantRole"),
   });
   if (!parsed.success) {
-    return { status: "error", message: firstValidationMessage(parsed.error) };
+    return { status: "error", message: t("invalidValues") };
   }
 
   try {
@@ -129,24 +121,25 @@ export async function updateTenantMemberRoleAction(
       p_tenant_role: parsed.data.tenantRole,
     });
     if (error) throw new Error(error.message);
-  } catch (error) {
-    return actionError(error);
+  } catch {
+    return { status: "error", message: t("failed") };
   }
 
   revalidatePath("/admin/members");
-  return { status: "success", message: "Member role updated." };
+  return { status: "success", message: t("roleUpdated") };
 }
 
 export async function removeTenantMemberAction(
   _previousState: TenantAdminActionState,
   formData: FormData
 ): Promise<TenantAdminActionState> {
+  const t = await getTranslations("Admin.actions");
   const parsed = removalSchema.safeParse({
     userId: formValue(formData, "userId"),
     confirmation: formValue(formData, "confirmation"),
   });
   if (!parsed.success) {
-    return { status: "error", message: firstValidationMessage(parsed.error) };
+    return { status: "error", message: t("invalidValues") };
   }
 
   try {
@@ -157,10 +150,10 @@ export async function removeTenantMemberAction(
       p_user_id: parsed.data.userId,
     });
     if (error) throw new Error(error.message);
-  } catch (error) {
-    return actionError(error);
+  } catch {
+    return { status: "error", message: t("failed") };
   }
 
   revalidatePath("/admin/members");
-  return { status: "success", message: "Tenant membership removed." };
+  return { status: "success", message: t("memberRemoved") };
 }

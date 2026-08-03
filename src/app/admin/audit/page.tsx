@@ -1,8 +1,10 @@
 import { Stack, Text, Title } from "@mantine/core";
 import { requireTenantAdminAccess } from "@/lib/tenant-admin/access";
 import { TenantAuditTable } from "../_components/TenantAuditTable";
+import { getTranslations } from "next-intl/server";
 
 export default async function TenantAuditPage() {
+  const t = await getTranslations("Admin.audit");
   const { supabase } = await requireTenantAdminAccess("tenant.audit.read");
   const { data: events, error } = await supabase.rpc("tenant_audit_events", {
     p_limit: 100,
@@ -12,9 +14,9 @@ export default async function TenantAuditPage() {
   return (
     <Stack gap="lg">
       <div>
-        <Title order={2}>Tenant audit</Title>
+        <Title order={2}>{t("title")}</Title>
         <Text c="dimmed" size="sm">
-          Append-only sensitive actions for your current tenant.
+          {t("description")}
         </Text>
       </div>
       <TenantAuditTable events={events ?? []} />

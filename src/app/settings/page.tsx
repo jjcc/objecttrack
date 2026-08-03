@@ -16,44 +16,43 @@ import {
   IconTimelineEvent,
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { AppShell } from "@/components/layout/AppShell";
 
 const settingEntries = [
   {
-    title: "Categories",
-    description: "Manage the categories used to classify tracked objects.",
+    key: "categories",
     href: "/settings/categories",
     icon: IconCategory,
   },
   {
-    title: "Event Types",
-    description: "Manage the event labels available throughout the system.",
+    key: "eventTypes",
     href: "/settings/event-types",
     icon: IconTimelineEvent,
   },
   {
-    title: "Custom Object Fields",
-    description: "Define additional fields collected for objects in your tenant.",
+    key: "customFields",
     href: "/settings/custom-fields",
     icon: IconForms,
   },
-];
+] as const;
 
 export default function SettingsPage() {
+  const t = useTranslations("Settings.home");
   const router = useRouter();
 
   return (
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Text>Settings</Text>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Text>{t("title")}</Text>
         </Breadcrumbs>
 
         <div>
-          <Title order={2}>Settings</Title>
+          <Title order={2}>{t("title")}</Title>
           <Text c="dimmed" size="sm">
-            Choose the configuration area you want to manage.
+            {t("description")}
           </Text>
         </div>
 
@@ -61,8 +60,8 @@ export default function SettingsPage() {
           {settingEntries.map((entry) => (
             <NavLink
               key={entry.href}
-              label={entry.title}
-              description={entry.description}
+              label={t(`${entry.key}.title`)}
+              description={t(`${entry.key}.description`)}
               leftSection={<entry.icon size={22} stroke={1.5} />}
               rightSection={<IconArrowRight size={18} />}
               onClick={() => router.push(entry.href)}

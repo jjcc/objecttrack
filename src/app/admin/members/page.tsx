@@ -4,10 +4,12 @@ import {
   type TenantMember,
 } from "@/app/admin/_components/TenantMembersTable";
 import { requireTenantAdminAccess } from "@/lib/tenant-admin/access";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function TenantMembersPage() {
+  const t = await getTranslations("Admin.members");
   const { supabase, context } = await requireTenantAdminAccess(
     "tenant.users.roles.update"
   );
@@ -17,10 +19,9 @@ export default async function TenantMembersPage() {
   return (
     <Stack gap="lg">
       <div>
-        <Title order={2}>Members</Title>
+        <Title order={2}>{t("title")}</Title>
         <Text c="dimmed" size="sm">
-          Role changes and removals are tenant-scoped and audited. The final
-          owner cannot be demoted or removed.
+          {t("description")}
         </Text>
       </div>
       <TenantMembersTable

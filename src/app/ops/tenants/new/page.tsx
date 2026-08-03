@@ -2,23 +2,24 @@ import Link from "next/link";
 import { Anchor, Breadcrumbs, Stack, Text, Title } from "@mantine/core";
 import { ProvisionTenantForm } from "@/app/ops/_components/ProvisionTenantForm";
 import { requirePlatformAccess } from "@/lib/ops/access";
+import { getTranslations } from "next-intl/server";
 
 export default async function NewTenantPage() {
   await requirePlatformAccess("platform.tenants.create");
+  const t = await getTranslations("Ops.newTenant");
 
   return (
     <Stack gap="lg">
       <Breadcrumbs>
         <Anchor component={Link} href="/ops">
-          Tenants
+          {t("tenants")}
         </Anchor>
-        <Text>New tenant</Text>
+        <Text>{t("newTenant")}</Text>
       </Breadcrumbs>
       <div>
-        <Title order={2}>Provision tenant</Title>
+        <Title order={2}>{t("title")}</Title>
         <Text c="dimmed" size="sm">
-          Tenant data, versioned defaults, initial owner invitation, audit event,
-          and queued email work are created in one database transaction.
+          {t("description")}
         </Text>
       </div>
       <ProvisionTenantForm />

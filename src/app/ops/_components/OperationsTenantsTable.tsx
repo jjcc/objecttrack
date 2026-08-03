@@ -14,6 +14,7 @@ import {
   Text,
 } from "@mantine/core";
 import type { Database } from "@/types/database";
+import { useFormatter, useTranslations } from "next-intl";
 
 type Tenant =
   Database["public"]["Functions"]["platform_tenants"]["Returns"][number];
@@ -25,17 +26,19 @@ export function OperationsTenantsTable({
   tenants: Tenant[];
   hasError: boolean;
 }) {
+  const t = useTranslations("Ops.tenantTable");
+  const format = useFormatter();
   return (
     <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
       <TableScrollContainer minWidth={850}>
         <Table striped highlightOnHover>
           <TableThead>
             <TableTr>
-              <TableTh>Institution</TableTh>
-              <TableTh>Status</TableTh>
-              <TableTh>Owner invitation</TableTh>
-              <TableTh>Defaults</TableTh>
-              <TableTh>Created</TableTh>
+              <TableTh>{t("institution")}</TableTh>
+              <TableTh>{t("status")}</TableTh>
+              <TableTh>{t("ownerInvitation")}</TableTh>
+              <TableTh>{t("defaults")}</TableTh>
+              <TableTh>{t("created")}</TableTh>
             </TableTr>
           </TableThead>
           <TableTbody>
@@ -50,20 +53,24 @@ export function OperationsTenantsTable({
                     {tenant.institution_name}
                   </Text>
                   <Text size="xs" c="dimmed">
-                    {tenant.email ?? "No institution email"}
+                    {tenant.email ?? t("noInstitutionEmail")}
                   </Text>
                 </TableTd>
                 <TableTd>
                   <Badge color={tenant.status === "active" ? "green" : "red"}>
-                    {tenant.status}
+                    {t(
+                      tenant.status === "active"
+                        ? "statuses.active"
+                        : "statuses.suspended"
+                    )}
                   </Badge>
                 </TableTd>
                 <TableTd>
-                  {tenant.initial_owner_email ?? "Legacy tenant"}
+                  {tenant.initial_owner_email ?? t("legacyTenant")}
                 </TableTd>
                 <TableTd>v{tenant.defaults_version}</TableTd>
                 <TableTd>
-                  {new Date(tenant.created_at).toLocaleDateString()}
+                  {format.dateTime(new Date(tenant.created_at), "short")}
                 </TableTd>
               </TableTr>
             ))}
@@ -71,7 +78,7 @@ export function OperationsTenantsTable({
               <TableTr>
                 <TableTd colSpan={5}>
                   <Text ta="center" c="dimmed" py="xl">
-                    No tenants found.
+                    {t("empty")}
                   </Text>
                 </TableTd>
               </TableTr>

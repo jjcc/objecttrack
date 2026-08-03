@@ -4,10 +4,12 @@ import {
   type TenantInvitation,
 } from "@/app/admin/invitations/_components/InvitationManager";
 import { requireTenantAdminAccess } from "@/lib/tenant-admin/access";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function TenantInvitationsPage() {
+  const t = await getTranslations("Admin.invitations");
   const { supabase, context } = await requireTenantAdminAccess(
     "tenant.users.invite"
   );
@@ -17,10 +19,9 @@ export default async function TenantInvitationsPage() {
   return (
     <Stack gap="lg">
       <div>
-        <Title order={2}>Invitations</Title>
+        <Title order={2}>{t("title")}</Title>
         <Text c="dimmed" size="sm">
-          Single-use links are email-bound, expire automatically, and can be
-          revoked or rate-limited before acceptance.
+          {t("description")}
         </Text>
       </div>
       <InvitationManager

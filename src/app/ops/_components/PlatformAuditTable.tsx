@@ -13,35 +13,38 @@ import {
   Text,
 } from "@mantine/core";
 import type { Database } from "@/types/database";
+import { useFormatter, useTranslations } from "next-intl";
 
 type AuditEvent =
   Database["public"]["Functions"]["platform_audit_events"]["Returns"][number];
 
 export function PlatformAuditTable({ events }: { events: AuditEvent[] }) {
+  const t = useTranslations("Ops.auditTable");
+  const format = useFormatter();
   return (
     <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
       <TableScrollContainer minWidth={1200}>
         <Table striped highlightOnHover>
           <TableThead>
             <TableTr>
-              <TableTh>Time</TableTh>
-              <TableTh>Tenant</TableTh>
-              <TableTh>Action</TableTh>
-              <TableTh>Actor</TableTh>
-              <TableTh>Target</TableTh>
-              <TableTh>Request ID</TableTh>
+              <TableTh>{t("time")}</TableTh>
+              <TableTh>{t("tenant")}</TableTh>
+              <TableTh>{t("action")}</TableTh>
+              <TableTh>{t("actor")}</TableTh>
+              <TableTh>{t("target")}</TableTh>
+              <TableTh>{t("requestId")}</TableTh>
             </TableTr>
           </TableThead>
           <TableTbody>
             {events.map((event) => (
               <TableTr key={event.id}>
-                <TableTd>{new Date(event.created_at).toLocaleString()}</TableTd>
-                <TableTd>{event.tenant_id ?? "Platform"}</TableTd>
+                <TableTd>{format.dateTime(new Date(event.created_at), "dateTime")}</TableTd>
+                <TableTd>{event.tenant_id ?? t("platform")}</TableTd>
                 <TableTd>
                   <Badge variant="light">{event.action}</Badge>
                 </TableTd>
                 <TableTd>
-                  {event.actor_email ?? event.actor_id ?? "System"}
+                  {event.actor_email ?? event.actor_id ?? t("system")}
                 </TableTd>
                 <TableTd>
                   {event.target_type}

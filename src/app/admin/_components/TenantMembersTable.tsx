@@ -12,6 +12,7 @@ import {
   Text,
 } from "@mantine/core";
 import { useFormState, useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import {
   removeTenantMemberAction,
   updateTenantMemberRoleAction,
@@ -54,6 +55,7 @@ function MemberRow({
   actorRole: "admin" | "owner";
   actorId: string;
 }) {
+  const t = useTranslations("Admin.membersTable");
   const [roleState, roleAction] = useFormState(
     updateTenantMemberRoleAction,
     initialState
@@ -62,10 +64,11 @@ function MemberRow({
     removeTenantMemberAction,
     initialState
   );
-  const roles =
+  const roleValues: Array<"member" | "admin" | "owner"> =
     actorRole === "owner"
       ? ["member", "admin", "owner"]
       : ["member", "admin"];
+  const roles = roleValues.map((role) => ({ value: role, label: t(`roles.${role}`) }));
   const isSelf = member.id === actorId;
 
   return (
@@ -109,7 +112,7 @@ function MemberRow({
                 (actorRole !== "owner" && member.tenant_role === "owner")
               }
             />
-            <PendingButton>Save</PendingButton>
+            <PendingButton>{t("save")}</PendingButton>
           </Group>
         </form>
       </Table.Td>
@@ -120,12 +123,12 @@ function MemberRow({
             <Checkbox
               name="confirmation"
               value="confirmed"
-              label="Confirm"
+              label={t("confirm")}
               size="xs"
               disabled={isSelf}
               required
             />
-            <PendingButton color="red">Remove</PendingButton>
+            <PendingButton color="red">{t("remove")}</PendingButton>
           </Stack>
         </form>
       </Table.Td>
@@ -142,16 +145,15 @@ export function TenantMembersTable({
   actorRole: "admin" | "owner";
   actorId: string;
 }) {
+  const t = useTranslations("Admin.membersTable");
   return (
     <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
       <Table.ScrollContainer minWidth={850}>
         <Table striped highlightOnHover>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>Member</Table.Th>
-              <Table.Th>Title</Table.Th>
-              <Table.Th>Tenant role</Table.Th>
-              <Table.Th>Remove membership</Table.Th>
+              <Table.Th>{t("member")}</Table.Th><Table.Th>{t("title")}</Table.Th>
+              <Table.Th>{t("tenantRole")}</Table.Th><Table.Th>{t("removeMembership")}</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>

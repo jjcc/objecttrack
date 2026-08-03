@@ -17,6 +17,7 @@ import {
   type PlatformTenantDetails,
 } from "@/app/ops/_components/TenantOperationsForm";
 import { requirePlatformAccess } from "@/lib/ops/access";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function TenantOperationsPage({
   params: { id: string };
   searchParams?: { created?: string };
 }) {
+  const t = await getTranslations("Ops.tenantDetails");
   const tenantId = Number(params.id);
   if (!Number.isSafeInteger(tenantId) || tenantId <= 0) notFound();
 
@@ -43,14 +45,14 @@ export default async function TenantOperationsPage({
     <Stack gap="lg">
       <Breadcrumbs>
         <Anchor component={Link} href="/ops">
-          Tenants
+          {t("tenants")}
         </Anchor>
         <Text>{tenant.institution_name}</Text>
       </Breadcrumbs>
 
       {searchParams?.created === "1" && (
-        <Alert color="green" title="Tenant provisioned">
-          The transaction committed successfully and initial owner email work is queued.
+        <Alert color="green" title={t("provisionedTitle")}>
+          {t("provisioned")}
         </Alert>
       )}
 
@@ -58,33 +60,37 @@ export default async function TenantOperationsPage({
         <div>
           <Title order={2}>{tenant.institution_name}</Title>
           <Text c="dimmed" size="sm">
-            Tenant #{tenant.id}
+            {t("tenantNumber", { id: tenant.id })}
           </Text>
         </div>
         <Badge color={tenant.status === "active" ? "green" : "red"} size="lg">
-          {tenant.status}
+          {t(
+            tenant.status === "active"
+              ? "statuses.active"
+              : "statuses.suspended"
+          )}
         </Badge>
       </Group>
 
       <SimpleGrid cols={{ base: 1, md: 3 }}>
         <Paper withBorder p="md">
           <Text size="xs" c="dimmed">
-            Defaults version
+            {t("defaultsVersion")}
           </Text>
           <Text fw={600}>v{tenant.defaults_version}</Text>
         </Paper>
         <Paper withBorder p="md">
           <Text size="xs" c="dimmed">
-            Initial owner
+            {t("initialOwner")}
           </Text>
-          <Text fw={600}>{tenant.initial_owner_email ?? "Legacy tenant"}</Text>
-          <Text size="xs">{tenant.initial_owner_status ?? "Not queued"}</Text>
+          <Text fw={600}>{tenant.initial_owner_email ?? t("legacyTenant")}</Text>
+          <Text size="xs">{tenant.initial_owner_status ?? t("notQueued")}</Text>
         </Paper>
         <Paper withBorder p="md">
           <Text size="xs" c="dimmed">
-            Last status reason
+            {t("lastStatusReason")}
           </Text>
-          <Text fw={600}>{tenant.status_reason ?? "None"}</Text>
+          <Text fw={600}>{tenant.status_reason ?? t("none")}</Text>
         </Paper>
       </SimpleGrid>
 

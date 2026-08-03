@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requirePlatformAccess } from "@/lib/ops/access";
 import type { Json } from "@/types/database";
+import { getTranslations } from "next-intl/server";
 
 export type OpsActionState = {
   status: "idle" | "error" | "success";
@@ -45,21 +46,11 @@ function formValue(formData: FormData, key: string): string {
   return typeof value === "string" ? value : "";
 }
 
-function validationMessage(error: z.ZodError): string {
-  return error.issues[0]?.message ?? "Check the submitted values.";
-}
-
-function operationError(error: unknown): OpsActionState {
-  return {
-    status: "error",
-    message: error instanceof Error ? error.message : "The operation failed.",
-  };
-}
-
 export async function provisionTenantAction(
   _previousState: OpsActionState,
   formData: FormData
 ): Promise<OpsActionState> {
+  const t = await getTranslations("Ops.actions");
   const parsed = provisionTenantSchema.safeParse({
     institutionName: formValue(formData, "institutionName"),
     ownerEmail: formValue(formData, "ownerEmail"),
@@ -72,7 +63,7 @@ export async function provisionTenantAction(
   });
 
   if (!parsed.success) {
-    return { status: "error", message: validationMessage(parsed.error) };
+    return { status: "error", message: t("invalidValues") };
   }
 
   let tenantId: number;
@@ -89,10 +80,10 @@ export async function provisionTenantAction(
       p_website: parsed.data.website || undefined,
     });
     if (error) throw new Error(error.message);
-    if (typeof data !== "number") throw new Error("Provisioning returned no tenant ID.");
+    if (typeof data !== "number") throw new Error("missing_tenant_id");
     tenantId = data;
-  } catch (error) {
-    return operationError(error);
+  } catch {
+    return { status: "error", message: t("provisionFailed") };
   }
 
   revalidatePath("/ops");
@@ -103,6 +94,7 @@ export async function updateTenantAction(
   _previousState: OpsActionState,
   formData: FormData
 ): Promise<OpsActionState> {
+  const t = await getTranslations("Ops.actions");
   const parsed = updateTenantSchema.safeParse({
     tenantId: formValue(formData, "tenantId"),
     institutionName: formValue(formData, "institutionName"),
@@ -115,7 +107,7 @@ export async function updateTenantAction(
     socialMedia: formValue(formData, "socialMedia"),
   });
   if (!parsed.success) {
-    return { status: "error", message: validationMessage(parsed.error) };
+    return { status: "error", message: t("invalidValues") };
   }
 
   let socialMedia: Json = {};
@@ -123,11 +115,11 @@ export async function updateTenantAction(
     try {
       const candidate: unknown = JSON.parse(parsed.data.socialMedia);
       if (!candidate || Array.isArray(candidate) || typeof candidate !== "object") {
-        return { status: "error", message: "Social media must be a JSON object." };
+        return { status: "error", message: t("socialMediaObject") };
       }
       socialMedia = candidate as Json;
     } catch {
-      return { status: "error", message: "Social media must be valid JSON." };
+      return { status: "error", message: t("socialMediaJson") };
     }
   }
 
@@ -145,19 +137,20 @@ export async function updateTenantAction(
       p_social_media: socialMedia,
     });
     if (error) throw new Error(error.message);
-  } catch (error) {
-    return operationError(error);
+  } catch {
+    return { status: "error", message: t("updateFailed") };
   }
 
   revalidatePath("/ops");
   revalidatePath(`/ops/tenants/${parsed.data.tenantId}`);
-  return { status: "success", message: "Tenant profile updated." };
+  return { status: "success", message: t("updated") };
 }
 
 export async function setTenantStatusAction(
   _previousState: OpsActionState,
   formData: FormData
 ): Promise<OpsActionState> {
+  const t = await getTranslations("Ops.actions");
   const parsed = statusSchema.safeParse({
     tenantId: formValue(formData, "tenantId"),
     status: formValue(formData, "status"),
@@ -165,7 +158,7 @@ export async function setTenantStatusAction(
     confirmation: formValue(formData, "confirmation"),
   });
   if (!parsed.success) {
-    return { status: "error", message: validationMessage(parsed.error) };
+    return { status: "error", message: t("invalidValues") };
   }
 
   try {
@@ -176,14 +169,14 @@ export async function setTenantStatusAction(
       p_reason: parsed.data.reason,
     });
     if (error) throw new Error(error.message);
-  } catch (error) {
-    return operationError(error);
+  } catch {
+    return { status: "error", message: t("statusFailed") };
   }
 
   revalidatePath("/ops");
   revalidatePath(`/ops/tenants/${parsed.data.tenantId}`);
   return {
     status: "success",
-    message: parsed.data.status === "suspended" ? "Tenant suspended." : "Tenant activated.",
+    message: t(`statuses.${parsed.data.status}`),
   };
 }

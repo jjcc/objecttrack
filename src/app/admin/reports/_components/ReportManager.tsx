@@ -13,6 +13,7 @@ import {
 } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 
 export type TenantReportJob = {
   id: string;
@@ -27,6 +28,8 @@ export type TenantReportJob = {
 };
 
 export function ReportManager({ jobs }: { jobs: TenantReportJob[] }) {
+  const t = useTranslations("Admin.reportManager");
+  const format = useFormatter();
   const router = useRouter();
   const [pendingMode, setPendingMode] = useState<"small" | "background" | null>(
     null
@@ -57,7 +60,7 @@ export function ReportManager({ jobs }: { jobs: TenantReportJob[] }) {
         anchor.download = "inventory.csv";
         anchor.click();
         URL.revokeObjectURL(url);
-        setFeedback({ color: "green", message: "Inventory report downloaded." });
+        setFeedback({ color: "green", message: t("downloaded") });
         return;
       }
 
@@ -66,17 +69,17 @@ export function ReportManager({ jobs }: { jobs: TenantReportJob[] }) {
         jobId?: string;
         rowCount?: number;
       };
-      if (!response.ok) throw new Error(result.error ?? "Report request failed.");
+      if (!response.ok) throw new Error("request_failed");
 
       setFeedback({
         color: "blue",
-        message: `Background report queued for ${result.rowCount ?? 0} rows.`,
+        message: t("queued", { count: result.rowCount ?? 0 }),
       });
       router.refresh();
-    } catch (error) {
+    } catch {
       setFeedback({
         color: "red",
-        message: error instanceof Error ? error.message : "Report request failed.",
+        message: t("requestFailed"),
       });
     } finally {
       setPendingMode(null);
@@ -88,10 +91,9 @@ export function ReportManager({ jobs }: { jobs: TenantReportJob[] }) {
       <Paper withBorder p="lg" radius="md">
         <Stack>
           <div>
-            <Title order={3}>Inventory export</Title>
+            <Title order={3}>{t("title")}</Title>
             <Text c="dimmed" size="sm">
-              Small exports download immediately. Background exports are retained
-              for seven days and use a newly authorized 60-second download link.
+              {t("description")}
             </Text>
           </div>
           {feedback && <Alert color={feedback.color}>{feedback.message}</Alert>}
@@ -101,7 +103,7 @@ export function ReportManager({ jobs }: { jobs: TenantReportJob[] }) {
               disabled={pendingMode !== null}
               onClick={() => requestReport(false)}
             >
-              Download inventory CSV
+              {t("downloadCsv")}
             </Button>
             <Button
               variant="light"
@@ -109,7 +111,7 @@ export function ReportManager({ jobs }: { jobs: TenantReportJob[] }) {
               disabled={pendingMode !== null}
               onClick={() => requestReport(true)}
             >
-              Queue background export
+              {t("queue")}
             </Button>
           </Group>
         </Stack>
@@ -120,18 +122,15 @@ export function ReportManager({ jobs }: { jobs: TenantReportJob[] }) {
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Report</Table.Th>
-                <Table.Th>Status</Table.Th>
-                <Table.Th>Rows</Table.Th>
-                <Table.Th>Requested</Table.Th>
-                <Table.Th>Retention</Table.Th>
-                <Table.Th>Action</Table.Th>
+                <Table.Th>{t("report")}</Table.Th><Table.Th>{t("status")}</Table.Th>
+                <Table.Th>{t("rows")}</Table.Th><Table.Th>{t("requested")}</Table.Th>
+                <Table.Th>{t("retention")}</Table.Th><Table.Th>{t("action")}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {jobs.map((job) => (
                 <Table.Tr key={job.id}>
-                  <Table.Td>{job.report_type}</Table.Td>
+                  <Table.Td>{job.report_type === "inventory" ? t("inventory") : job.report_type}</Table.Td>
                   <Table.Td>
                     <Badge
                       color={
@@ -144,20 +143,20 @@ export function ReportManager({ jobs }: { jobs: TenantReportJob[] }) {
                               : "blue"
                       }
                     >
-                      {job.status}
+                      {job.status === "completed" || job.status === "failed" || job.status === "expired" || job.status === "pending" || job.status === "processing" ? t(`statuses.${job.status}`) : job.status}
                     </Badge>
                     {job.failure_message && (
                       <Text size="xs" c="red" mt="xs">
-                        {job.failure_message}
+                        {t("jobFailed")}
                       </Text>
                     )}
                   </Table.Td>
                   <Table.Td>{job.row_count ?? "—"}</Table.Td>
                   <Table.Td>
-                    {new Date(job.requested_at).toLocaleString()}
+                    {format.dateTime(new Date(job.requested_at), "dateTime")}
                   </Table.Td>
                   <Table.Td>
-                    {new Date(job.retention_until).toLocaleString()}
+                    {format.dateTime(new Date(job.retention_until), "dateTime")}
                   </Table.Td>
                   <Table.Td>
                     {job.status === "completed" ? (
@@ -167,11 +166,11 @@ export function ReportManager({ jobs }: { jobs: TenantReportJob[] }) {
                         size="xs"
                         variant="light"
                       >
-                        Download
+                        {t("download")}
                       </Button>
                     ) : (
                       <Text size="sm" c="dimmed">
-                        Not available
+                        {t("notAvailable")}
                       </Text>
                     )}
                   </Table.Td>
@@ -181,7 +180,7 @@ export function ReportManager({ jobs }: { jobs: TenantReportJob[] }) {
                 <Table.Tr>
                   <Table.Td colSpan={6}>
                     <Text ta="center" c="dimmed" py="xl">
-                      No background reports yet.
+                      {t("none")}
                     </Text>
                   </Table.Td>
                 </Table.Tr>

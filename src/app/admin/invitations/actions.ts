@@ -6,6 +6,7 @@ import { z } from "zod";
 import { sendTenantInvitationEmail } from "@/lib/email/invitations";
 import { generateInvitationToken } from "@/lib/invitations/token";
 import { requireTenantAdminAccess } from "@/lib/tenant-admin/access";
+import { getTranslations } from "next-intl/server";
 
 export type InvitationActionState = {
   status: "idle" | "error" | "success" | "warning";
@@ -25,13 +26,6 @@ const invitationSchema = z.object({
 function formValue(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
-}
-
-function actionError(error: unknown): InvitationActionState {
-  return {
-    status: "error",
-    message: error instanceof Error ? error.message : "Invitation operation failed.",
-  };
 }
 
 async function invitationUrl(token: string): Promise<string> {
@@ -66,6 +60,7 @@ export async function createTenantInvitationAction(
   _previousState: InvitationActionState,
   formData: FormData
 ): Promise<InvitationActionState> {
+  const t = await getTranslations("Admin.invitationActions");
   const parsed = createSchema.safeParse({
     email: formValue(formData, "email"),
     intendedRole: formValue(formData, "intendedRole"),
@@ -74,7 +69,7 @@ export async function createTenantInvitationAction(
   if (!parsed.success) {
     return {
       status: "error",
-      message: parsed.error.issues[0]?.message ?? "Check the invitation values.",
+      message: t("invalidValues"),
     };
   }
 
@@ -109,13 +104,13 @@ export async function createTenantInvitationAction(
 
     revalidatePath("/admin/invitations");
     return delivery.ok
-      ? { status: "success", message: "Invitation created and sent." }
+      ? { status: "success", message: t("created") }
       : {
           status: "warning",
-          message: "Invitation created, but delivery failed: " + delivery.error,
+          message: t("createdDeliveryFailed"),
         };
-  } catch (error) {
-    return actionError(error);
+  } catch {
+    return { status: "error", message: t("failed") };
   }
 }
 
@@ -123,11 +118,12 @@ export async function resendTenantInvitationAction(
   _previousState: InvitationActionState,
   formData: FormData
 ): Promise<InvitationActionState> {
+  const t = await getTranslations("Admin.invitationActions");
   const parsed = invitationSchema.safeParse({
     invitationId: formValue(formData, "invitationId"),
   });
   if (!parsed.success) {
-    return { status: "error", message: "Invitation ID is invalid." };
+    return { status: "error", message: t("invalidId") };
   }
 
   try {
@@ -163,13 +159,13 @@ export async function resendTenantInvitationAction(
 
     revalidatePath("/admin/invitations");
     return delivery.ok
-      ? { status: "success", message: "Invitation resent." }
+      ? { status: "success", message: t("resent") }
       : {
           status: "warning",
-          message: "A new token was saved, but delivery failed: " + delivery.error,
+          message: t("resentDeliveryFailed"),
         };
-  } catch (error) {
-    return actionError(error);
+  } catch {
+    return { status: "error", message: t("failed") };
   }
 }
 
@@ -177,11 +173,12 @@ export async function revokeTenantInvitationAction(
   _previousState: InvitationActionState,
   formData: FormData
 ): Promise<InvitationActionState> {
+  const t = await getTranslations("Admin.invitationActions");
   const parsed = invitationSchema.safeParse({
     invitationId: formValue(formData, "invitationId"),
   });
   if (!parsed.success) {
-    return { status: "error", message: "Invitation ID is invalid." };
+    return { status: "error", message: t("invalidId") };
   }
 
   try {
@@ -190,10 +187,10 @@ export async function revokeTenantInvitationAction(
       p_invitation_id: parsed.data.invitationId,
     });
     if (error) throw new Error(error.message);
-  } catch (error) {
-    return actionError(error);
+  } catch {
+    return { status: "error", message: t("failed") };
   }
 
   revalidatePath("/admin/invitations");
-  return { status: "success", message: "Invitation revoked." };
+  return { status: "success", message: t("revoked") };
 }

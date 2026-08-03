@@ -19,24 +19,12 @@ import { showNotification } from "@mantine/notifications";
 import { IconAlertCircle } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { z } from "zod";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-const profileSchema = z.object({
-  first_name: z.string(),
-  last_name: z.string(),
-  email: z.string().email("Enter a valid contact email").or(z.literal("")),
-  title: z.string(),
-  phone: z.string(),
-  city: z.string(),
-  province: z.string(),
-  country: z.string(),
-  zipcode: z.string(),
-  wechat_id: z.string(),
-});
-
-type ProfileFormValues = z.infer<typeof profileSchema>;
+type ProfileFormValues = { first_name: string; last_name: string; email: string; title: string; phone: string; city: string; province: string; country: string; zipcode: string; wechat_id: string };
 
 interface ProfileMetadata {
   id: string;
@@ -45,24 +33,18 @@ interface ProfileMetadata {
   createdAt: string;
 }
 
-function errorMessage(error: unknown, fallback: string): string {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "message" in error &&
-    typeof error.message === "string"
-  ) {
-    return error.message;
-  }
-  return fallback;
-}
-
 export default function ProfilePage() {
+  const t = useTranslations("Profile");
+  const format = useFormatter();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<ProfileMetadata | null>(null);
+  const profileSchema = z.object({
+    first_name: z.string(), last_name: z.string(), email: z.string().email(t("invalidEmail")).or(z.literal("")),
+    title: z.string(), phone: z.string(), city: z.string(), province: z.string(), country: z.string(), zipcode: z.string(), wechat_id: z.string(),
+  });
 
   const form = useForm<ProfileFormValues>({
     initialValues: {
@@ -95,7 +77,7 @@ export default function ProfilePage() {
         } = await supabase.auth.getUser();
 
         if (authError) throw authError;
-        if (!user) throw new Error("Your session has expired. Please sign in again.");
+        if (!user) throw new Error("session_expired");
 
         const { data: profile, error: profileError } = await supabase
           .from("user_profiles")
@@ -106,7 +88,7 @@ export default function ProfilePage() {
           .maybeSingle();
 
         if (profileError) throw profileError;
-        if (!profile) throw new Error("No profile record exists for this account.");
+        if (!profile) throw new Error("profile_missing");
         if (ignore) return;
 
         form.setValues({
@@ -126,12 +108,12 @@ export default function ProfilePage() {
         setMetadata({
           id: profile.id,
           authEmail: user.email ?? "—",
-          groupName: profile.groups?.title ?? "Not assigned",
-          createdAt: new Date(profile.created_at).toLocaleString(),
+          groupName: profile.groups?.title ?? t("notAssigned"),
+          createdAt: profile.created_at,
         });
       } catch (error) {
         if (!ignore) {
-          setLoadError(errorMessage(error, "Unable to load your profile."));
+          setLoadError(error instanceof Error && error.message === "session_expired" ? t("sessionExpired") : error instanceof Error && error.message === "profile_missing" ? t("profileMissing") : t("loadFailedMessage"));
         }
       } finally {
         if (!ignore) setIsLoading(false);
@@ -143,7 +125,7 @@ export default function ProfilePage() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [t]);
 
   const handleSubmit = async (values: ProfileFormValues) => {
     setIsSaving(true);
@@ -168,14 +150,14 @@ export default function ProfilePage() {
       form.resetDirty();
       showNotification({
         color: "green",
-        title: "Profile saved",
-        message: "Your profile information was updated successfully.",
+        title: t("saved"),
+        message: t("savedMessage"),
       });
-    } catch (error) {
+    } catch {
       showNotification({
         color: "red",
-        title: "Unable to save profile",
-        message: errorMessage(error, "Your profile could not be updated."),
+        title: t("saveFailed"),
+        message: t("saveFailedMessage"),
       });
     } finally {
       setIsSaving(false);
@@ -186,21 +168,21 @@ export default function ProfilePage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Text>Profile</Text>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Text>{t("profile")}</Text>
         </Breadcrumbs>
 
         <div>
-          <Title order={2}>My Profile</Title>
+          <Title order={2}>{t("title")}</Title>
           <Text c="dimmed" size="sm">
-            Update your personal and contact information.
+            {t("description")}
           </Text>
         </div>
 
         {loadError && (
           <Alert
             color="red"
-            title="Unable to load profile"
+            title={t("loadFailed")}
             icon={<IconAlertCircle size={18} />}
           >
             {loadError}
@@ -214,79 +196,79 @@ export default function ProfilePage() {
             <Stack gap="lg">
               <SimpleGrid cols={{ base: 1, sm: 2 }}>
                 <TextInput
-                  label="Account ID"
+                  label={t("accountId")}
                   value={metadata?.id ?? ""}
                   readOnly
-                  description="Managed by authentication"
+                  description={t("managedByAuth")}
                 />
                 <TextInput
-                  label="Authentication Email"
+                  label={t("authEmail")}
                   value={metadata?.authEmail ?? ""}
                   readOnly
-                  description="Used to sign in"
+                  description={t("usedToSignIn")}
                 />
                 <TextInput
-                  label="Group"
+                  label={t("group")}
                   value={metadata?.groupName ?? ""}
                   readOnly
-                  description="Managed by an administrator"
+                  description={t("managedByAdmin")}
                 />
                 <TextInput
-                  label="Profile Created"
-                  value={metadata?.createdAt ?? ""}
+                  label={t("profileCreated")}
+                  value={metadata?.createdAt ? format.dateTime(new Date(metadata.createdAt), "dateTime") : ""}
                   readOnly
                 />
               </SimpleGrid>
 
               <SimpleGrid cols={{ base: 1, sm: 2 }}>
                 <TextInput
-                  label="First Name"
-                  placeholder="First name"
+                  label={t("firstName")}
+                  placeholder={t("firstNamePlaceholder")}
                   {...form.getInputProps("first_name")}
                 />
                 <TextInput
-                  label="Last Name"
-                  placeholder="Last name"
+                  label={t("lastName")}
+                  placeholder={t("lastNamePlaceholder")}
                   {...form.getInputProps("last_name")}
                 />
                 <TextInput
-                  label="Contact Email"
-                  placeholder="Contact email"
+                  label={t("contactEmail")}
+                  placeholder={t("contactEmailPlaceholder")}
                   {...form.getInputProps("email")}
                 />
                 <TextInput
-                  label="Title"
-                  placeholder="Job title"
+                  label={t("jobTitle")}
+                  placeholder={t("jobTitlePlaceholder")}
                   {...form.getInputProps("title")}
                 />
                 <TextInput
-                  label="Phone"
-                  placeholder="Phone number"
+                  label={t("phone")}
+                  placeholder={t("phonePlaceholder")}
                   {...form.getInputProps("phone")}
                 />
                 <TextInput
-                  label="WeChat ID"
-                  placeholder="WeChat ID"
+                  label={t("wechatId")}
+                  placeholder={t("wechatId")}
                   {...form.getInputProps("wechat_id")}
                 />
                 <TextInput
-                  label="City"
-                  placeholder="City"
+                  label={t("city")}
+                  placeholder={t("city")}
                   {...form.getInputProps("city")}
                 />
                 <TextInput
-                  label="Province / State"
-                  placeholder="Province or state"
+                  label={t("province")}
+                  placeholder={t("provincePlaceholder")}
                   {...form.getInputProps("province")}
                 />
                 <TextInput
-                  label="Country"
-                  placeholder="Country"
+                  label={t("country")}
+                  placeholder={t("country")}
                   {...form.getInputProps("country")}
                 />
                 <TextInput
-                  label="Zip / Postal Code"
-                  placeholder="Zip or postal code"
+                  label={t("zipcode")}
+                  placeholder={t("zipcodePlaceholder")}
                   {...form.getInputProps("zipcode")}
                 />
               </SimpleGrid>
@@ -297,7 +279,7 @@ export default function ProfilePage() {
                   loading={isSaving}
                   disabled={isLoading || Boolean(loadError) || !form.isDirty()}
                 >
-                  Save Changes
+                  {t("saveChanges")}
                 </Button>
                 <Button
                   type="button"
@@ -305,7 +287,7 @@ export default function ProfilePage() {
                   onClick={() => router.push("/dashboard")}
                   disabled={isSaving}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
               </Group>
             </Stack>

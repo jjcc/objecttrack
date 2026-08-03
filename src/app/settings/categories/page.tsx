@@ -26,20 +26,17 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { z } from "zod";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
 
-const categorySchema = z.object({
-  name: z.string().trim().min(1, "Name is required"),
-  description: z.string(),
-});
-
 type Category = Database["public"]["Tables"]["categories"]["Row"];
-type CategoryFormValues = z.infer<typeof categorySchema>;
+type CategoryFormValues = { name: string; description: string };
 
 export default function CategorySettingsPage() {
+  const t = useTranslations("Settings.categories");
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -47,6 +44,7 @@ export default function CategorySettingsPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [opened, { open, close }] = useDisclosure(false);
+  const categorySchema = z.object({ name: z.string().trim().min(1, t("nameRequired")), description: z.string() });
 
   const form = useForm<CategoryFormValues>({
     initialValues: { name: "", description: "" },
@@ -63,13 +61,13 @@ export default function CategorySettingsPage() {
       .order("name");
 
     if (error) {
-      setLoadError(error.message);
+      setLoadError(t("loadFailed"));
       setCategories([]);
     } else {
       setCategories(data ?? []);
     }
     setIsLoading(false);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchCategories();
@@ -109,16 +107,16 @@ export default function CategorySettingsPage() {
     if (error) {
       showNotification({
         color: "red",
-        title: "Unable to save category",
-        message: error.message,
+        title: t("saveFailed"),
+        message: t("saveFailedMessage"),
       });
       return;
     }
 
     showNotification({
       color: "green",
-      title: editingId === null ? "Category created" : "Category updated",
-      message: `${payload.name} was saved successfully.`,
+      title: editingId === null ? t("created") : t("updated"),
+      message: t("saved", { name: payload.name }),
     });
     close();
     await fetchCategories();
@@ -136,16 +134,16 @@ export default function CategorySettingsPage() {
     if (error) {
       showNotification({
         color: "red",
-        title: "Unable to delete category",
-        message: error.message,
+        title: t("deleteFailed"),
+        message: t("deleteFailedMessage"),
       });
       return;
     }
 
     showNotification({
       color: "green",
-      title: "Category deleted",
-      message: `${category.name} was deleted.`,
+      title: t("deleted"),
+      message: t("deletedMessage", { name: category.name }),
     });
     await fetchCategories();
   };
@@ -154,27 +152,27 @@ export default function CategorySettingsPage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/settings">Settings</Anchor>
-          <Text>Categories</Text>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/settings">{t("settings")}</Anchor>
+          <Text>{t("title")}</Text>
         </Breadcrumbs>
 
         <Group justify="space-between">
           <div>
-            <Title order={2}>Categories</Title>
+            <Title order={2}>{t("title")}</Title>
             <Text c="dimmed" size="sm">
-              Manage classifications for tracked objects.
+              {t("description")}
             </Text>
           </div>
           <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
-            Add Category
+            {t("add")}
           </Button>
         </Group>
 
         {loadError && (
           <Alert
             color="red"
-            title="Unable to load categories"
+            title={t("loadFailed")}
             icon={<IconAlertCircle size={18} />}
           >
             {loadError}
@@ -191,9 +189,9 @@ export default function CategorySettingsPage() {
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>ID</Table.Th>
-                  <Table.Th>Name</Table.Th>
-                  <Table.Th>Description</Table.Th>
-                  <Table.Th w={100}>Actions</Table.Th>
+                  <Table.Th>{t("name")}</Table.Th>
+                  <Table.Th>{t("fieldDescription")}</Table.Th>
+                  <Table.Th w={100}>{t("actions")}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -206,7 +204,7 @@ export default function CategorySettingsPage() {
                       <Group gap={4}>
                         <ActionIcon
                           variant="subtle"
-                          aria-label={`Edit ${category.name}`}
+                          aria-label={t("editLabel", { name: category.name })}
                           onClick={() => openEdit(category)}
                         >
                           <IconEdit size={16} />
@@ -214,7 +212,7 @@ export default function CategorySettingsPage() {
                         <ActionIcon
                           variant="subtle"
                           color="red"
-                          aria-label={`Delete ${category.name}`}
+                          aria-label={t("deleteLabel", { name: category.name })}
                           loading={deletingId === category.id}
                           disabled={deletingId !== null}
                           onClick={() => handleDelete(category)}
@@ -229,7 +227,7 @@ export default function CategorySettingsPage() {
                   <Table.Tr>
                     <Table.Td colSpan={4}>
                       <Text ta="center" c="dimmed">
-                        No categories
+                        {t("none")}
                       </Text>
                     </Table.Td>
                   </Table.Tr>
@@ -243,27 +241,27 @@ export default function CategorySettingsPage() {
       <Modal
         opened={opened}
         onClose={close}
-        title={editingId === null ? "Add Category" : "Edit Category"}
+        title={editingId === null ? t("add") : t("edit")}
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack>
             <TextInput
-              label="Name"
-              placeholder="Category name"
+              label={t("name")}
+              placeholder={t("namePlaceholder")}
               required
               {...form.getInputProps("name")}
             />
             <TextInput
-              label="Description"
-              placeholder="Description (optional)"
+              label={t("fieldDescription")}
+              placeholder={t("descriptionPlaceholder")}
               {...form.getInputProps("description")}
             />
             <Group justify="flex-end">
               <Button type="button" variant="outline" onClick={close}>
-                Cancel
+                {t("cancel")}
               </Button>
               <Button type="submit" loading={isSaving}>
-                {editingId === null ? "Create" : "Save"}
+                {editingId === null ? t("create") : t("save")}
               </Button>
             </Group>
           </Stack>

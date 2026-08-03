@@ -3,12 +3,15 @@ import { redirect } from "next/navigation";
 import { Anchor, Container, Group, Text, Title } from "@mantine/core";
 import { AuthorizationError } from "@/lib/auth/tenant-context";
 import { requirePlatformAccess } from "@/lib/ops/access";
+import { getTranslations } from "next-intl/server";
+import { LocaleSwitcher } from "@/components/i18n/LocaleSwitcher";
 
 export default async function OperationsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const t = await getTranslations("Ops.nav");
   let authorized = false;
   let mfaRequired = false;
   try {
@@ -39,20 +42,21 @@ export default async function OperationsLayout({
       >
         <Group justify="space-between">
           <div>
-            <Title order={3}>Platform Operations</Title>
+            <Title order={3}>{t("title")}</Title>
             <Text size="xs" c="dimmed">
-              Internal control plane
+              {t("subtitle")}
             </Text>
           </div>
           <Group>
+            <LocaleSwitcher />
             <Anchor component={Link} href="/ops">
-              Tenants
+              {t("tenants")}
             </Anchor>
             <Anchor component={Link} href="/ops/audit">
-              Audit & monitoring
+              {t("audit")}
             </Anchor>
             <Anchor component={Link} href="/dashboard">
-              Customer application
+              {t("customerApplication")}
             </Anchor>
           </Group>
         </Group>

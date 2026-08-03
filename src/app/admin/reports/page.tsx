@@ -4,8 +4,10 @@ import {
   type TenantReportJob,
 } from "@/app/admin/reports/_components/ReportManager";
 import { requireTenantAdminAccess } from "@/lib/tenant-admin/access";
+import { getTranslations } from "next-intl/server";
 
 export default async function TenantReportsPage() {
+  const t = await getTranslations("Admin.reports");
   const { supabase } = await requireTenantAdminAccess(
     "tenant.reports.generate"
   );
@@ -15,9 +17,9 @@ export default async function TenantReportsPage() {
   return (
     <Stack gap="lg">
       <div>
-        <Title order={2}>Reports</Title>
+        <Title order={2}>{t("title")}</Title>
         <Text c="dimmed" size="sm">
-          Tenant-scoped report generation and downloads.
+          {t("description")}
         </Text>
       </div>
       <ReportManager jobs={(data ?? []) as TenantReportJob[]} />

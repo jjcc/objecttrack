@@ -11,6 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useFormState } from "react-dom";
+import { useTranslations } from "next-intl";
 import {
   updateCurrentTenantProfileAction,
   type TenantAdminActionState,
@@ -37,6 +38,7 @@ export function TenantProfileForm({
 }: {
   tenant: TenantAdminProfile;
 }) {
+  const t = useTranslations("Admin.profileForm");
   const [state, action] = useFormState(
     updateCurrentTenantProfileAction,
     initialState
@@ -46,32 +48,32 @@ export function TenantProfileForm({
     <Paper withBorder p="lg" radius="md" maw={900}>
       <form action={action}>
         <Stack>
-          <Title order={3}>Tenant profile and settings</Title>
+          <Title order={3}>{t("title")}</Title>
           {state.status !== "idle" && (
             <Alert
               color={state.status === "error" ? "red" : "green"}
-              title={state.status === "error" ? "Update failed" : "Updated"}
+              title={state.status === "error" ? t("updateFailed") : t("updated")}
             >
               {state.message}
             </Alert>
           )}
           <TextInput
             name="institutionName"
-            label="Institution name"
+            label={t("institutionName")}
             defaultValue={tenant.institution_name}
             required
             maxLength={200}
           />
           <Textarea
             name="description"
-            label="Description"
+            label={t("description")}
             defaultValue={tenant.description ?? ""}
             rows={3}
             maxLength={4000}
           />
           <Textarea
             name="address"
-            label="Address"
+            label={t("address")}
             defaultValue={tenant.address ?? ""}
             rows={2}
             maxLength={1000}
@@ -79,43 +81,43 @@ export function TenantProfileForm({
           <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <TextInput
               name="contact"
-              label="Contact"
+              label={t("contact")}
               defaultValue={tenant.contact ?? ""}
               maxLength={500}
             />
             <TextInput
               name="phone"
-              label="Phone"
+              label={t("phone")}
               defaultValue={tenant.phone ?? ""}
               maxLength={100}
             />
             <TextInput
               name="email"
-              label="Institution email"
+              label={t("email")}
               type="email"
               defaultValue={tenant.email ?? ""}
             />
             <TextInput
               name="website"
-              label="Website"
+              label={t("website")}
               type="url"
               defaultValue={tenant.website ?? ""}
             />
           </SimpleGrid>
           <Textarea
             name="socialMedia"
-            label="Social media"
-            description="JSON object"
+            label={t("socialMedia")}
+            description={t("jsonObject")}
             defaultValue={JSON.stringify(tenant.social_media ?? {}, null, 2)}
             rows={4}
             maxLength={10000}
           />
           <Checkbox
             name="publicObjectInfo"
-            label="Show object information without authentication"
+            label={t("publicInfo")}
             defaultChecked={tenant.show_object_info_without_authentication}
           />
-          <SubmitButton idleLabel="Save changes" pendingLabel="Saving…" />
+          <SubmitButton idleLabel={t("save")} pendingLabel={t("saving")} />
         </Stack>
       </form>
     </Paper>
