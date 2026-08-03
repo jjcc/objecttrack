@@ -13,11 +13,14 @@ import { DataTable } from "mantine-datatable";
 import { IconEdit, IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { AppShell } from "@/components/layout/AppShell";
 import dayjs from "dayjs";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function GroupsListPage() {
+  const t = useTranslations("Groups.list");
+  const format = useFormatter();
   const router = useRouter();
 
   const [records, setRecords] = useState<Record<string, unknown>[]>([]);
@@ -51,17 +54,17 @@ export default function GroupsListPage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/groups">Groups</Anchor>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/groups">{t("title")}</Anchor>
         </Breadcrumbs>
 
         <Group justify="space-between">
-          <Title order={2}>Groups</Title>
+          <Title order={2}>{t("title")}</Title>
           <Button
             leftSection={<IconPlus size={16} />}
             onClick={() => router.push("/groups/create")}
           >
-            Create Group
+            {t("create")}
           </Button>
         </Group>
 
@@ -74,24 +77,25 @@ export default function GroupsListPage() {
           records={records}
           columns={[
             { accessor: "id", title: "ID", width: 80 },
-            { accessor: "title", title: "Title" },
+            { accessor: "title", title: t("groupTitle") },
             {
               accessor: "description",
-              title: "Description",
+              title: t("description"),
               ellipsis: true,
             },
             {
               accessor: "created_at",
-              title: "Created",
+              title: t("created"),
               render: (record) =>
-                dayjs(record.created_at as string).format("YYYY-MM-DD"),
+                format.dateTime(new Date(record.created_at as string), "short"),
             },
             {
               accessor: "actions",
-              title: "Actions",
+              title: t("actions"),
               width: 80,
               render: (record) => (
                 <ActionIcon
+                  aria-label={t("edit")}
                   variant="subtle"
                   onClick={() => router.push(`/groups/${record.id}/edit`)}
                 >
@@ -105,7 +109,7 @@ export default function GroupsListPage() {
           page={page}
           onPageChange={setPage}
           paginationSize="sm"
-          noRecordsText="No groups found"
+          noRecordsText={t("noGroups")}
         />
       </Stack>
     </AppShell>

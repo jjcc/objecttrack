@@ -15,19 +15,18 @@ import { useForm, zodResolver } from "@mantine/form";
 import { IconAlertCircle } from "@tabler/icons-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { z } from "zod";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-const forgotPasswordSchema = z.object({
-  email: z.string().email("Invalid email address"),
-});
-
-type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
+type ForgotPasswordFormValues = { email: string };
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations("Auth.forgotPassword");
   const [isPending, setIsPending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const forgotPasswordSchema = z.object({ email: z.string().email(t("invalidEmail")) });
 
   const form = useForm<ForgotPasswordFormValues>({
     initialValues: {
@@ -47,13 +46,13 @@ export default function ForgotPasswordPage() {
       );
 
       if (resetError) {
-        setError(resetError.message);
+        setError(t("failed"));
         return;
       }
 
       setSent(true);
-    } catch (err) {
-      setError((err as Error)?.message ?? "Password reset failed. Please try again.");
+    } catch {
+      setError(t("failed"));
     } finally {
       setIsPending(false);
     }
@@ -63,13 +62,13 @@ export default function ForgotPasswordPage() {
     <Center h="100vh" bg="gray.1" px="md">
       <Paper shadow="md" p={30} radius="md" w={420}>
         <Title order={2} ta="center" mb="lg">
-          Object Tracking
+          {t("appTitle")}
         </Title>
         <Title order={4} ta="center" mb="xs" c="dimmed">
-          Reset Password
+          {t("title")}
         </Title>
         <Text size="sm" c="dimmed" ta="center" mb="lg">
-          Enter your email address and we&apos;ll send you a password reset link.
+          {t("description")}
         </Text>
 
         {error && (
@@ -86,22 +85,22 @@ export default function ForgotPasswordPage() {
 
         {sent ? (
           <Alert color="green" mb="md">
-            Check your email for a password reset link.
+            {t("sent")}
           </Alert>
         ) : (
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack>
               <TextInput
-                label="Email"
+                label={t("email")}
                 placeholder="name@example.com"
                 required
                 {...form.getInputProps("email")}
               />
               <Button type="submit" fullWidth loading={isPending}>
-                Send reset link
+                {t("submit")}
               </Button>
               <Anchor component={Link} href="/login" size="sm" ta="center">
-                Back to login
+                {t("backToLogin")}
               </Anchor>
             </Stack>
           </form>

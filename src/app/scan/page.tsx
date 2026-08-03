@@ -1,22 +1,23 @@
 import { Anchor, Breadcrumbs, Stack, Title, Paper, Text } from "@mantine/core";
 import { AppShell } from "@/components/layout/AppShell";
+import { getTranslations } from "next-intl/server";
 
-export default function ScanPage() {
+export default async function ScanPage() {
+  const t = await getTranslations("Scan");
   return (
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/scan">Scan</Anchor>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/scan">{t("scan")}</Anchor>
         </Breadcrumbs>
 
-        <Title order={2}>Scan QR Code</Title>
+        <Title order={2}>{t("title")}</Title>
 
         <Paper withBorder p="xl" radius="md">
           <Stack align="center" gap="md">
             <Text size="lg" ta="center">
-              Use mobile browser to open an object&apos;s QR image, or use the device
-              camera to scan the API link.
+              {t("description")}
             </Text>
           </Stack>
         </Paper>

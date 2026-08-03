@@ -14,6 +14,7 @@ import {
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 type TotpEnrollment = {
@@ -23,6 +24,7 @@ type TotpEnrollment = {
 };
 
 export default function MfaPage() {
+  const t = useTranslations("Auth.mfa");
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedNext = searchParams.get("next");
@@ -44,7 +46,7 @@ export default function MfaPage() {
       const { data, error: factorsError } = await supabase.auth.mfa.listFactors();
       if (!active) return;
       if (factorsError) {
-        setError(factorsError.message);
+        setError(t("loadFailed"));
       } else {
         setVerifiedFactorId(data.totp.find((factor) => factor.status === "verified")?.id ?? null);
       }
@@ -53,7 +55,7 @@ export default function MfaPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [t]);
 
   async function enroll() {
     setError(null);
@@ -63,7 +65,7 @@ export default function MfaPage() {
       friendlyName: "ObjectTrack platform operations",
     });
     if (enrollError) {
-      setError(enrollError.message);
+      setError(t("enrollFailed"));
       return;
     }
     setEnrollment({
@@ -85,7 +87,7 @@ export default function MfaPage() {
         code,
       });
       if (verifyError) {
-        setError(verifyError.message);
+        setError(t("verifyFailed"));
         return;
       }
       router.replace(nextPath);
@@ -99,10 +101,9 @@ export default function MfaPage() {
     <Center mih="100vh" bg="gray.1" px="md">
       <Paper withBorder shadow="md" p="xl" radius="md" w={440}>
         <Stack align="center">
-          <Title order={2}>Secure platform access</Title>
+          <Title order={2}>{t("title")}</Title>
           <Text c="dimmed" size="sm" ta="center">
-            Platform operations require a verified authenticator code for this
-            session.
+            {t("description")}
           </Text>
           {loading ? (
             <Loader />
@@ -110,19 +111,19 @@ export default function MfaPage() {
             <>
               {error && <Alert color="red">{error}</Alert>}
               {!verifiedFactorId && !enrollment && (
-                <Button onClick={enroll}>Set up authenticator</Button>
+                <Button onClick={enroll}>{t("setup")}</Button>
               )}
               {enrollment && (
                 <Stack align="center">
                   <Image
                     src={enrollment.qrCode}
-                    alt="Authenticator setup QR code"
+                    alt={t("qrAlt")}
                     width={220}
                     height={220}
                     unoptimized
                   />
                   <Text size="xs" c="dimmed" ta="center">
-                    If you cannot scan the code, enter this secret:
+                    {t("secretHelp")}
                     <br />
                     <Text component="span" ff="monospace">
                       {enrollment.secret}
@@ -146,7 +147,7 @@ export default function MfaPage() {
                     disabled={code.length !== 6}
                     onClick={verify}
                   >
-                    Verify and continue
+                    {t("verify")}
                   </Button>
                 </>
               )}

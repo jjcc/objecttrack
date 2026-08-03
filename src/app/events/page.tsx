@@ -17,12 +17,15 @@ import { DataTable } from "mantine-datatable";
 import { IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { AppShell } from "@/components/layout/AppShell";
 import { EventTypeBadge } from "@/components/shared/EventTypeBadge";
 import dayjs from "dayjs";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function EventsListPage() {
+  const t = useTranslations("Events.list");
+  const format = useFormatter();
   const router = useRouter();
 
   const [eventTypeFilter, setEventTypeFilter] = useState<string | null>(null);
@@ -99,48 +102,48 @@ export default function EventsListPage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/events">Events</Anchor>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/events">{t("events")}</Anchor>
         </Breadcrumbs>
 
         <Group justify="space-between">
-          <Title order={2}>Events (Audit Log)</Title>
+          <Title order={2}>{t("title")}</Title>
           <Button
             leftSection={<IconPlus size={16} />}
             onClick={() => router.push("/events/create")}
           >
-            Record Event
+            {t("record")}
           </Button>
         </Group>
 
         <Paper withBorder p="md" radius="md">
           <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }}>
             <Select
-              label="Event Type"
-              placeholder="All types"
+              label={t("eventType")}
+              placeholder={t("allTypes")}
               data={eventTypeOptions}
               clearable
               value={eventTypeFilter}
               onChange={setEventTypeFilter}
             />
             <Select
-              label="Group"
-              placeholder="All groups"
+              label={t("group")}
+              placeholder={t("allGroups")}
               data={groupOptions}
               clearable
               value={groupFilter}
               onChange={setGroupFilter}
             />
             <DatePickerInput
-              label="Date From"
-              placeholder="Start date"
+              label={t("dateFrom")}
+              placeholder={t("startDate")}
               clearable
               value={dateFrom}
               onChange={(val) => setDateFrom(val as Date | null)}
             />
             <DatePickerInput
-              label="Date To"
-              placeholder="End date"
+              label={t("dateTo")}
+              placeholder={t("endDate")}
               clearable
               value={dateTo}
               onChange={(val) => setDateTo(val as Date | null)}
@@ -159,7 +162,7 @@ export default function EventsListPage() {
             { accessor: "id", title: "ID", width: 70 },
             {
               accessor: "objects.name",
-              title: "Object",
+              title: t("object"),
               render: (record) => {
                 const obj = (record as Record<string, unknown>).objects as Record<string, string> | null;
                 return <Text size="sm">{obj?.name ?? "—"}</Text>;
@@ -167,7 +170,7 @@ export default function EventsListPage() {
             },
             {
               accessor: "event_types.label",
-              title: "Type",
+              title: t("type"),
               render: (record) => {
                 const et = (record as Record<string, unknown>).event_types as Record<string, string> | null;
                 return et?.label ? (
@@ -179,7 +182,7 @@ export default function EventsListPage() {
             },
             {
               accessor: "groups.title",
-              title: "Group",
+              title: t("group"),
               render: (record) => {
                 const g = (record as Record<string, unknown>).groups as Record<string, string> | null;
                 return <Text size="sm">{g?.title ?? "—"}</Text>;
@@ -187,21 +190,21 @@ export default function EventsListPage() {
             },
             {
               accessor: "from",
-              title: "From",
+              title: t("from"),
               render: (record) => {
                 const fromUser = (record as Record<string, unknown>).from as Record<string, string> | null;
                 return (
                   <Text size="sm">
                     {fromUser
                       ? `${fromUser.first_name ?? ""} ${fromUser.last_name ?? ""}`.trim() || "—"
-                      : "— (initial)"}
+                      : t("initial")}
                   </Text>
                 );
               },
             },
             {
               accessor: "to",
-              title: "To",
+              title: t("to"),
               render: (record) => {
                 const toUser = (record as Record<string, unknown>).to as Record<string, string> | null;
                 return (
@@ -215,9 +218,9 @@ export default function EventsListPage() {
             },
             {
               accessor: "created_at",
-              title: "Date",
+              title: t("date"),
               render: (record) =>
-                dayjs((record as Record<string, string>).created_at).format("YYYY-MM-DD HH:mm"),
+                format.dateTime(new Date((record as Record<string, string>).created_at), "dateTime"),
             },
           ]}
           totalRecords={totalRecords}
@@ -225,7 +228,7 @@ export default function EventsListPage() {
           page={page}
           onPageChange={setPage}
           paginationSize="sm"
-          noRecordsText="No events found"
+          noRecordsText={t("noEvents")}
         />
       </Stack>
     </AppShell>

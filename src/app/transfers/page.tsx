@@ -19,6 +19,7 @@ import { DataTable } from "mantine-datatable";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import {
@@ -31,6 +32,8 @@ import {
 import dayjs from "dayjs";
 
 export default function TransfersListPage() {
+  const t = useTranslations("Transfers");
+  const format = useFormatter();
   const router = useRouter();
 
   const [records, setRecords] = useState<TransferDisplayRecord[]>([]);
@@ -70,11 +73,11 @@ export default function TransfersListPage() {
     } catch (error) {
       setRecords([]);
       setTotalRecords(0);
-      setFetchError(error instanceof Error ? error.message : "Unable to load transfer requests");
+      setFetchError(t("loadFailed"));
     } finally {
       setIsLoading(false);
     }
-  }, [page, statusFilter]);
+  }, [page, statusFilter, t]);
 
   useEffect(() => {
     fetchTransfers();
@@ -86,17 +89,17 @@ export default function TransfersListPage() {
     try {
       await approveTransfer(supabase, requestId);
 
-      showNotification({ color: "green", title: "Success", message: "Transfer approved" });
+      showNotification({ color: "green", title: t("success"), message: t("approvedMessage") });
       if (page !== 1) {
         setPage(1);
       } else {
         await fetchTransfers();
       }
-    } catch (error) {
+    } catch {
       showNotification({
         color: "red",
-        title: "Approval failed",
-        message: error instanceof Error ? error.message : "Unable to approve transfer",
+        title: t("approvalFailed"),
+        message: t("approveFailedMessage"),
       });
     } finally {
       setActiveRequestId(null);
@@ -110,7 +113,7 @@ export default function TransfersListPage() {
     try {
       await rejectTransfer(supabase, rejectRequestId, rejectReason.trim() || null);
 
-      showNotification({ color: "green", title: "Success", message: "Transfer rejected" });
+      showNotification({ color: "green", title: t("success"), message: t("rejectedMessage") });
       setRejectRequestId(null);
       setRejectReason("");
       if (page !== 1) {
@@ -118,11 +121,11 @@ export default function TransfersListPage() {
       } else {
         await fetchTransfers();
       }
-    } catch (error) {
+    } catch {
       showNotification({
         color: "red",
-        title: "Rejection failed",
-        message: error instanceof Error ? error.message : "Unable to reject transfer",
+        title: t("rejectionFailed"),
+        message: t("rejectFailedMessage"),
       });
     } finally {
       setActiveRequestId(null);
@@ -137,7 +140,7 @@ export default function TransfersListPage() {
     };
     return (
       <Badge color={colorMap[status] ?? "gray"} variant="light">
-        {status}
+        {t(`statuses.${status}`)}
       </Badge>
     );
   };
@@ -146,46 +149,46 @@ export default function TransfersListPage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/transfers">Transfers</Anchor>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/transfers">{t("transfers")}</Anchor>
         </Breadcrumbs>
 
         <Group justify="space-between">
-          <Title order={2}>Transfer Requests</Title>
+          <Title order={2}>{t("title")}</Title>
           <Group>
             <Button
               variant={statusFilter === "pending" ? "filled" : "outline"}
               size="sm"
               onClick={() => setStatusFilter("pending")}
             >
-              Pending
+              {t("statuses.pending")}
             </Button>
             <Button
               variant={statusFilter === null ? "filled" : "outline"}
               size="sm"
               onClick={() => setStatusFilter(null)}
             >
-              All
+              {t("all")}
             </Button>
             <Button
               variant={statusFilter === "approved" ? "filled" : "outline"}
               size="sm"
               onClick={() => setStatusFilter("approved")}
             >
-              Approved
+              {t("statuses.approved")}
             </Button>
             <Button
               variant={statusFilter === "rejected" ? "filled" : "outline"}
               size="sm"
               onClick={() => setStatusFilter("rejected")}
             >
-              Rejected
+              {t("statuses.rejected")}
             </Button>
           </Group>
         </Group>
 
         {fetchError && (
-          <Alert color="red" title="Unable to load transfer requests">
+          <Alert color="red" title={t("loadFailed")}>
             {fetchError}
           </Alert>
         )}
@@ -202,32 +205,32 @@ export default function TransfersListPage() {
               { accessor: "id", title: "ID", width: 70 },
               {
                 accessor: "object_name",
-                title: "Object",
+                title: t("object"),
                 render: (record) => <Text size="sm">{record.object_name}</Text>,
               },
               {
                 accessor: "from_user_full_name",
-                title: "Requester",
+                title: t("requester"),
                 render: (record) => <Text size="sm">{record.from_user_full_name ?? "—"}</Text>,
               },
               {
                 accessor: "to_user_full_name",
-                title: "Current Owner",
+                title: t("currentOwner"),
                 render: (record) => <Text size="sm">{record.to_user_full_name ?? "—"}</Text>,
               },
               {
                 accessor: "status",
-                title: "Status",
+                title: t("status"),
                 render: (record) => statusBadge(record.status),
               },
               {
                 accessor: "created_at",
-                title: "Requested At",
-                render: (record) => dayjs(record.created_at).format("YYYY-MM-DD HH:mm"),
+                title: t("requestedAt"),
+                render: (record) => format.dateTime(new Date(record.created_at), "dateTime"),
               },
               {
                 accessor: "actions",
-                title: "Actions",
+                title: t("actions"),
                 width: 140,
                 render: (record) => {
                   if (record.status !== "pending") return null;
@@ -241,7 +244,7 @@ export default function TransfersListPage() {
                         disabled={activeRequestId !== null}
                         onClick={() => handleApprove(record.id)}
                       >
-                        Approve
+                        {t("approve")}
                       </Button>
                       <Button
                         size="xs"
@@ -253,7 +256,7 @@ export default function TransfersListPage() {
                           setRejectReason("");
                         }}
                       >
-                        Reject
+                        {t("reject")}
                       </Button>
                     </Group>
                   );
@@ -265,7 +268,7 @@ export default function TransfersListPage() {
             page={page}
             onPageChange={setPage}
             paginationSize="sm"
-            noRecordsText="No transfer requests found"
+            noRecordsText={t("noTransfers")}
           />
         </Paper>
 
@@ -275,13 +278,13 @@ export default function TransfersListPage() {
             setRejectRequestId(null);
             setRejectReason("");
           }}
-          title={`Reject transfer #${rejectRequestId ?? ""}`}
+          title={t("rejectTitle", { id: rejectRequestId ?? "" })}
           centered
         >
           <Stack>
             <Textarea
-              label="Rejection reason"
-              placeholder="Enter a reason for rejecting this transfer"
+              label={t("rejectionReason")}
+              placeholder={t("rejectionPlaceholder")}
               value={rejectReason}
               onChange={(event) => setRejectReason(event.currentTarget.value)}
               autosize
@@ -295,14 +298,14 @@ export default function TransfersListPage() {
                   setRejectReason("");
                 }}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button
                 color="red"
                 loading={activeRequestId === rejectRequestId}
                 onClick={handleReject}
               >
-                Reject transfer
+                {t("rejectTransfer")}
               </Button>
             </Group>
           </Stack>

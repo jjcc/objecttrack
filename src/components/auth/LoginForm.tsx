@@ -16,16 +16,13 @@ import { z } from "zod";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormValues = { email: string; password: string };
 
 export function LoginForm() {
+  const t = useTranslations("Auth.login");
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedNext = searchParams.get("next");
@@ -35,6 +32,10 @@ export function LoginForm() {
       : "/dashboard";
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const loginSchema = z.object({
+    email: z.string().email(t("invalidEmail")),
+    password: z.string().min(6, t("passwordMin", { count: 6 })),
+  });
 
   const form = useForm<LoginFormValues>({
     initialValues: {
@@ -55,13 +56,13 @@ export function LoginForm() {
       });
 
       if (signInError) {
-        setError(signInError.message);
+        setError(signInError.code === "invalid_credentials" ? t("invalidCredentials") : t("failed"));
         return;
       }
 
       router.replace(nextPath);
-    } catch (err) {
-      setError((err as Error)?.message ?? "Login failed. Please try again.");
+    } catch {
+      setError(t("failed"));
     } finally {
       setIsPending(false);
     }
@@ -70,10 +71,10 @@ export function LoginForm() {
   return (
     <Paper shadow="md" p={30} radius="md" w={400}>
       <Title order={2} ta="center" mb="lg">
-        Object Tracking
+        {t("appTitle")}
       </Title>
       <Title order={4} ta="center" mb="lg" c="dimmed">
-        Admin Login
+        {t("title")}
       </Title>
 
       {error && (
@@ -91,22 +92,22 @@ export function LoginForm() {
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack>
           <TextInput
-            label="Email"
+            label={t("email")}
             placeholder="admin@example.com"
             required
             {...form.getInputProps("email")}
           />
           <PasswordInput
-            label="Password"
-            placeholder="Your password"
+            label={t("password")}
+            placeholder={t("passwordPlaceholder")}
             required
             {...form.getInputProps("password")}
           />
           <Button type="submit" fullWidth loading={isPending}>
-            Sign in
+            {t("signIn")}
           </Button>
           <Anchor component={Link} href="/forgot-password" size="sm" ta="center">
-            Forgot your password?
+            {t("forgotPassword")}
           </Anchor>
           <Anchor
             component={Link}
@@ -114,7 +115,7 @@ export function LoginForm() {
             size="sm"
             ta="center"
           >
-            Need an account?
+            {t("needAccount")}
           </Anchor>
         </Stack>
       </form>

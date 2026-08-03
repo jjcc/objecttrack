@@ -12,18 +12,20 @@ import {
   Title,
 } from "@mantine/core";
 import { useFormState, useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import {
   acceptInvitationAction,
   type AcceptInvitationState,
 } from "@/app/invitations/accept/actions";
 
-const initialState: AcceptInvitationState = { status: "idle", message: "" };
+const initialState: AcceptInvitationState = { status: "idle", code: "" };
 
 function AcceptButton() {
+  const t = useTranslations("Invitations.accept");
   const { pending } = useFormStatus();
   return (
     <Button type="submit" loading={pending}>
-      Accept invitation
+      {t("accept")}
     </Button>
   );
 }
@@ -41,6 +43,7 @@ export function AcceptInvitationView({
   maskedEmail: string | null;
   authenticated: boolean;
 }) {
+  const t = useTranslations("Invitations.accept");
   const [state, action] = useFormState(acceptInvitationAction, initialState);
   const nextPath =
     "/invitations/accept?token=" + encodeURIComponent(token);
@@ -51,39 +54,35 @@ export function AcceptInvitationView({
     <Center mih="100vh" bg="gray.1" p="md">
       <Paper withBorder shadow="sm" p="xl" radius="md" maw={520} w="100%">
         <Stack>
-          <Title order={2}>Tenant invitation</Title>
+          <Title order={2}>{t("title")}</Title>
 
           {status === "invalid" && (
-            <Alert color="red" title="Invalid link">
-              This invitation link is invalid.
+            <Alert color="red" title={t("invalidTitle")}>
+              {t("invalid")}
             </Alert>
           )}
           {status === "expired" && (
-            <Alert color="yellow" title="Expired link">
-              This invitation has expired. Ask the tenant administrator to
-              resend it.
+            <Alert color="yellow" title={t("expiredTitle")}>
+              {t("expired")}
             </Alert>
           )}
           {status === "revoked" && (
-            <Alert color="red" title="Revoked invitation">
-              This invitation was revoked and can no longer be accepted.
+            <Alert color="red" title={t("revokedTitle")}>
+              {t("revoked")}
             </Alert>
           )}
           {status === "accepted" && (
-            <Alert color="green" title="Already accepted">
-              This invitation has already been used.
+            <Alert color="green" title={t("acceptedTitle")}>
+              {t("alreadyAccepted")}
             </Alert>
           )}
 
           {status === "pending" && (
             <>
-              <Text>
-                You were invited to join <strong>{tenantName}</strong>. Sign in
-                using {maskedEmail ?? "the invited email address"}.
-              </Text>
+              <Text>{t.rich("description", { tenant: () => <strong>{tenantName}</strong>, email: maskedEmail ?? t("invitedEmail") })}</Text>
               {state.status === "error" && (
-                <Alert color="red" title="Unable to accept">
-                  {state.message}
+                <Alert color="red" title={t("unableTitle")}>
+                  {state.code ? t(`errors.${state.code}`) : t("errors.failed")}
                 </Alert>
               )}
               {authenticated ? (
@@ -94,10 +93,10 @@ export function AcceptInvitationView({
               ) : (
                 <Stack gap="xs">
                   <Button component={Link} href={loginHref}>
-                    Sign in to accept
+                    {t("signIn")}
                   </Button>
                   <Anchor component={Link} href={registerHref} ta="center">
-                    Register with the invited email
+                    {t("register")}
                   </Anchor>
                 </Stack>
               )}

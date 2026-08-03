@@ -16,24 +16,15 @@ import { useForm, zodResolver } from "@mantine/form";
 import { IconAlertCircle } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { z } from "zod";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-const registerSchema = z
-  .object({
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
-  })
-  .refine((values) => values.password === values.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
+type RegisterFormValues = { email: string; password: string; confirmPassword: string };
 
 export default function RegisterPage() {
+  const t = useTranslations("Auth.register");
   const searchParams = useSearchParams();
   const requestedNext = searchParams.get("next");
   const nextPath =
@@ -44,6 +35,16 @@ export default function RegisterPage() {
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const registerSchema = z
+    .object({
+      email: z.string().email(t("invalidEmail")),
+      password: z.string().min(8, t("passwordMin", { count: 8 })),
+      confirmPassword: z.string().min(8, t("passwordMin", { count: 8 })),
+    })
+    .refine((values) => values.password === values.confirmPassword, {
+      message: t("passwordMismatch"),
+      path: ["confirmPassword"],
+    });
 
   const form = useForm<RegisterFormValues>({
     initialValues: {
@@ -71,7 +72,7 @@ export default function RegisterPage() {
       });
 
       if (signUpError) {
-        setError(signUpError.message);
+        setError(t("failed"));
         return;
       }
 
@@ -81,8 +82,8 @@ export default function RegisterPage() {
       }
 
       setSuccess(true);
-    } catch (err) {
-      setError((err as Error)?.message ?? "Registration failed. Please try again.");
+    } catch {
+      setError(t("failed"));
     } finally {
       setIsPending(false);
     }
@@ -92,14 +93,13 @@ export default function RegisterPage() {
     <Center h="100vh" bg="gray.1" px="md">
       <Paper shadow="md" p={30} radius="md" w={420}>
         <Title order={2} ta="center" mb="lg">
-          Object Tracking
+          {t("appTitle")}
         </Title>
         <Title order={4} ta="center" mb="xs" c="dimmed">
-          Request Access
+          {t("title")}
         </Title>
         <Text size="sm" c="dimmed" ta="center" mb="lg">
-          Creating an account does not grant tenant access automatically. An authorized
-          tenant administrator or owner must add you as a member of their tenant.
+          {t("description")}
         </Text>
 
         {error && (
@@ -117,7 +117,7 @@ export default function RegisterPage() {
         {success ? (
           <Stack>
             <Alert color="green" mb="md">
-              Account created! Check your email for a confirmation link.
+              {t("success")}
             </Alert>
             <Anchor
               component={Link}
@@ -125,32 +125,32 @@ export default function RegisterPage() {
               size="sm"
               ta="center"
             >
-              Continue to sign in
+              {t("continueSignIn")}
             </Anchor>
           </Stack>
         ) : (
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack>
               <TextInput
-                label="Email"
+                label={t("email")}
                 placeholder="name@example.com"
                 required
                 {...form.getInputProps("email")}
               />
               <PasswordInput
-                label="Password"
-                placeholder="Create a password"
+                label={t("password")}
+                placeholder={t("passwordPlaceholder")}
                 required
                 {...form.getInputProps("password")}
               />
               <PasswordInput
-                label="Confirm Password"
-                placeholder="Repeat your password"
+                label={t("confirmPassword")}
+                placeholder={t("confirmPasswordPlaceholder")}
                 required
                 {...form.getInputProps("confirmPassword")}
               />
               <Button type="submit" fullWidth loading={isPending}>
-                Register
+                {t("submit")}
               </Button>
               <Anchor
                 component={Link}
@@ -158,7 +158,7 @@ export default function RegisterPage() {
                 size="sm"
                 ta="center"
               >
-                Back to login
+                {t("backToLogin")}
               </Anchor>
             </Stack>
           </form>

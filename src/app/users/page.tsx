@@ -14,10 +14,12 @@ import { DataTable } from "mantine-datatable";
 import { IconEdit, IconEye, IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function UsersListPage() {
+  const t = useTranslations("Users.list");
   const router = useRouter();
 
   const [records, setRecords] = useState<Record<string, unknown>[]>([]);
@@ -51,17 +53,17 @@ export default function UsersListPage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/users">Users</Anchor>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/users">{t("title")}</Anchor>
         </Breadcrumbs>
 
         <Group justify="space-between">
-          <Title order={2}>Users</Title>
+          <Title order={2}>{t("title")}</Title>
           <Button
             leftSection={<IconPlus size={16} />}
             onClick={() => router.push("/users/create")}
           >
-            Create User
+            {t("create")}
           </Button>
         </Group>
 
@@ -75,27 +77,27 @@ export default function UsersListPage() {
           columns={[
             {
               accessor: "name",
-              title: "Name",
+              title: t("name"),
               render: (record) => {
                 const r = record as Record<string, string>;
                 const name = [r.first_name, r.last_name].filter(Boolean).join(" ");
                 return <Text size="sm">{name || "—"}</Text>;
               },
             },
-            { accessor: "title", title: "Title", render: (r) => (r as Record<string, string>).title ?? "—" },
+            { accessor: "title", title: t("jobTitle"), render: (r) => (r as Record<string, string>).title ?? "—" },
             {
               accessor: "groups.title",
-              title: "Group",
+              title: t("group"),
               render: (record) => {
                 const g = (record as Record<string, unknown>).groups as Record<string, string> | null;
                 return <Text size="sm">{g?.title ?? "—"}</Text>;
               },
             },
-            { accessor: "email", title: "Email" },
-            { accessor: "phone", title: "Phone", render: (r) => (r as Record<string, string>).phone ?? "—" },
+            { accessor: "email", title: t("email") },
+            { accessor: "phone", title: t("phone"), render: (r) => (r as Record<string, string>).phone ?? "—" },
             {
               accessor: "location",
-              title: "Location",
+              title: t("location"),
               render: (record) => {
                 const r = record as Record<string, string>;
                 return (
@@ -107,17 +109,19 @@ export default function UsersListPage() {
             },
             {
               accessor: "actions",
-              title: "Actions",
+              title: t("actions"),
               width: 100,
               render: (record) => (
                 <Group gap={4}>
                   <ActionIcon
+                    aria-label={t("view")}
                     variant="subtle"
                     onClick={() => router.push(`/users/${(record as Record<string, unknown>).id}`)}
                   >
                     <IconEye size={16} />
                   </ActionIcon>
                   <ActionIcon
+                    aria-label={t("edit")}
                     variant="subtle"
                     onClick={() =>
                       router.push(`/users/${(record as Record<string, unknown>).id}/edit`)
@@ -134,7 +138,7 @@ export default function UsersListPage() {
           page={page}
           onPageChange={setPage}
           paginationSize="sm"
-          noRecordsText="No users found"
+          noRecordsText={t("noUsers")}
         />
       </Stack>
     </AppShell>

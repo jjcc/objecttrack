@@ -17,6 +17,7 @@ import { IconAlertCircle } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { Json } from "@/types/database";
 
@@ -52,6 +53,8 @@ function InfoField({ label, value }: { label: string; value: string | number | n
 }
 
 export default function PublicObjectInfoPage() {
+  const t = useTranslations("Objects.publicInfo");
+  const format = useFormatter();
   const params = useParams();
   const id = Number(params.id);
   const [record, setRecord] = useState<ObjectInfo | null>(null);
@@ -63,7 +66,7 @@ export default function PublicObjectInfoPage() {
   useEffect(() => {
     async function fetchObjectInfo() {
       if (!Number.isSafeInteger(id) || id < 1) {
-        setError("This object link is invalid.");
+        setError(t("invalid"));
         setIsLoading(false);
         return;
       }
@@ -74,15 +77,15 @@ export default function PublicObjectInfoPage() {
       const objectInfo = data?.[0] as ObjectInfo | undefined;
 
       if (loadError) {
-        setError(loadError.message);
+        setError(t("unavailable"));
       } else if (!objectInfo) {
-        setError("This object does not exist or its information is private.");
+        setError(t("notFound"));
       } else {
         setRecord(objectInfo);
         const { data: eventData, error: eventError } = await supabase
           .rpc("object_info_events", { p_object_id: id });
         if (eventError) {
-          setError(eventError.message);
+          setError(t("eventsFailed"));
           setIsLoading(false);
           return;
         }
@@ -97,7 +100,7 @@ export default function PublicObjectInfoPage() {
       setIsLoading(false);
     }
     fetchObjectInfo();
-  }, [id]);
+  }, [id, t]);
 
   if (isLoading) {
     return <Center mih="100vh"><Loader /></Center>;
@@ -106,7 +109,7 @@ export default function PublicObjectInfoPage() {
   if (error || !record) {
     return (
       <Container size="sm" py="xl">
-        <Alert color="red" title="Object information unavailable" icon={<IconAlertCircle size={18} />}>
+        <Alert color="red" title={t("unavailableTitle")} icon={<IconAlertCircle size={18} />}>
           {error}
         </Alert>
       </Container>
@@ -129,7 +132,7 @@ export default function PublicObjectInfoPage() {
           {imageUrl && (
             <Image
               src={imageUrl}
-              alt={`${record.name} image`}
+              alt={t("imageAlt", { name: record.name })}
               maw={420}
               mah={300}
               fit="contain"
@@ -137,16 +140,16 @@ export default function PublicObjectInfoPage() {
             />
           )}
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
-            <InfoField label="Object ID" value={record.id} />
-            <InfoField label="Institution" value={record.institution_name} />
-            <InfoField label="Owner" value={record.owner_name} />
-            <InfoField label="Category" value={record.category_name} />
-            <InfoField label="Model" value={record.model} />
+            <InfoField label={t("objectId")} value={record.id} />
+            <InfoField label={t("institution")} value={record.institution_name} />
+            <InfoField label={t("owner")} value={record.owner_name} />
+            <InfoField label={t("category")} value={record.category_name} />
+            <InfoField label={t("model")} value={record.model} />
             <InfoField
-              label="Created"
-              value={dayjs(record.created_at).format("YYYY-MM-DD HH:mm")}
+              label={t("created")}
+              value={format.dateTime(new Date(record.created_at), "dateTime")}
             />
-            <InfoField label="Description" value={record.description} />
+            <InfoField label={t("description")} value={record.description} />
             {Object.entries(extra).map(([name, value]) => (
               <InfoField
                 key={name}
@@ -161,15 +164,15 @@ export default function PublicObjectInfoPage() {
           </SimpleGrid>
         </Paper>
         <Paper withBorder p="lg" radius="md">
-          <Title order={3} mb="md">Event History</Title>
+          <Title order={3} mb="md">{t("eventHistory")}</Title>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Event</Table.Th>
-                <Table.Th>Group</Table.Th>
-                <Table.Th>From</Table.Th>
-                <Table.Th>To</Table.Th>
-                <Table.Th>Date</Table.Th>
+                <Table.Th>{t("event")}</Table.Th>
+                <Table.Th>{t("group")}</Table.Th>
+                <Table.Th>{t("from")}</Table.Th>
+                <Table.Th>{t("to")}</Table.Th>
+                <Table.Th>{t("date")}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -177,17 +180,17 @@ export default function PublicObjectInfoPage() {
                 <Table.Tr key={event.id}>
                   <Table.Td>{event.event_type_label ?? "—"}</Table.Td>
                   <Table.Td>{event.group_name ?? "—"}</Table.Td>
-                  <Table.Td>{event.from_user_name ?? "— (initial)"}</Table.Td>
+                  <Table.Td>{event.from_user_name ?? t("initial")}</Table.Td>
                   <Table.Td>{event.to_user_name ?? "—"}</Table.Td>
                   <Table.Td>
-                    {dayjs(event.created_at).format("YYYY-MM-DD HH:mm")}
+                    {format.dateTime(new Date(event.created_at), "dateTime")}
                   </Table.Td>
                 </Table.Tr>
               ))}
               {events.length === 0 && (
                 <Table.Tr>
                   <Table.Td colSpan={5}>
-                    <Text ta="center" c="dimmed">No events recorded for this object</Text>
+                    <Text ta="center" c="dimmed">{t("noEvents")}</Text>
                   </Table.Td>
                 </Table.Tr>
               )}

@@ -3,9 +3,11 @@
 import { Center, Paper, Title, Text, Button, Stack } from "@mantine/core";
 import { IconShieldOff } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function UnauthorizedPage() {
+  const t = useTranslations("Auth.unauthorized");
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -19,10 +21,9 @@ export default function UnauthorizedPage() {
       <Paper shadow="md" p={30} radius="md" w={400}>
         <Stack align="center" gap="md">
           <IconShieldOff size={48} color="red" />
-          <Title order={3}>Access Denied</Title>
+          <Title order={3}>{t("title")}</Title>
           <Text c="dimmed" ta="center">
-            You are not authorized to access this application. Only
-            administrators can use this dashboard.
+            {t("description")}
           </Text>
           <Button
             variant="outline"
@@ -30,7 +31,7 @@ export default function UnauthorizedPage() {
             onClick={handleLogout}
             fullWidth
           >
-            Return to Login
+            {t("returnToLogin")}
           </Button>
         </Stack>
       </Paper>

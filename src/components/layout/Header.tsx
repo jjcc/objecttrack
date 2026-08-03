@@ -16,8 +16,10 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { LocaleSwitcher } from "@/components/i18n/LocaleSwitcher";
 
 interface HeaderProps {
   opened: boolean;
@@ -31,6 +33,7 @@ interface UserIdentity {
 }
 
 export function Header({ opened, toggle }: HeaderProps) {
+  const t = useTranslations("Shell.header");
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const router = useRouter();
   const [user, setUser] = useState<UserIdentity | null>(null);
@@ -47,8 +50,8 @@ export function Header({ opened, toggle }: HeaderProps) {
           .maybeSingle() as unknown as { data: { first_name: string | null; last_name: string | null } | null };
 
         const name = profile
-          ? [profile.first_name, profile.last_name].filter(Boolean).join(" ") || authUser.email || "Admin"
-          : "Admin";
+          ? [profile.first_name, profile.last_name].filter(Boolean).join(" ") || authUser.email || t("admin")
+          : t("admin");
 
         setUser({
           id: authUser.id,
@@ -58,7 +61,7 @@ export function Header({ opened, toggle }: HeaderProps) {
       }
     }
     fetchUser();
-  }, []);
+  }, [t]);
 
   const handleLogout = async () => {
     const supabase = getSupabaseClient();
@@ -71,15 +74,16 @@ export function Header({ opened, toggle }: HeaderProps) {
       <Group>
         <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
         <Text size="lg" fw={700}>
-          Object Tracking
+          {t("appTitle")}
         </Text>
       </Group>
       <Group>
+        <LocaleSwitcher />
         <ActionIcon
           variant="default"
           onClick={() => toggleColorScheme()}
           size="lg"
-          aria-label="Toggle color scheme"
+          aria-label={t("toggleColorScheme")}
         >
           {colorScheme === "dark" ? (
             <IconSun size={18} />
@@ -90,28 +94,28 @@ export function Header({ opened, toggle }: HeaderProps) {
 
         <Menu shadow="md" width={200}>
           <Menu.Target>
-            <ActionIcon variant="default" size="lg">
+            <ActionIcon variant="default" size="lg" aria-label={t("userMenu")}>
               <Avatar size="sm" radius="xl" color="blue">
                 {user?.name?.charAt(0)?.toUpperCase() ?? "A"}
               </Avatar>
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
-            <Menu.Label>{user?.name ?? "Admin"}</Menu.Label>
+            <Menu.Label>{user?.name ?? t("admin")}</Menu.Label>
             <Menu.Label>{user?.email ?? ""}</Menu.Label>
             <Menu.Divider />
             <Menu.Item
               leftSection={<IconUser size={14} />}
               onClick={() => router.push("/profile")}
             >
-              Profile
+              {t("profile")}
             </Menu.Item>
             <Menu.Item
               color="red"
               leftSection={<IconLogout size={14} />}
               onClick={handleLogout}
             >
-              Logout
+              {t("logout")}
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>

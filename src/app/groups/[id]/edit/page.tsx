@@ -17,23 +17,21 @@ import { showNotification } from "@mantine/notifications";
 import { useParams, useRouter } from "next/navigation";
 import { z } from "zod";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-const groupSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-});
-
-type GroupFormValues = z.infer<typeof groupSchema>;
+type GroupFormValues = { title: string; description?: string };
 
 export default function GroupEditPage() {
+  const t = useTranslations("Groups.form");
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
 
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, setIsPending] = useState(false);
+  const groupSchema = z.object({ title: z.string().min(1, t("titleRequired")), description: z.string().optional() });
 
   const form = useForm<GroupFormValues>({
     initialValues: {
@@ -79,23 +77,23 @@ export default function GroupEditPage() {
       if (error) {
         showNotification({
           color: "red",
-          title: "Error",
-          message: error.message ?? "Failed to update group",
+          title: t("error"),
+          message: t("updateFailed"),
         });
         return;
       }
 
       showNotification({
         color: "green",
-        title: "Success",
-        message: "Group updated successfully",
+        title: t("success"),
+        message: t("updateSuccess"),
       });
       router.push("/groups");
-    } catch (err) {
+    } catch {
       showNotification({
         color: "red",
-        title: "Error",
-        message: (err as Error)?.message ?? "Failed to update group",
+        title: t("error"),
+        message: t("updateFailed"),
       });
     } finally {
       setIsPending(false);
@@ -106,38 +104,38 @@ export default function GroupEditPage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/groups">Groups</Anchor>
-          <Anchor>Edit</Anchor>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/groups">{t("groups")}</Anchor>
+          <Anchor>{t("edit")}</Anchor>
         </Breadcrumbs>
 
-        <Title order={2}>Edit Group</Title>
+        <Title order={2}>{t("editTitle")}</Title>
 
         <Paper withBorder p="md" radius="md" maw={600} pos="relative">
           <LoadingOverlay visible={isLoading} />
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack>
               <TextInput
-                label="Title"
-                placeholder="Enter group title"
+                label={t("groupTitle")}
+                placeholder={t("titlePlaceholder")}
                 required
                 {...form.getInputProps("title")}
               />
               <Textarea
-                label="Description"
-                placeholder="Enter group description"
+                label={t("description")}
+                placeholder={t("descriptionPlaceholder")}
                 rows={3}
                 {...form.getInputProps("description")}
               />
               <Group>
                 <Button type="submit" loading={isPending}>
-                  Save
+                  {t("save")}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => router.push("/groups")}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
               </Group>
             </Stack>

@@ -16,43 +16,15 @@ import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { z } from "zod";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-const eventSchema = z
-  .object({
-    group_id: z.string().min(1, "Group is required"),
-    object_id: z.string().min(1, "Object is required"),
-    event_type_id: z.string().min(1, "Event type is required"),
-    e_from: z.string().optional(),
-    e_to: z.string().optional(),
-    extra: z.string().optional(),
-  })
-  .superRefine((values, context) => {
-    const fromUser = values.e_from?.trim();
-    const toUser = values.e_to?.trim();
-
-    if (!fromUser && !toUser) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "An event must include at least a receiving user.",
-        path: ["e_to"],
-      });
-    }
-
-    if (fromUser && toUser && fromUser === toUser) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "From User and To User cannot be the same.",
-        path: ["e_to"],
-      });
-    }
-  });
-
-type EventFormValues = z.infer<typeof eventSchema>;
+type EventFormValues = { group_id: string; object_id: string; event_type_id: string; e_from?: string; e_to?: string; extra?: string };
 
 export default function EventCreatePage() {
+  const t = useTranslations("Events.form");
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
 
@@ -62,6 +34,17 @@ export default function EventCreatePage() {
   const [userOptions, setUserOptions] = useState<{ value: string; label: string }[]>([]);
   const [currentCustodianId, setCurrentCustodianId] = useState<string | null>(null);
   const [currentCustodianLabel, setCurrentCustodianLabel] = useState<string | null>(null);
+  const eventSchema = z.object({
+    group_id: z.string().min(1, t("groupRequired")),
+    object_id: z.string().min(1, t("objectRequired")),
+    event_type_id: z.string().min(1, t("eventTypeRequired")),
+    e_from: z.string().optional(), e_to: z.string().optional(), extra: z.string().optional(),
+  }).superRefine((values, context) => {
+    const fromUser = values.e_from?.trim();
+    const toUser = values.e_to?.trim();
+    if (!fromUser && !toUser) context.addIssue({ code: z.ZodIssueCode.custom, message: t("receiverRequired"), path: ["e_to"] });
+    if (fromUser && toUser && fromUser === toUser) context.addIssue({ code: z.ZodIssueCode.custom, message: t("usersMustDiffer"), path: ["e_to"] });
+  });
 
   useEffect(() => {
     async function fetchFilters() {
@@ -160,8 +143,8 @@ export default function EventCreatePage() {
       } catch {
         showNotification({
           color: "red",
-          title: "Error",
-          message: "Extra data must be valid JSON",
+          title: t("error"),
+          message: t("invalidJson"),
         });
         return;
       }
@@ -174,9 +157,8 @@ export default function EventCreatePage() {
       if (fromUser) {
         showNotification({
           color: "red",
-          title: "Error",
-          message:
-            "Initial assignment must leave From User empty because the object has no current custodian.",
+          title: t("error"),
+          message: t("initialFromEmpty"),
         });
         return;
       }
@@ -184,9 +166,8 @@ export default function EventCreatePage() {
       if (!toUser) {
         showNotification({
           color: "red",
-          title: "Error",
-          message:
-            "Initial assignment requires a To User so the first custodian is recorded correctly.",
+          title: t("error"),
+          message: t("initialToRequired"),
         });
         return;
       }
@@ -194,9 +175,8 @@ export default function EventCreatePage() {
       if (fromUser !== currentCustodianId) {
         showNotification({
           color: "red",
-          title: "Error",
-          message:
-            "From User must match the object's current custodian before recording a transfer.",
+          title: t("error"),
+          message: t("fromMustMatch"),
         });
         return;
       }
@@ -204,9 +184,8 @@ export default function EventCreatePage() {
       if (!toUser) {
         showNotification({
           color: "red",
-          title: "Error",
-          message:
-            "A transfer requires a To User so the next custodian can be derived from the latest event.",
+          title: t("error"),
+          message: t("transferToRequired"),
         });
         return;
       }
@@ -227,23 +206,23 @@ export default function EventCreatePage() {
       if (error) {
         showNotification({
           color: "red",
-          title: "Error",
-          message: error.message ?? "Failed to record event",
+          title: t("error"),
+          message: t("recordFailed"),
         });
         return;
       }
 
       showNotification({
         color: "green",
-        title: "Success",
-        message: "Event recorded successfully",
+        title: t("success"),
+        message: t("recordSuccess"),
       });
       router.push("/events");
-    } catch (err) {
+    } catch {
       showNotification({
         color: "red",
-        title: "Error",
-        message: (err as Error)?.message ?? "Failed to record event",
+        title: t("error"),
+        message: t("recordFailed"),
       });
     } finally {
       setIsPending(false);
@@ -254,27 +233,27 @@ export default function EventCreatePage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/events">Events</Anchor>
-          <Anchor>Record Event</Anchor>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/events">{t("events")}</Anchor>
+          <Anchor>{t("record")}</Anchor>
         </Breadcrumbs>
 
-        <Title order={2}>Record Event</Title>
+        <Title order={2}>{t("record")}</Title>
 
         <Paper withBorder p="md" radius="md" maw={600}>
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack>
               <Select
-                label="Group"
-                placeholder="Select group"
+                label={t("group")}
+                placeholder={t("selectGroup")}
                 data={groupOptions}
                 required
                 searchable
                 {...form.getInputProps("group_id")}
               />
               <Select
-                label="Object"
-                placeholder="Select object"
+                label={t("object")}
+                placeholder={t("selectObject")}
                 data={objectOptions}
                 required
                 searchable
@@ -283,36 +262,36 @@ export default function EventCreatePage() {
               <Text size="sm" c="dimmed">
                 {form.values.object_id
                   ? currentCustodianLabel
-                    ? `Current custodian: ${currentCustodianLabel}`
-                    : "No current custodian recorded. This event will be treated as the initial assignment."
-                  : "Select an object to load its current custodian."}
+                    ? t("currentCustodian", { name: currentCustodianLabel })
+                    : t("noCustodian")
+                  : t("selectObjectHelp")}
               </Text>
               <Select
-                label="Event Type"
-                placeholder="Select event type"
+                label={t("eventType")}
+                placeholder={t("selectEventType")}
                 data={eventTypeOptions}
                 required
                 searchable
                 {...form.getInputProps("event_type_id")}
               />
               <Select
-                label="From User"
-                placeholder="Automatically set from current custodian"
+                label={t("fromUser")}
+                placeholder={t("fromPlaceholder")}
                 data={userOptions}
                 clearable
                 searchable
                 {...form.getInputProps("e_from")}
               />
               <Select
-                label="To User"
-                placeholder="Select receiving user"
+                label={t("toUser")}
+                placeholder={t("toPlaceholder")}
                 data={userOptions}
                 clearable
                 searchable
                 {...form.getInputProps("e_to")}
               />
               <JsonInput
-                label="Extra Data (JSON, optional)"
+                label={t("extraData")}
                 placeholder='{"notes": "..."}'
                 formatOnBlur
                 autosize
@@ -321,13 +300,13 @@ export default function EventCreatePage() {
               />
               <Group>
                 <Button type="submit" loading={isPending}>
-                  Record Event
+                  {t("record")}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => router.push("/events")}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
               </Group>
             </Stack>

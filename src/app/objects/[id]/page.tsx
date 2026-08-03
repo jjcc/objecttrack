@@ -17,12 +17,15 @@ import {
 import { IconEdit, IconExternalLink } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { AppShell } from "@/components/layout/AppShell";
 import { EventTypeBadge } from "@/components/shared/EventTypeBadge";
 import dayjs from "dayjs";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function ObjectShowPage() {
+  const t = useTranslations("Objects.detail");
+  const format = useFormatter();
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -73,27 +76,27 @@ export default function ObjectShowPage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/objects">Objects</Anchor>
-          <Anchor>{record?.name as string ?? "Detail"}</Anchor>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/objects">{t("objects")}</Anchor>
+          <Anchor>{record?.name as string ?? t("detail")}</Anchor>
         </Breadcrumbs>
 
         <Group justify="space-between">
-          <Title order={2}>{record?.name as string ?? "Object Detail"}</Title>
+          <Title order={2}>{record?.name as string ?? t("title")}</Title>
           <Group>
             <Button
               leftSection={<IconExternalLink size={16} />}
               variant="subtle"
               onClick={() => router.push(`/object-info/${id}`)}
             >
-              Object Info
+              {t("objectInfo")}
             </Button>
             <Button
               leftSection={<IconEdit size={16} />}
               variant="outline"
               onClick={() => router.push(`/objects/${id}/edit`)}
             >
-              Edit
+              {t("edit")}
             </Button>
           </Group>
         </Group>
@@ -103,7 +106,7 @@ export default function ObjectShowPage() {
           {imageUrl && (
             <Image
               src={imageUrl}
-              alt={`${(record?.name as string) ?? "Object"} image`}
+              alt={t("imageAlt", { name: (record?.name as string) ?? t("object") })}
               maw={360}
               mah={260}
               fit="contain"
@@ -112,27 +115,27 @@ export default function ObjectShowPage() {
           )}
           <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <div>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Name</Text>
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>{t("name")}</Text>
               <Text>{record?.name as string ?? "—"}</Text>
             </div>
             <div>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Category</Text>
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>{t("category")}</Text>
               <Text>{category?.name ?? "—"}</Text>
             </div>
             <div>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Model</Text>
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>{t("model")}</Text>
               <Text>{(record?.model as string) ?? "—"}</Text>
             </div>
             <div>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Created</Text>
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>{t("created")}</Text>
               <Text>
                 {record?.created_at
-                  ? dayjs(record.created_at as string).format("YYYY-MM-DD HH:mm")
+                  ? format.dateTime(new Date(record.created_at as string), "dateTime")
                   : "—"}
               </Text>
             </div>
             <div>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>Description</Text>
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>{t("description")}</Text>
               <Text>{(record?.description as string) ?? "—"}</Text>
             </div>
             {Object.entries(extra).map(([name, value]) => (
@@ -146,17 +149,17 @@ export default function ObjectShowPage() {
 
         <Paper withBorder p="md" radius="md" pos="relative">
           <Title order={4} mb="md">
-            Event History
+            {t("eventHistory")}
           </Title>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>ID</Table.Th>
-                <Table.Th>Event Type</Table.Th>
-                <Table.Th>Group</Table.Th>
-                <Table.Th>From</Table.Th>
-                <Table.Th>To</Table.Th>
-                <Table.Th>Date</Table.Th>
+                <Table.Th>{t("eventType")}</Table.Th>
+                <Table.Th>{t("group")}</Table.Th>
+                <Table.Th>{t("from")}</Table.Th>
+                <Table.Th>{t("to")}</Table.Th>
+                <Table.Th>{t("date")}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -180,7 +183,7 @@ export default function ObjectShowPage() {
                     <Table.Td>
                       {fromUser
                         ? `${fromUser.first_name ?? ""} ${fromUser.last_name ?? ""}`.trim() || "—"
-                        : "— (initial)"}
+                        : t("initial")}
                     </Table.Td>
                     <Table.Td>
                       {toUser
@@ -188,7 +191,7 @@ export default function ObjectShowPage() {
                         : "—"}
                     </Table.Td>
                     <Table.Td>
-                      {dayjs(event.created_at as string).format("YYYY-MM-DD HH:mm")}
+                      {format.dateTime(new Date(event.created_at as string), "dateTime")}
                     </Table.Td>
                   </Table.Tr>
                 );
@@ -197,7 +200,7 @@ export default function ObjectShowPage() {
                 <Table.Tr>
                   <Table.Td colSpan={6}>
                     <Text ta="center" c="dimmed">
-                      No events recorded for this object
+                      {t("noEvents")}
                     </Text>
                   </Table.Td>
                 </Table.Tr>

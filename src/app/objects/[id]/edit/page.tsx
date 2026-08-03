@@ -16,6 +16,7 @@ import {
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { z } from "zod";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -27,16 +28,10 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 
-const objectSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  category_id: z.string().optional(),
-  model: z.string().optional(),
-});
-
-type ObjectFormValues = z.infer<typeof objectSchema>;
+type ObjectFormValues = { name: string; description?: string; category_id?: string; model?: string };
 
 export default function ObjectEditPage() {
+  const t = useTranslations("Objects.form");
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -49,6 +44,12 @@ export default function ObjectEditPage() {
   const [extraValues, setExtraValues] = useState<Record<string, string>>({});
   const [image, setImage] = useState<File | null>(null);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
+  const objectSchema = z.object({
+    name: z.string().min(1, t("nameRequired")),
+    description: z.string().optional(),
+    category_id: z.string().optional(),
+    model: z.string().optional(),
+  });
 
   const form = useForm<ObjectFormValues>({
     initialValues: {
@@ -106,7 +107,7 @@ export default function ObjectEditPage() {
 
   const handleSubmit = async (values: ObjectFormValues) => {
     if (image && image.size > MAX_IMAGE_SIZE) {
-      showNotification({ color: "red", title: "Image too large", message: "Choose an image no larger than 2 MB." });
+      showNotification({ color: "red", title: t("imageTooLarge"), message: t("imageSizeHelp") });
       return;
     }
     setIsPending(true);
@@ -117,7 +118,7 @@ export default function ObjectEditPage() {
       );
       let imagePath = currentImage;
       if (image) {
-        if (tenantId === null) throw new Error("Your profile is not assigned to a tenant.");
+        if (tenantId === null) throw new Error("tenant_missing");
         const extension = image.name.split(".").pop()?.toLowerCase() || "jpg";
         imagePath = `${tenantId}/${id}/${crypto.randomUUID()}.${extension}`;
         const { error: uploadError } = await supabase.storage
@@ -139,8 +140,8 @@ export default function ObjectEditPage() {
       if (error) {
         showNotification({
           color: "red",
-          title: "Error",
-          message: error.message ?? "Failed to update object",
+          title: t("error"),
+          message: t("updateFailed"),
         });
         return;
       }
@@ -151,15 +152,15 @@ export default function ObjectEditPage() {
 
       showNotification({
         color: "green",
-        title: "Success",
-        message: "Object updated successfully",
+        title: t("success"),
+        message: t("updateSuccess"),
       });
       router.push("/objects");
-    } catch (err) {
+    } catch (error) {
       showNotification({
         color: "red",
-        title: "Error",
-        message: (err as Error)?.message ?? "Failed to update object",
+        title: t("error"),
+        message: error instanceof Error && error.message === "tenant_missing" ? t("tenantMissing") : t("updateFailed"),
       });
     } finally {
       setIsPending(false);
@@ -170,39 +171,39 @@ export default function ObjectEditPage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/objects">Objects</Anchor>
-          <Anchor>Edit</Anchor>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/objects">{t("objects")}</Anchor>
+          <Anchor>{t("edit")}</Anchor>
         </Breadcrumbs>
 
-        <Title order={2}>Edit Object</Title>
+        <Title order={2}>{t("editTitle")}</Title>
 
         <Paper withBorder p="md" radius="md" maw={600} pos="relative">
           <LoadingOverlay visible={isLoading} />
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack>
               <TextInput
-                label="Name"
-                placeholder="Enter object name"
+                label={t("name")}
+                placeholder={t("namePlaceholder")}
                 required
                 {...form.getInputProps("name")}
               />
               <Select
-                label="Category"
-                placeholder="Select a category"
+                label={t("category")}
+                placeholder={t("categoryPlaceholder")}
                 data={categoryOptions}
                 clearable
                 searchable
                 {...form.getInputProps("category_id")}
               />
               <TextInput
-                label="Model"
-                placeholder="Enter model"
+                label={t("model")}
+                placeholder={t("modelPlaceholder")}
                 {...form.getInputProps("model")}
               />
               <Textarea
-                label="Description"
-                placeholder="Enter description"
+                label={t("description")}
+                placeholder={t("descriptionPlaceholder")}
                 rows={3}
                 {...form.getInputProps("description")}
               />
@@ -218,13 +219,13 @@ export default function ObjectEditPage() {
               />
               <Group>
                 <Button type="submit" loading={isPending}>
-                  Save
+                  {t("save")}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => router.push("/objects")}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
               </Group>
             </Stack>

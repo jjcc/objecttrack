@@ -15,6 +15,7 @@ import {
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { AppShell } from "@/components/layout/AppShell";
@@ -26,16 +27,10 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 
-const objectSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  category_id: z.string().optional(),
-  model: z.string().optional(),
-});
-
-type ObjectFormValues = z.infer<typeof objectSchema>;
+type ObjectFormValues = { name: string; description?: string; category_id?: string; model?: string };
 
 export default function ObjectCreatePage() {
+  const t = useTranslations("Objects.form");
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
@@ -43,6 +38,12 @@ export default function ObjectCreatePage() {
   const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>([]);
   const [extraValues, setExtraValues] = useState<Record<string, string>>({});
   const [image, setImage] = useState<File | null>(null);
+  const objectSchema = z.object({
+    name: z.string().min(1, t("nameRequired")),
+    description: z.string().optional(),
+    category_id: z.string().optional(),
+    model: z.string().optional(),
+  });
 
   useEffect(() => {
     async function fetchCategories() {
@@ -80,11 +81,11 @@ export default function ObjectCreatePage() {
 
   const handleSubmit = async (values: ObjectFormValues) => {
     if (image && image.size > MAX_IMAGE_SIZE) {
-      showNotification({ color: "red", title: "Image too large", message: "Choose an image no larger than 2 MB." });
+      showNotification({ color: "red", title: t("imageTooLarge"), message: t("imageSizeHelp") });
       return;
     }
     if (tenantId === null) {
-      showNotification({ color: "red", title: "Tenant unavailable", message: "Your profile is not assigned to a tenant." });
+      showNotification({ color: "red", title: t("tenantUnavailable"), message: t("tenantMissing") });
       return;
     }
     setIsPending(true);
@@ -105,8 +106,8 @@ export default function ObjectCreatePage() {
       if (error) {
         showNotification({
           color: "red",
-          title: "Error",
-          message: error.message ?? "Failed to create object",
+          title: t("error"),
+          message: t("createFailed"),
         });
         return;
       }
@@ -119,7 +120,7 @@ export default function ObjectCreatePage() {
           .upload(path, image, { contentType: image.type });
         if (uploadError) {
           await (supabase.from("objects") as any).delete().eq("id", objectData.id);
-          showNotification({ color: "red", title: "Image upload failed", message: uploadError.message });
+          showNotification({ color: "red", title: t("imageUploadFailed"), message: t("imageUploadFailedMessage") });
           return;
         }
         const { error: imageUpdateError } = await (supabase.from("objects") as any)
@@ -127,22 +128,22 @@ export default function ObjectCreatePage() {
           .eq("id", objectData.id);
         if (imageUpdateError) {
           await supabase.storage.from("object-images").remove([path]);
-          showNotification({ color: "red", title: "Unable to attach image", message: imageUpdateError.message });
+          showNotification({ color: "red", title: t("imageAttachFailed"), message: t("imageAttachFailedMessage") });
           return;
         }
       }
 
       showNotification({
         color: "green",
-        title: "Success",
-        message: "Object created successfully",
+        title: t("success"),
+        message: t("createSuccess"),
       });
       router.push("/objects");
-    } catch (err) {
+    } catch {
       showNotification({
         color: "red",
-        title: "Error",
-        message: (err as Error)?.message ?? "Failed to create object",
+        title: t("error"),
+        message: t("createFailed"),
       });
     } finally {
       setIsPending(false);
@@ -153,38 +154,38 @@ export default function ObjectCreatePage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/objects">Objects</Anchor>
-          <Anchor>Create</Anchor>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/objects">{t("objects")}</Anchor>
+          <Anchor>{t("create")}</Anchor>
         </Breadcrumbs>
 
-        <Title order={2}>Create Object</Title>
+        <Title order={2}>{t("createTitle")}</Title>
 
         <Paper withBorder p="md" radius="md" maw={600}>
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack>
               <TextInput
-                label="Name"
-                placeholder="Enter object name"
+                label={t("name")}
+                placeholder={t("namePlaceholder")}
                 required
                 {...form.getInputProps("name")}
               />
               <Select
-                label="Category"
-                placeholder="Select a category"
+                label={t("category")}
+                placeholder={t("categoryPlaceholder")}
                 data={categoryOptions}
                 clearable
                 searchable
                 {...form.getInputProps("category_id")}
               />
               <TextInput
-                label="Model"
-                placeholder="Enter model"
+                label={t("model")}
+                placeholder={t("modelPlaceholder")}
                 {...form.getInputProps("model")}
               />
               <Textarea
-                label="Description"
-                placeholder="Enter description"
+                label={t("description")}
+                placeholder={t("descriptionPlaceholder")}
                 rows={3}
                 {...form.getInputProps("description")}
               />
@@ -199,13 +200,13 @@ export default function ObjectCreatePage() {
               />
               <Group>
                 <Button type="submit" loading={isPending}>
-                  Create
+                  {t("create")}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => router.push("/objects")}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
               </Group>
             </Stack>

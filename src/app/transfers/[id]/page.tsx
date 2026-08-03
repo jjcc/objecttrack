@@ -18,6 +18,7 @@ import { showNotification } from "@mantine/notifications";
 import { IconCheck, IconX, IconArrowBack } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import {
@@ -30,6 +31,8 @@ import {
 import dayjs from "dayjs";
 
 export default function TransferDetailPage() {
+  const t = useTranslations("Transfers");
+  const format = useFormatter();
   const params = useParams();
   const router = useRouter();
   const id = Number(params.id);
@@ -61,11 +64,11 @@ export default function TransferDetailPage() {
       setRecord(data);
     } catch (error) {
       setRecord(null);
-      setFetchError(error instanceof Error ? error.message : "Unable to load transfer request");
+      setFetchError(t("loadOneFailed"));
     } finally {
       setIsLoading(false);
     }
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     fetchTransfer();
@@ -78,13 +81,13 @@ export default function TransferDetailPage() {
     try {
       await approveTransfer(supabase, id);
 
-      showNotification({ color: "green", title: "Success", message: "Transfer approved" });
+      showNotification({ color: "green", title: t("success"), message: t("approvedMessage") });
       await fetchTransfer();
-    } catch (error) {
+    } catch {
       showNotification({
         color: "red",
-        title: "Approval failed",
-        message: error instanceof Error ? error.message : "Unable to approve transfer",
+        title: t("approvalFailed"),
+        message: t("approveFailedMessage"),
       });
     } finally {
       setActiveAction(null);
@@ -98,13 +101,13 @@ export default function TransferDetailPage() {
     try {
       await rejectTransfer(supabase, id, rejectReason.trim() || null);
 
-      showNotification({ color: "green", title: "Success", message: "Transfer rejected" });
+      showNotification({ color: "green", title: t("success"), message: t("rejectedMessage") });
       await fetchTransfer();
-    } catch (error) {
+    } catch {
       showNotification({
         color: "red",
-        title: "Rejection failed",
-        message: error instanceof Error ? error.message : "Unable to reject transfer",
+        title: t("rejectionFailed"),
+        message: t("rejectFailedMessage"),
       });
     } finally {
       setActiveAction(null);
@@ -121,7 +124,7 @@ export default function TransferDetailPage() {
   if (isLoading) {
     return (
       <AppShell>
-        <Text>Loading...</Text>
+        <Text>{t("loading")}</Text>
       </AppShell>
     );
   }
@@ -131,23 +134,23 @@ export default function TransferDetailPage() {
       <AppShell>
         <Stack gap="lg">
           <Breadcrumbs>
-            <Anchor href="/dashboard">Dashboard</Anchor>
-            <Anchor href="/transfers">Transfers</Anchor>
-            <Anchor>Not Found</Anchor>
+            <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+            <Anchor href="/transfers">{t("transfers")}</Anchor>
+            <Anchor>{t("notFound")}</Anchor>
           </Breadcrumbs>
           {fetchError ? (
-            <Alert color="red" title="Unable to load transfer request">
+            <Alert color="red" title={t("loadOneFailed")}>
               {fetchError}
             </Alert>
           ) : (
-            <Title order={2}>Transfer Request Not Found</Title>
+            <Title order={2}>{t("notFoundTitle")}</Title>
           )}
           <Button
             variant="outline"
             leftSection={<IconArrowBack size={16} />}
             onClick={() => router.push("/transfers")}
           >
-            Back to Transfers
+            {t("backToTransfers")}
           </Button>
         </Stack>
       </AppShell>
@@ -158,20 +161,20 @@ export default function TransferDetailPage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/transfers">Transfers</Anchor>
-          <Anchor>Transfer #{id}</Anchor>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/transfers">{t("transfers")}</Anchor>
+          <Anchor>{t("transferNumber", { id })}</Anchor>
         </Breadcrumbs>
 
         <Group justify="space-between">
-          <Title order={2}>Transfer Request #{id}</Title>
+          <Title order={2}>{t("requestNumber", { id })}</Title>
           <Group>
             <Button
               variant="outline"
               leftSection={<IconArrowBack size={16} />}
               onClick={() => router.push("/transfers")}
             >
-              Back
+              {t("back")}
             </Button>
             {status === "pending" && (
               <>
@@ -182,7 +185,7 @@ export default function TransferDetailPage() {
                   disabled={activeAction !== null}
                   onClick={handleApprove}
                 >
-                  Approve
+                  {t("approve")}
                 </Button>
                 <Button
                   color="red"
@@ -191,7 +194,7 @@ export default function TransferDetailPage() {
                   disabled={activeAction !== null}
                   onClick={handleReject}
                 >
-                  Reject
+                  {t("reject")}
                 </Button>
               </>
             )}
@@ -200,8 +203,8 @@ export default function TransferDetailPage() {
 
         {status === "pending" && (
           <Textarea
-            label="Rejection reason"
-            placeholder="Enter a reason before rejecting this transfer"
+            label={t("rejectionReason")}
+            placeholder={t("rejectionBeforePlaceholder")}
             value={rejectReason}
             onChange={(event) => setRejectReason(event.currentTarget.value)}
             autosize
@@ -212,49 +215,49 @@ export default function TransferDetailPage() {
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <Group>
-              <Text fw={600}>Status:</Text>
+              <Text fw={600}>{t("status")}:</Text>
               <Badge color={statusColorMap[record.status] ?? "gray"} variant="light" size="lg">
-                {status}
+                {t(`statuses.${record.status}`)}
               </Badge>
             </Group>
 
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
               <div>
-                <Text size="sm" c="dimmed">Object</Text>
+                <Text size="sm" c="dimmed">{t("object")}</Text>
                 <Text fw={500}>{record.object_name}</Text>
                 {record.object_description && (
                   <Text size="sm" c="dimmed">{record.object_description}</Text>
                 )}
                 {record.object_model && (
-                  <Text size="sm" c="dimmed">Model: {record.object_model}</Text>
+                  <Text size="sm" c="dimmed">{t("model", { model: record.object_model })}</Text>
                 )}
               </div>
 
               <div>
-                <Text size="sm" c="dimmed">Requester / New Owner</Text>
+                <Text size="sm" c="dimmed">{t("requesterNewOwner")}</Text>
                 <Text fw={500}>{record.from_user_full_name ?? "—"}</Text>
               </div>
 
               <div>
-                <Text size="sm" c="dimmed">Current Owner / Recipient</Text>
+                <Text size="sm" c="dimmed">{t("currentOwnerRecipient")}</Text>
                 <Text fw={500}>{record.to_user_full_name ?? "—"}</Text>
               </div>
 
               {record.reason && (
                 <div>
-                  <Text size="sm" c="dimmed">Reason</Text>
+                  <Text size="sm" c="dimmed">{t("reason")}</Text>
                   <Text fw={500}>{record.reason}</Text>
                 </div>
               )}
 
               <div>
-                <Text size="sm" c="dimmed">Requested At</Text>
-                <Text fw={500}>{dayjs(record.created_at).format("YYYY-MM-DD HH:mm")}</Text>
+                <Text size="sm" c="dimmed">{t("requestedAt")}</Text>
+                <Text fw={500}>{format.dateTime(new Date(record.created_at), "dateTime")}</Text>
               </div>
 
               <div>
-                <Text size="sm" c="dimmed">Last Updated</Text>
-                <Text fw={500}>{dayjs(record.updated_at).format("YYYY-MM-DD HH:mm")}</Text>
+                <Text size="sm" c="dimmed">{t("lastUpdated")}</Text>
+                <Text fw={500}>{format.dateTime(new Date(record.updated_at), "dateTime")}</Text>
               </div>
             </SimpleGrid>
           </Stack>

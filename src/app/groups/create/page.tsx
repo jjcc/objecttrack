@@ -15,20 +15,18 @@ import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { z } from "zod";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-const groupSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-});
-
-type GroupFormValues = z.infer<typeof groupSchema>;
+type GroupFormValues = { title: string; description?: string };
 
 export default function GroupCreatePage() {
+  const t = useTranslations("Groups.form");
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
+  const groupSchema = z.object({ title: z.string().min(1, t("titleRequired")), description: z.string().optional() });
 
   const form = useForm<GroupFormValues>({
     initialValues: {
@@ -50,23 +48,23 @@ export default function GroupCreatePage() {
       if (error) {
         showNotification({
           color: "red",
-          title: "Error",
-          message: error.message ?? "Failed to create group",
+          title: t("error"),
+          message: t("createFailed"),
         });
         return;
       }
 
       showNotification({
         color: "green",
-        title: "Success",
-        message: "Group created successfully",
+        title: t("success"),
+        message: t("createSuccess"),
       });
       router.push("/groups");
-    } catch (err) {
+    } catch {
       showNotification({
         color: "red",
-        title: "Error",
-        message: (err as Error)?.message ?? "Failed to create group",
+        title: t("error"),
+        message: t("createFailed"),
       });
     } finally {
       setIsPending(false);
@@ -77,37 +75,37 @@ export default function GroupCreatePage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/groups">Groups</Anchor>
-          <Anchor>Create</Anchor>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/groups">{t("groups")}</Anchor>
+          <Anchor>{t("create")}</Anchor>
         </Breadcrumbs>
 
-        <Title order={2}>Create Group</Title>
+        <Title order={2}>{t("createTitle")}</Title>
 
         <Paper withBorder p="md" radius="md" maw={600}>
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack>
               <TextInput
-                label="Title"
-                placeholder="Enter group title"
+                label={t("groupTitle")}
+                placeholder={t("titlePlaceholder")}
                 required
                 {...form.getInputProps("title")}
               />
               <Textarea
-                label="Description"
-                placeholder="Enter group description"
+                label={t("description")}
+                placeholder={t("descriptionPlaceholder")}
                 rows={3}
                 {...form.getInputProps("description")}
               />
               <Group>
                 <Button type="submit" loading={isPending}>
-                  Create
+                  {t("create")}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => router.push("/groups")}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
               </Group>
             </Stack>

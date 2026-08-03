@@ -1,6 +1,7 @@
 "use client";
 
 import { FileInput, Stack, Text, TextInput } from "@mantine/core";
+import { useTranslations } from "next-intl";
 
 export type CustomFieldDefinition = { name: string; note?: string };
 
@@ -21,23 +22,24 @@ export function ObjectExtendedFields({
   onImageChange,
   currentImage,
 }: Props) {
+  const t = useTranslations("Objects.extendedFields");
   return (
     <Stack gap="sm">
       <FileInput
-        label="Image"
+        label={t("image")}
         description={
           currentImage
-            ? "Choose a new image to replace the current one. Maximum 2 MB."
-            : "JPEG, PNG, WebP, or GIF. Maximum 2 MB."
+            ? t("replaceImageHelp")
+            : t("imageHelp")
         }
-        placeholder="Choose image"
+        placeholder={t("chooseImage")}
         accept="image/jpeg,image/png,image/webp,image/gif"
         value={image}
         onChange={onImageChange}
         clearable
       />
       {fields.length > 0 && (
-        <Text fw={600} mt="xs">Custom fields</Text>
+        <Text fw={600} mt="xs">{t("customFields")}</Text>
       )}
       {fields.map((field) => (
         <TextInput

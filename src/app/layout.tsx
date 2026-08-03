@@ -1,41 +1,43 @@
-"use client";
-
-import { MantineProvider, ColorSchemeScript, createTheme } from "@mantine/core";
-import { Notifications } from "@mantine/notifications";
-import { Analytics } from "@vercel/analytics/next";
-import { Suspense } from "react";
-import { AuthGate } from "@/components/auth/AuthGate";
-
-const theme = createTheme({
-  primaryColor: "blue",
-});
-
 import "@mantine/core/styles.css";
-import "@mantine/notifications/styles.css";
 import "@mantine/dates/styles.css";
+import "@mantine/notifications/styles.css";
 import "mantine-datatable/styles.css";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+import {ColorSchemeScript} from "@mantine/core";
+import {Analytics} from "@vercel/analytics/next";
+import type {Metadata} from "next";
+import {NextIntlClientProvider} from "next-intl";
+import {getLocale, getTranslations} from "next-intl/server";
+import {Suspense} from "react";
+import {AppProviders} from "./providers";
+import {PublicLocaleSwitcher} from "@/components/i18n/PublicLocaleSwitcher";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Metadata");
+
+  return {
+    title: t("title"),
+    description: t("description")
+  };
+}
+
+export default async function RootLayout({children}: {children: React.ReactNode}) {
+  const locale = await getLocale();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <ColorSchemeScript defaultColorScheme="light" />
-        <title>Object Tracking Admin</title>
       </head>
       <body>
-        <MantineProvider
-          theme={theme}
-          defaultColorScheme="light"
-        >
-          <Notifications position="top-right" />
-          <Suspense>
-            <AuthGate>{children}</AuthGate>
-          </Suspense>
-        </MantineProvider>
+        <NextIntlClientProvider>
+          <AppProviders>
+            <Suspense>
+              <PublicLocaleSwitcher />
+              {children}
+            </Suspense>
+          </AppProviders>
+        </NextIntlClientProvider>
         <Analytics />
       </body>
     </html>

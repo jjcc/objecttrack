@@ -13,11 +13,14 @@ import { DataTable } from "mantine-datatable";
 import { IconEdit, IconEye } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import dayjs from "dayjs";
 import { ObjectQrCode } from "@/components/shared/ObjectQrCode";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 export function ObjectBarcodeGenerator() {
+  const t = useTranslations("Barcode.generator");
+  const format = useFormatter();
   const router = useRouter();
   const [selectedObjectId, setSelectedObjectId] = useState<number | null>(null);
 
@@ -60,14 +63,14 @@ export function ObjectBarcodeGenerator() {
         columns={[
           {
             accessor: "select",
-            title: "QR",
+            title: t("qr"),
             width: 60,
             render: (record) => {
               const objectId = (record as Record<string, number>).id;
 
               return (
                 <Radio
-                  aria-label={`Select object ${objectId} for barcode generation`}
+                  aria-label={t("selectObject", { id: objectId })}
                   checked={selectedObjectId === objectId}
                   onChange={() => setSelectedObjectId(objectId)}
                 />
@@ -75,10 +78,10 @@ export function ObjectBarcodeGenerator() {
             },
           },
           { accessor: "id", title: "ID", width: 80 },
-          { accessor: "name", title: "Name" },
+          { accessor: "name", title: t("name") },
           {
             accessor: "categories.name",
-            title: "Category",
+            title: t("category"),
             render: (record) => {
               const category = (record as Record<string, unknown>).categories as
                 | Record<string, string>
@@ -89,30 +92,32 @@ export function ObjectBarcodeGenerator() {
           },
           {
             accessor: "model",
-            title: "Model",
+            title: t("model"),
             render: (record) => (
               <Text size="sm">{(record as Record<string, string>).model ?? "-"}</Text>
             ),
           },
           {
             accessor: "created_at",
-            title: "Created",
+            title: t("created"),
             render: (record) =>
-              dayjs((record as Record<string, string>).created_at).format("YYYY-MM-DD"),
+              format.dateTime(new Date((record as Record<string, string>).created_at), "short"),
           },
           {
             accessor: "actions",
-            title: "Actions",
+            title: t("actions"),
             width: 100,
             render: (record) => (
               <Group gap={4}>
                 <ActionIcon
+                  aria-label={t("view")}
                   variant="subtle"
                   onClick={() => router.push(`/objects/${(record as Record<string, unknown>).id}`)}
                 >
                   <IconEye size={16} />
                 </ActionIcon>
                 <ActionIcon
+                  aria-label={t("edit")}
                   variant="subtle"
                   onClick={() =>
                     router.push(`/objects/${(record as Record<string, unknown>).id}/edit`)
@@ -129,15 +134,14 @@ export function ObjectBarcodeGenerator() {
         page={page}
         onPageChange={setPage}
         paginationSize="sm"
-        noRecordsText="No objects found"
+        noRecordsText={t("noObjects")}
       />
 
       <Paper withBorder p="md" radius="md">
         <Stack gap="md">
-          <Text fw={600}>2D Barcode</Text>
+          <Text fw={600}>{t("title")}</Text>
           <Text c="dimmed" size="sm">
-            Select an object to generate a 2D barcode that opens its object
-            information page.
+            {t("description")}
           </Text>
 
           {selectedObjectId ? (
@@ -145,17 +149,17 @@ export function ObjectBarcodeGenerator() {
               <ObjectQrCode objectId={selectedObjectId} />
               <Paper withBorder p="md" radius="md">
                 <Stack gap="xs">
-                  <Text fw={600}>Barcode Details</Text>
-                  <Text size="sm">Selected object ID: {selectedObjectId}</Text>
+                  <Text fw={600}>{t("details")}</Text>
+                  <Text size="sm">{t("selectedId", { id: selectedObjectId })}</Text>
                   <Text size="sm">
-                    Destination: /object-info/{selectedObjectId}
+                    {t("destination", { path: `/object-info/${selectedObjectId}` })}
                   </Text>
                 </Stack>
               </Paper>
             </SimpleGrid>
           ) : (
             <Text size="sm" c="dimmed">
-              No object selected yet.
+              {t("noneSelected")}
             </Text>
           )}
         </Stack>

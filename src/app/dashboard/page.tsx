@@ -22,6 +22,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { EventTypeBadge } from "@/components/shared/EventTypeBadge";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 interface StatCardProps {
@@ -52,6 +53,8 @@ function StatCard({ title, value, icon, color }: StatCardProps) {
 }
 
 export default function DashboardPage() {
+  const t = useTranslations("Dashboard");
+  const format = useFormatter();
   const [totalObjects, setTotalObjects] = useState(0);
   const [totalUsers, setTotalUsers] = useState(0);
   const [pendingTransfers, setPendingTransfers] = useState(0);
@@ -96,32 +99,32 @@ export default function DashboardPage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
+          <Anchor href="/dashboard">{t("title")}</Anchor>
         </Breadcrumbs>
 
-        <Title order={2}>Dashboard</Title>
+        <Title order={2}>{t("title")}</Title>
 
         <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
           <StatCard
-            title="Total Objects"
+            title={t("totalObjects")}
             value={totalObjects}
             icon={<IconBox size={24} />}
             color="blue"
           />
           <StatCard
-            title="Total Users"
+            title={t("totalUsers")}
             value={totalUsers}
             icon={<IconUsers size={24} />}
             color="green"
           />
           <StatCard
-            title="Pending Transfers"
+            title={t("pendingTransfers")}
             value={pendingTransfers}
             icon={<IconTransfer size={24} />}
             color="orange"
           />
           <StatCard
-            title="Recent Events (7 days)"
+            title={t("recentEventsDays", { days: 7 })}
             value={recentEvents.length}
             icon={<IconTransfer size={24} />}
             color="teal"
@@ -130,16 +133,16 @@ export default function DashboardPage() {
 
         <Paper withBorder p="md" radius="md">
           <Title order={4} mb="md">
-            Recent Events
+            {t("recentEvents")}
           </Title>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>Object</Table.Th>
-                <Table.Th>Event Type</Table.Th>
-                <Table.Th>From</Table.Th>
-                <Table.Th>To</Table.Th>
-                <Table.Th>Date</Table.Th>
+                <Table.Th>{t("object")}</Table.Th>
+                <Table.Th>{t("eventType")}</Table.Th>
+                <Table.Th>{t("from")}</Table.Th>
+                <Table.Th>{t("to")}</Table.Th>
+                <Table.Th>{t("date")}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -170,7 +173,7 @@ export default function DashboardPage() {
                         : "—"}
                     </Table.Td>
                     <Table.Td>
-                      {dayjs(event.created_at as string).format("YYYY-MM-DD HH:mm")}
+                      {format.dateTime(new Date(event.created_at as string), "dateTime")}
                     </Table.Td>
                   </Table.Tr>
                 );
@@ -179,7 +182,7 @@ export default function DashboardPage() {
                 <Table.Tr>
                   <Table.Td colSpan={5}>
                     <Text ta="center" c="dimmed">
-                      No events yet
+                      {t("noEvents")}
                     </Text>
                   </Table.Td>
                 </Table.Tr>

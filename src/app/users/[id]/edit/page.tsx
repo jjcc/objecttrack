@@ -18,26 +18,17 @@ import { showNotification } from "@mantine/notifications";
 import { useParams, useRouter } from "next/navigation";
 import { z } from "zod";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-const userSchema = z.object({
-  first_name: z.string().optional(),
-  last_name: z.string().optional(),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  title: z.string().optional(),
-  group_id: z.string().optional(),
-  phone: z.string().optional(),
-  city: z.string().optional(),
-  province: z.string().optional(),
-  country: z.string().optional(),
-  zipcode: z.string().optional(),
-  wechat_id: z.string().optional(),
-});
-
-type UserFormValues = z.infer<typeof userSchema>;
+type UserFormValues = {
+  first_name?: string; last_name?: string; email?: string; title?: string; group_id?: string;
+  phone?: string; city?: string; province?: string; country?: string; zipcode?: string; wechat_id?: string;
+};
 
 export default function UserEditPage() {
+  const t = useTranslations("Users.form");
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -45,6 +36,13 @@ export default function UserEditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, setIsPending] = useState(false);
   const [groupOptions, setGroupOptions] = useState<{ value: string; label: string }[]>([]);
+  const userSchema = z.object({
+    first_name: z.string().optional(), last_name: z.string().optional(),
+    email: z.string().email(t("invalidEmail")).optional().or(z.literal("")),
+    title: z.string().optional(), group_id: z.string().optional(), phone: z.string().optional(),
+    city: z.string().optional(), province: z.string().optional(), country: z.string().optional(),
+    zipcode: z.string().optional(), wechat_id: z.string().optional(),
+  });
 
   const form = useForm<UserFormValues>({
     initialValues: {
@@ -122,23 +120,23 @@ export default function UserEditPage() {
       if (error) {
         showNotification({
           color: "red",
-          title: "Error",
-          message: error.message ?? "Failed to update user profile",
+          title: t("error"),
+          message: t("updateFailed"),
         });
         return;
       }
 
       showNotification({
         color: "green",
-        title: "Success",
-        message: "User profile updated successfully",
+        title: t("success"),
+        message: t("updateSuccess"),
       });
       router.push("/users");
-    } catch (err) {
+    } catch {
       showNotification({
         color: "red",
-        title: "Error",
-        message: (err as Error)?.message ?? "Failed to update user profile",
+        title: t("error"),
+        message: t("updateFailed"),
       });
     } finally {
       setIsPending(false);
@@ -149,12 +147,12 @@ export default function UserEditPage() {
     <AppShell>
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor href="/dashboard">Dashboard</Anchor>
-          <Anchor href="/users">Users</Anchor>
-          <Anchor>Edit</Anchor>
+          <Anchor href="/dashboard">{t("dashboard")}</Anchor>
+          <Anchor href="/users">{t("users")}</Anchor>
+          <Anchor>{t("edit")}</Anchor>
         </Breadcrumbs>
 
-        <Title order={2}>Edit User Profile</Title>
+        <Title order={2}>{t("editTitle")}</Title>
 
         <Paper withBorder p="md" radius="md" maw={800} pos="relative">
           <LoadingOverlay visible={isLoading} />
@@ -162,73 +160,73 @@ export default function UserEditPage() {
             <Stack>
               <SimpleGrid cols={{ base: 1, sm: 2 }}>
                 <TextInput
-                  label="First Name"
-                  placeholder="First name"
+                  label={t("firstName")}
+                  placeholder={t("firstNamePlaceholder")}
                   {...form.getInputProps("first_name")}
                 />
                 <TextInput
-                  label="Last Name"
-                  placeholder="Last name"
+                  label={t("lastName")}
+                  placeholder={t("lastNamePlaceholder")}
                   {...form.getInputProps("last_name")}
                 />
                 <TextInput
-                  label="Email"
-                  placeholder="Email address"
+                  label={t("email")}
+                  placeholder={t("emailPlaceholder")}
                   {...form.getInputProps("email")}
                 />
                 <TextInput
-                  label="Title"
-                  placeholder="Job title"
+                  label={t("jobTitle")}
+                  placeholder={t("jobTitlePlaceholder")}
                   {...form.getInputProps("title")}
                 />
                 <Select
-                  label="Group"
-                  placeholder="Select group"
+                  label={t("group")}
+                  placeholder={t("groupPlaceholder")}
                   data={groupOptions}
                   clearable
                   searchable
                   {...form.getInputProps("group_id")}
                 />
                 <TextInput
-                  label="Phone"
-                  placeholder="Phone number"
+                  label={t("phone")}
+                  placeholder={t("phonePlaceholder")}
                   {...form.getInputProps("phone")}
                 />
                 <TextInput
-                  label="City"
-                  placeholder="City"
+                  label={t("city")}
+                  placeholder={t("city")}
                   {...form.getInputProps("city")}
                 />
                 <TextInput
-                  label="Province"
-                  placeholder="Province / State"
+                  label={t("province")}
+                  placeholder={t("provincePlaceholder")}
                   {...form.getInputProps("province")}
                 />
                 <TextInput
-                  label="Country"
-                  placeholder="Country"
+                  label={t("country")}
+                  placeholder={t("country")}
                   {...form.getInputProps("country")}
                 />
                 <TextInput
-                  label="Zipcode"
-                  placeholder="Zip / postal code"
+                  label={t("zipcode")}
+                  placeholder={t("zipcodePlaceholder")}
                   {...form.getInputProps("zipcode")}
                 />
                 <TextInput
-                  label="WeChat ID"
-                  placeholder="WeChat ID"
+                  label={t("wechatId")}
+                  placeholder={t("wechatId")}
                   {...form.getInputProps("wechat_id")}
                 />
               </SimpleGrid>
               <Group>
                 <Button type="submit" loading={isPending}>
-                  Save
+                  {t("save")}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => router.push("/users")}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
               </Group>
             </Stack>

@@ -3,8 +3,10 @@
 import { Anchor, Button, Center, Paper, Stack, Text, Title } from "@mantine/core";
 import { IconArrowLeft, IconSearchOff } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export default function NotFound() {
+  const t = useTranslations("NotFound");
   const router = useRouter();
 
   return (
@@ -12,18 +14,18 @@ export default function NotFound() {
       <Paper shadow="md" p="xl" radius="md" maw={480} w="100%">
         <Stack align="center" gap="md">
           <IconSearchOff size={48} />
-          <Title order={2}>Page Not Found</Title>
+          <Title order={2}>{t("title")}</Title>
           <Text c="dimmed" ta="center">
-            The page you requested does not exist or may have been moved.
+            {t("description")}
           </Text>
           <Button
             leftSection={<IconArrowLeft size={16} />}
             onClick={() => router.push("/dashboard")}
           >
-            Back to Dashboard
+            {t("backToDashboard")}
           </Button>
           <Anchor href="/dashboard" size="sm">
-            Go to dashboard manually
+            {t("manualLink")}
           </Anchor>
         </Stack>
       </Paper>
