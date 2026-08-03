@@ -1,0 +1,594 @@
+{
+  "Admin": {
+    "nav": {"overview": "Overview", "profile": "Profile & settings", "members": "Members", "invitations": "Invitations", "reports": "Reports", "audit": "Audit"},
+    "home": {
+      "title": "Tenant administration", "description": "Administrative actions are restricted to your current tenant.",
+      "profile": {"title": "Profile & settings", "description": "Manage supported tenant identity, contact, and visibility settings."},
+      "members": {"title": "Members", "description": "Review tenant members and safely manage tenant roles."},
+      "invitations": {"title": "Invitations", "description": "Invite and onboard users into this tenant."},
+      "reports": {"title": "Reports", "description": "Generate and download tenant-scoped reports."}
+    },
+    "audit": {"title": "Tenant audit", "description": "Append-only sensitive actions for your current tenant."},
+    "members": {"title": "Members", "description": "Role changes and removals are tenant-scoped and audited. The final owner cannot be demoted or removed."},
+    "profile": {"title": "Profile & settings", "description": "Platform-controlled status, defaults version, and billing ownership cannot be changed here.", "unavailable": "Tenant profile is unavailable."},
+    "reports": {"title": "Reports", "description": "Tenant-scoped report generation and downloads."},
+    "invitations": {"title": "Invitations", "description": "Single-use links are email-bound, expire automatically, and can be revoked or rate-limited before acceptance."},
+    "auditTable": {"time": "Time", "action": "Action", "actor": "Actor", "target": "Target", "requestId": "Request ID", "system": "System", "none": "No sensitive actions have been recorded."},
+    "membersTable": {
+      "member": "Member", "title": "Title", "tenantRole": "Tenant role", "removeMembership": "Remove membership",
+      "save": "Save", "confirm": "Confirm", "remove": "Remove",
+      "roles": {"member": "Member", "admin": "Admin", "owner": "Owner"}
+    },
+    "profileForm": {
+      "title": "Tenant profile and settings", "updateFailed": "Update failed", "updated": "Updated",
+      "institutionName": "Institution name", "description": "Description", "address": "Address",
+      "contact": "Contact", "phone": "Phone", "email": "Institution email", "website": "Website",
+      "socialMedia": "Social media", "jsonObject": "JSON object",
+      "publicInfo": "Show object information without authentication", "save": "Save changes", "saving": "Saving…"
+    },
+    "reportManager": {
+      "title": "Inventory export", "description": "Small exports download immediately. Background exports are retained for seven days and use a newly authorized 60-second download link.",
+      "downloadCsv": "Download inventory CSV", "queue": "Queue background export", "downloaded": "Inventory report downloaded.",
+      "queued": "Background report queued for {count} rows.", "requestFailed": "Report request failed.",
+      "report": "Report", "status": "Status", "rows": "Rows", "requested": "Requested", "retention": "Retention",
+      "action": "Action", "inventory": "Inventory", "jobFailed": "The report failed.",
+      "statuses": {"completed": "Completed", "failed": "Failed", "expired": "Expired", "pending": "Pending", "processing": "Processing"},
+      "download": "Download", "notAvailable": "Not available", "none": "No background reports yet."
+    },
+    "invitationManager": {
+      "createdAt": "Created {date}", "delivery": "Delivery", "resend": "Resend", "revoke": "Revoke",
+      "noPendingActions": "No pending actions", "createTitle": "Create invitation", "email": "Invited email",
+      "tenantRole": "Tenant role", "expiresInDays": "Expires in days", "send": "Send invitation",
+      "recipient": "Recipient", "role": "Role", "status": "Status", "expires": "Expires", "actions": "Actions",
+      "none": "No invitations yet.",
+      "roles": {"member": "Member", "admin": "Admin", "owner": "Owner"},
+      "statuses": {"pending": "Pending", "accepted": "Accepted", "revoked": "Revoked", "expired": "Expired"},
+      "deliveryStatuses": {"pending": "Pending", "sent": "Sent", "failed": "Failed"}
+    },
+    "actions": {
+      "invalidValues": "Check the submitted values.", "socialObject": "Social media must be a JSON object.",
+      "socialJson": "Social media must be valid JSON.", "failed": "The operation failed.",
+      "profileUpdated": "Tenant profile and settings updated.", "roleUpdated": "Member role updated.",
+      "memberRemoved": "Tenant membership removed."
+    },
+    "invitationActions": {
+      "invalidValues": "Check the invitation values.", "invalidId": "Invitation ID is invalid.",
+      "failed": "Invitation operation failed.", "created": "Invitation created and sent.",
+      "createdDeliveryFailed": "Invitation created, but email delivery failed.", "resent": "Invitation resent.",
+      "resentDeliveryFailed": "A new invitation token was saved, but email delivery failed.", "revoked": "Invitation revoked."
+    }
+  },
+  "Settings": {
+    "home": {
+      "dashboard": "Dashboard", "title": "Settings", "description": "Choose the configuration area you want to manage.",
+      "categories": {"title": "Categories", "description": "Manage the categories used to classify tracked objects."},
+      "eventTypes": {"title": "Event Types", "description": "Manage the event labels available throughout the system."},
+      "customFields": {"title": "Custom Object Fields", "description": "Define additional fields collected for objects in your tenant."}
+    },
+    "categories": {
+      "dashboard": "Dashboard", "settings": "Settings", "title": "Categories",
+      "description": "Manage classifications for tracked objects.", "add": "Add Category", "edit": "Edit Category",
+      "name": "Name", "fieldDescription": "Description", "actions": "Actions", "none": "No categories",
+      "namePlaceholder": "Category name", "descriptionPlaceholder": "Description (optional)",
+      "cancel": "Cancel", "create": "Create", "save": "Save", "nameRequired": "Name is required",
+      "loadFailed": "Unable to load categories", "saveFailed": "Unable to save category",
+      "saveFailedMessage": "The category could not be saved.", "created": "Category created",
+      "updated": "Category updated", "saved": "{name} was saved successfully.",
+      "deleteFailed": "Unable to delete category", "deleteFailedMessage": "The category could not be deleted.",
+      "deleted": "Category deleted", "deletedMessage": "{name} was deleted.",
+      "editLabel": "Edit {name}", "deleteLabel": "Delete {name}"
+    },
+    "eventTypes": {
+      "dashboard": "Dashboard", "settings": "Settings", "title": "Event Types",
+      "description": "Manage labels used for object history events.", "add": "Add Event Type", "edit": "Edit Event Type",
+      "label": "Label", "actions": "Actions", "none": "No event types", "labelPlaceholder": "Event type label",
+      "cancel": "Cancel", "create": "Create", "save": "Save", "labelRequired": "Label is required",
+      "loadFailed": "Unable to load event types", "saveFailed": "Unable to save event type",
+      "saveFailedMessage": "The event type could not be saved.", "created": "Event type created",
+      "updated": "Event type updated", "saved": "{label} was saved successfully.",
+      "deleteFailed": "Unable to delete event type", "deleteFailedMessage": "The event type could not be deleted.",
+      "deleted": "Event type deleted", "deletedMessage": "{label} was deleted.",
+      "editLabel": "Edit {label}", "deleteLabel": "Delete {label}"
+    },
+    "customFields": {
+      "dashboard": "Dashboard", "settings": "Settings", "title": "Custom Object Fields",
+      "description": "Define one tenant-wide schema appended to object forms.", "add": "Add Field",
+      "loadFailed": "Unable to load custom fields", "tenantMissing": "Your profile is not assigned to a tenant.",
+      "missingName": "Missing field name", "missingNameMessage": "Every custom field needs a name.",
+      "duplicateName": "Duplicate field name", "duplicateNameMessage": "Custom field names must be unique.",
+      "saveFailed": "Unable to save custom fields", "saveFailedMessage": "The custom fields could not be saved.",
+      "saved": "Custom fields saved", "savedMessage": "New object forms will use this schema.",
+      "fieldName": "Field name", "note": "Note or comment", "action": "Action",
+      "fieldNameLabel": "Custom field {number} name", "fieldNoteLabel": "Custom field {number} note",
+      "removeLabel": "Remove custom field {number}", "none": "No custom fields", "save": "Save Schema"
+    }
+  },
+  "Profile": {
+    "dashboard": "Dashboard", "profile": "Profile", "title": "My Profile",
+    "description": "Update your personal and contact information.", "loadFailed": "Unable to load profile",
+    "loadFailedMessage": "Unable to load your profile.", "sessionExpired": "Your session has expired. Please sign in again.",
+    "profileMissing": "No profile record exists for this account.", "notAssigned": "Not assigned",
+    "invalidEmail": "Enter a valid contact email", "saved": "Profile saved",
+    "savedMessage": "Your profile information was updated successfully.", "saveFailed": "Unable to save profile",
+    "saveFailedMessage": "Your profile could not be updated.", "accountId": "Account ID",
+    "managedByAuth": "Managed by authentication", "authEmail": "Authentication Email",
+    "usedToSignIn": "Used to sign in", "group": "Group", "managedByAdmin": "Managed by an administrator",
+    "profileCreated": "Profile Created", "firstName": "First Name", "firstNamePlaceholder": "First name",
+    "lastName": "Last Name", "lastNamePlaceholder": "Last name", "contactEmail": "Contact Email",
+    "contactEmailPlaceholder": "Contact email", "jobTitle": "Title", "jobTitlePlaceholder": "Job title",
+    "phone": "Phone", "phonePlaceholder": "Phone number", "wechatId": "WeChat ID", "city": "City",
+    "province": "Province / State", "provincePlaceholder": "Province or state", "country": "Country",
+    "zipcode": "Zip / Postal Code", "zipcodePlaceholder": "Zip or postal code",
+    "saveChanges": "Save Changes", "cancel": "Cancel"
+  },
+  "Events": {
+    "list": {
+      "dashboard": "Dashboard", "events": "Events", "title": "Events (Audit Log)", "record": "Record Event",
+      "eventType": "Event Type", "allTypes": "All types", "group": "Group", "allGroups": "All groups",
+      "dateFrom": "Date From", "startDate": "Start date", "dateTo": "Date To", "endDate": "End date",
+      "object": "Object", "type": "Type", "from": "From", "to": "To", "date": "Date",
+      "initial": "— (initial)", "noEvents": "No events found"
+    },
+    "form": {
+      "dashboard": "Dashboard", "events": "Events", "record": "Record Event", "group": "Group",
+      "selectGroup": "Select group", "object": "Object", "selectObject": "Select object",
+      "currentCustodian": "Current custodian: {name}",
+      "noCustodian": "No current custodian recorded. This event will be treated as the initial assignment.",
+      "selectObjectHelp": "Select an object to load its current custodian.",
+      "eventType": "Event Type", "selectEventType": "Select event type", "fromUser": "From User",
+      "fromPlaceholder": "Automatically set from current custodian", "toUser": "To User",
+      "toPlaceholder": "Select receiving user", "extraData": "Extra Data (JSON, optional)", "cancel": "Cancel",
+      "groupRequired": "Group is required", "objectRequired": "Object is required",
+      "eventTypeRequired": "Event type is required", "receiverRequired": "An event must include at least a receiving user.",
+      "usersMustDiffer": "From User and To User cannot be the same.", "invalidJson": "Extra data must be valid JSON.",
+      "initialFromEmpty": "Initial assignment must leave From User empty because the object has no current custodian.",
+      "initialToRequired": "Initial assignment requires a To User so the first custodian is recorded correctly.",
+      "fromMustMatch": "From User must match the object's current custodian before recording a transfer.",
+      "transferToRequired": "A transfer requires a To User so the next custodian can be derived from the latest event.",
+      "error": "Error", "success": "Success", "recordFailed": "Failed to record event.",
+      "recordSuccess": "Event recorded successfully."
+    }
+  },
+  "Transfers": {
+    "dashboard": "Dashboard", "transfers": "Transfers", "title": "Transfer Requests", "all": "All",
+    "statuses": {"pending": "Pending", "approved": "Approved", "rejected": "Rejected"},
+    "loadFailed": "Unable to load transfer requests", "loadOneFailed": "Unable to load transfer request",
+    "success": "Success", "approvedMessage": "Transfer approved", "rejectedMessage": "Transfer rejected",
+    "approvalFailed": "Approval failed", "approveFailedMessage": "Unable to approve transfer.",
+    "rejectionFailed": "Rejection failed", "rejectFailedMessage": "Unable to reject transfer.",
+    "object": "Object", "requester": "Requester", "currentOwner": "Current Owner", "status": "Status",
+    "requestedAt": "Requested At", "actions": "Actions", "approve": "Approve", "reject": "Reject",
+    "noTransfers": "No transfer requests found", "rejectTitle": "Reject transfer #{id}",
+    "rejectionReason": "Rejection reason", "rejectionPlaceholder": "Enter a reason for rejecting this transfer",
+    "rejectionBeforePlaceholder": "Enter a reason before rejecting this transfer", "cancel": "Cancel",
+    "rejectTransfer": "Reject transfer", "loading": "Loading...", "notFound": "Not Found",
+    "notFoundTitle": "Transfer Request Not Found", "backToTransfers": "Back to Transfers",
+    "transferNumber": "Transfer #{id}", "requestNumber": "Transfer Request #{id}", "back": "Back",
+    "model": "Model: {model}", "requesterNewOwner": "Requester / New Owner",
+    "currentOwnerRecipient": "Current Owner / Recipient", "reason": "Reason", "lastUpdated": "Last Updated"
+  },
+  "Users": {
+    "list": {
+      "dashboard": "Dashboard", "title": "Users", "create": "Create User", "name": "Name",
+      "jobTitle": "Title", "group": "Group", "email": "Email", "phone": "Phone",
+      "location": "Location", "actions": "Actions", "view": "View user", "edit": "Edit user",
+      "noUsers": "No users found"
+    },
+    "detail": {
+      "dashboard": "Dashboard", "users": "Users", "detail": "Detail", "title": "User Detail",
+      "edit": "Edit", "firstName": "First Name", "lastName": "Last Name", "email": "Email",
+      "jobTitle": "Title", "group": "Group", "phone": "Phone", "city": "City", "country": "Country",
+      "wechatId": "WeChat ID", "eventHistory": "Event History", "object": "Object",
+      "eventType": "Event Type", "from": "From", "to": "To", "date": "Date",
+      "noEvents": "No events involving this user"
+    },
+    "form": {
+      "dashboard": "Dashboard", "users": "Users", "create": "Create", "edit": "Edit",
+      "createTitle": "Create User Profile", "editTitle": "Edit User Profile",
+      "authUserId": "Auth User ID (UUID)", "authUserIdPlaceholder": "UUID from Supabase auth.users",
+      "firstName": "First Name", "firstNamePlaceholder": "First name", "lastName": "Last Name",
+      "lastNamePlaceholder": "Last name", "email": "Email", "emailPlaceholder": "Email address",
+      "jobTitle": "Title", "jobTitlePlaceholder": "Job title", "group": "Group",
+      "groupPlaceholder": "Select group", "phone": "Phone", "phonePlaceholder": "Phone number",
+      "city": "City", "province": "Province", "provincePlaceholder": "Province / State",
+      "country": "Country", "zipcode": "Zipcode", "zipcodePlaceholder": "Zip / postal code",
+      "wechatId": "WeChat ID", "save": "Save", "cancel": "Cancel",
+      "invalidUuid": "Must be a valid UUID matching the auth user ID.",
+      "invalidEmail": "Invalid email address", "error": "Error", "success": "Success",
+      "createFailed": "Failed to create user profile.", "createSuccess": "User profile created successfully.",
+      "updateFailed": "Failed to update user profile.", "updateSuccess": "User profile updated successfully."
+    }
+  },
+  "Groups": {
+    "list": {
+      "dashboard": "Dashboard", "title": "Groups", "create": "Create Group",
+      "groupTitle": "Title", "description": "Description", "created": "Created",
+      "actions": "Actions", "edit": "Edit group", "noGroups": "No groups found"
+    },
+    "form": {
+      "dashboard": "Dashboard", "groups": "Groups", "create": "Create", "edit": "Edit",
+      "createTitle": "Create Group", "editTitle": "Edit Group", "groupTitle": "Title",
+      "titlePlaceholder": "Enter group title", "titleRequired": "Title is required",
+      "description": "Description", "descriptionPlaceholder": "Enter group description",
+      "save": "Save", "cancel": "Cancel", "error": "Error", "success": "Success",
+      "createFailed": "Failed to create group.", "createSuccess": "Group created successfully.",
+      "updateFailed": "Failed to update group.", "updateSuccess": "Group updated successfully."
+    }
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "totalObjects": "Total Objects",
+    "totalUsers": "Total Users",
+    "pendingTransfers": "Pending Transfers",
+    "recentEventsDays": "Recent Events ({days} days)",
+    "recentEvents": "Recent Events",
+    "object": "Object",
+    "eventType": "Event Type",
+    "from": "From",
+    "to": "To",
+    "date": "Date",
+    "noEvents": "No events yet"
+  },
+  "Objects": {
+    "dashboard": "Dashboard",
+    "title": "Objects",
+    "create": "Create Object",
+    "form": {
+      "dashboard": "Dashboard",
+      "objects": "Objects",
+      "create": "Create",
+      "edit": "Edit",
+      "createTitle": "Create Object",
+      "editTitle": "Edit Object",
+      "name": "Name",
+      "namePlaceholder": "Enter object name",
+      "nameRequired": "Name is required",
+      "category": "Category",
+      "categoryPlaceholder": "Select a category",
+      "model": "Model",
+      "modelPlaceholder": "Enter model",
+      "description": "Description",
+      "descriptionPlaceholder": "Enter description",
+      "save": "Save",
+      "cancel": "Cancel",
+      "imageTooLarge": "Image too large",
+      "imageSizeHelp": "Choose an image no larger than 2 MB.",
+      "tenantUnavailable": "Tenant unavailable",
+      "tenantMissing": "Your profile is not assigned to a tenant.",
+      "error": "Error",
+      "success": "Success",
+      "createFailed": "Failed to create object.",
+      "createSuccess": "Object created successfully.",
+      "updateFailed": "Failed to update object.",
+      "updateSuccess": "Object updated successfully.",
+      "imageUploadFailed": "Image upload failed",
+      "imageUploadFailedMessage": "The image could not be uploaded.",
+      "imageAttachFailed": "Unable to attach image",
+      "imageAttachFailedMessage": "The image could not be attached to the object."
+    },
+    "extendedFields": {
+      "image": "Image",
+      "replaceImageHelp": "Choose a new image to replace the current one. Maximum 2 MB.",
+      "imageHelp": "JPEG, PNG, WebP, or GIF. Maximum 2 MB.",
+      "chooseImage": "Choose image",
+      "customFields": "Custom fields"
+    },
+    "detail": {
+      "dashboard": "Dashboard",
+      "objects": "Objects",
+      "detail": "Detail",
+      "title": "Object Detail",
+      "object": "Object",
+      "objectInfo": "Object Info",
+      "edit": "Edit",
+      "imageAlt": "{name} image",
+      "name": "Name",
+      "category": "Category",
+      "model": "Model",
+      "created": "Created",
+      "description": "Description",
+      "eventHistory": "Event History",
+      "eventType": "Event Type",
+      "group": "Group",
+      "from": "From",
+      "to": "To",
+      "date": "Date",
+      "initial": "— (initial)",
+      "noEvents": "No events recorded for this object"
+    },
+    "publicInfo": {
+      "invalid": "This object link is invalid.",
+      "unavailable": "Object information could not be loaded.",
+      "notFound": "This object does not exist or its information is private.",
+      "eventsFailed": "The event history could not be loaded.",
+      "unavailableTitle": "Object information unavailable",
+      "imageAlt": "{name} image",
+      "objectId": "Object ID",
+      "institution": "Institution",
+      "owner": "Owner",
+      "category": "Category",
+      "model": "Model",
+      "created": "Created",
+      "description": "Description",
+      "eventHistory": "Event History",
+      "event": "Event",
+      "group": "Group",
+      "from": "From",
+      "to": "To",
+      "date": "Date",
+      "initial": "— (initial)",
+      "noEvents": "No events recorded for this object"
+    }
+  },
+  "Barcode": {
+    "dashboard": "Dashboard",
+    "title": "Barcode",
+    "qr": {
+      "objectId": "Object ID: {id}",
+      "description": "Opens the object information page",
+      "openInfo": "Open Object Info",
+      "copied": "Copied",
+      "copyLink": "Copy link"
+    },
+    "generator": {
+      "qr": "QR",
+      "selectObject": "Select object {id} for barcode generation",
+      "name": "Name",
+      "category": "Category",
+      "model": "Model",
+      "created": "Created",
+      "actions": "Actions",
+      "view": "View object",
+      "edit": "Edit object",
+      "noObjects": "No objects found",
+      "title": "2D Barcode",
+      "description": "Select an object to generate a 2D barcode that opens its object information page.",
+      "details": "Barcode Details",
+      "selectedId": "Selected object ID: {id}",
+      "destination": "Destination: {path}",
+      "noneSelected": "No object selected yet."
+    }
+  },
+  "Scan": {
+    "dashboard": "Dashboard",
+    "scan": "Scan",
+    "title": "Scan QR Code",
+    "description": "Use a mobile browser to open an object's QR image, or use the device camera to scan the API link."
+  },
+  "Metadata": {
+    "title": "Object Tracking Admin",
+    "description": "Manage objects, users, events, and transfers."
+  },
+  "LocaleSwitcher": {
+    "label": "Language"
+  },
+  "Auth": {
+    "login": {
+      "appTitle": "Object Tracking",
+      "title": "Admin Login",
+      "email": "Email",
+      "password": "Password",
+      "passwordPlaceholder": "Your password",
+      "signIn": "Sign in",
+      "forgotPassword": "Forgot your password?",
+      "needAccount": "Need an account?",
+      "invalidEmail": "Invalid email address",
+      "passwordMin": "Password must be at least {count} characters",
+      "invalidCredentials": "The email or password is incorrect.",
+      "failed": "Login failed. Please try again."
+    },
+    "register": {
+      "appTitle": "Object Tracking",
+      "title": "Request Access",
+      "description": "Creating an account does not grant tenant access automatically. An authorized tenant administrator or owner must add you as a member of their tenant.",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "passwordPlaceholder": "Create a password",
+      "confirmPasswordPlaceholder": "Repeat your password",
+      "submit": "Register",
+      "backToLogin": "Back to login",
+      "continueSignIn": "Continue to sign in",
+      "success": "Account created! Check your email for a confirmation link.",
+      "invalidEmail": "Invalid email address",
+      "passwordMin": "Password must be at least {count} characters",
+      "passwordMismatch": "Passwords do not match",
+      "failed": "Registration failed. Please try again."
+    },
+    "forgotPassword": {
+      "appTitle": "Object Tracking",
+      "title": "Reset Password",
+      "description": "Enter your email address and we'll send you a password reset link.",
+      "email": "Email",
+      "submit": "Send reset link",
+      "backToLogin": "Back to login",
+      "sent": "Check your email for a password reset link.",
+      "invalidEmail": "Invalid email address",
+      "failed": "Password reset failed. Please try again."
+    },
+    "mfa": {
+      "title": "Secure platform access",
+      "description": "Platform operations require a verified authenticator code for this session.",
+      "setup": "Set up authenticator",
+      "qrAlt": "Authenticator setup QR code",
+      "secretHelp": "If you cannot scan the code, enter this secret:",
+      "verify": "Verify and continue",
+      "loadFailed": "Unable to load authenticator factors.",
+      "enrollFailed": "Unable to set up the authenticator.",
+      "verifyFailed": "The authenticator code could not be verified."
+    },
+    "unauthorized": {
+      "title": "Access Denied",
+      "description": "You are not authorized to access this application. Only administrators can use this dashboard.",
+      "returnToLogin": "Return to Login"
+    }
+  },
+  "NotFound": {
+    "title": "Page Not Found",
+    "description": "The page you requested does not exist or may have been moved.",
+    "backToDashboard": "Back to Dashboard",
+    "manualLink": "Go to dashboard manually"
+  },
+  "Invitations": {
+    "accept": {
+      "title": "Tenant invitation",
+      "invalidTitle": "Invalid link",
+      "invalid": "This invitation link is invalid.",
+      "expiredTitle": "Expired link",
+      "expired": "This invitation has expired. Ask the tenant administrator to resend it.",
+      "revokedTitle": "Revoked invitation",
+      "revoked": "This invitation was revoked and can no longer be accepted.",
+      "acceptedTitle": "Already accepted",
+      "alreadyAccepted": "This invitation has already been used.",
+      "description": "You were invited to join <tenant></tenant>. Sign in using {email}.",
+      "invitedEmail": "the invited email address",
+      "unableTitle": "Unable to accept",
+      "accept": "Accept invitation",
+      "signIn": "Sign in to accept",
+      "register": "Register with the invited email",
+      "errors": {
+        "invalid": "Invitation link is invalid.",
+        "signInRequired": "Sign in before accepting the invitation.",
+        "failed": "Invitation acceptance failed."
+      }
+    }
+  },
+  "Shell": {
+    "header": {
+      "appTitle": "Object Tracking",
+      "toggleColorScheme": "Toggle color scheme",
+      "userMenu": "Open user menu",
+      "admin": "Admin",
+      "profile": "Profile",
+      "logout": "Logout"
+    },
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "objects": "Objects",
+      "users": "Users",
+      "groups": "Groups",
+      "transfers": "Transfers",
+      "events": "Events",
+      "settings": "Settings",
+      "tenantAdmin": "Tenant Admin"
+    }
+  },
+  "Ops": {
+    "nav": {
+      "title": "Platform Operations",
+      "subtitle": "Internal control plane",
+      "tenants": "Tenants",
+      "audit": "Audit & monitoring",
+      "customerApplication": "Customer application"
+    },
+    "tenants": {
+      "title": "Tenants",
+      "description": "Search, inspect, provision, and control tenant status.",
+      "create": "Create tenant",
+      "searchLabel": "Search tenants",
+      "searchPlaceholder": "Institution or email",
+      "search": "Search",
+      "loadFailedTitle": "Unable to load tenants",
+      "loadFailed": "Tenant records could not be loaded. Please try again."
+    },
+    "audit": {
+      "title": "Audit & monitoring",
+      "description": "Cross-tenant operational events and failure indicators. AAL2 is required.",
+      "metrics": {
+        "invitationDeliveryFailures24h": "Invitation delivery failures (24h)",
+        "reportFailures24h": "Report failures (24h)",
+        "pendingWorkItems": "Pending work items",
+        "failedWorkItems24h": "Failed work items (24h)"
+      }
+    },
+    "newTenant": {
+      "tenants": "Tenants",
+      "newTenant": "New tenant",
+      "title": "Provision tenant",
+      "description": "Tenant data, versioned defaults, initial owner invitation, audit event, and queued email work are created in one database transaction."
+    },
+    "tenantDetails": {
+      "tenants": "Tenants",
+      "provisionedTitle": "Tenant provisioned",
+      "provisioned": "The transaction committed successfully and initial owner email work is queued.",
+      "tenantNumber": "Tenant #{id}",
+      "defaultsVersion": "Defaults version",
+      "initialOwner": "Initial owner",
+      "legacyTenant": "Legacy tenant",
+      "notQueued": "Not queued",
+      "lastStatusReason": "Last status reason",
+      "none": "None",
+      "statuses": { "active": "Active", "suspended": "Suspended" }
+    },
+    "tenantTable": {
+      "institution": "Institution",
+      "status": "Status",
+      "ownerInvitation": "Owner invitation",
+      "defaults": "Defaults",
+      "created": "Created",
+      "noInstitutionEmail": "No institution email",
+      "legacyTenant": "Legacy tenant",
+      "empty": "No tenants found.",
+      "statuses": { "active": "Active", "suspended": "Suspended" }
+    },
+    "auditTable": {
+      "time": "Time",
+      "tenant": "Tenant",
+      "action": "Action",
+      "actor": "Actor",
+      "target": "Target",
+      "requestId": "Request ID",
+      "platform": "Platform",
+      "system": "System"
+    },
+    "provisionForm": {
+      "failedTitle": "Unable to provision tenant",
+      "institutionName": "Institution name",
+      "ownerEmail": "Initial owner email",
+      "ownerEmailDescription": "The owner invitation is queued only for this tenant after the transaction commits.",
+      "description": "Description",
+      "address": "Address",
+      "contact": "Contact",
+      "phone": "Phone",
+      "institutionEmail": "Institution email",
+      "website": "Website",
+      "create": "Create tenant",
+      "creating": "Creating tenant…"
+    },
+    "tenantForm": {
+      "profileTitle": "Tenant profile",
+      "updateFailed": "Update failed",
+      "updated": "Updated",
+      "institutionName": "Institution name",
+      "description": "Description",
+      "address": "Address",
+      "contact": "Contact",
+      "phone": "Phone",
+      "institutionEmail": "Institution email",
+      "website": "Website",
+      "socialMedia": "Social media",
+      "jsonObject": "JSON object",
+      "save": "Save tenant",
+      "saving": "Saving…",
+      "statusTitle": "{action} tenant",
+      "statusDescription": "This changes the platform-controlled tenant status. A reason and explicit confirmation are required.",
+      "statusFailed": "Status change failed",
+      "statusChanged": "Status changed",
+      "reason": "Reason",
+      "confirmation": "I confirm that I want to {action} this tenant.",
+      "verbs": { "active": "Activate", "suspended": "Suspend" },
+      "statusSubmit": { "active": "Activate tenant", "suspended": "Suspend tenant" },
+      "statusPending": { "active": "Activating…", "suspended": "Suspending…" }
+    },
+    "actions": {
+      "invalidValues": "Check the submitted values.",
+      "provisionFailed": "The tenant could not be provisioned. Please try again.",
+      "socialMediaObject": "Social media must be a JSON object.",
+      "socialMediaJson": "Social media must be valid JSON.",
+      "updateFailed": "The tenant profile could not be updated.",
+      "updated": "Tenant profile updated.",
+      "statusFailed": "The tenant status could not be changed.",
+      "statuses": { "active": "Tenant activated.", "suspended": "Tenant suspended." }
+    }
+  }
+}

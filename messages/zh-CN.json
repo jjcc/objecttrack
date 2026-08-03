@@ -1,0 +1,594 @@
+{
+  "Admin": {
+    "nav": {"overview": "概览", "profile": "资料与设置", "members": "成员", "invitations": "邀请", "reports": "报告", "audit": "审计"},
+    "home": {
+      "title": "租户管理", "description": "管理操作仅限于您当前的租户。",
+      "profile": {"title": "资料与设置", "description": "管理租户身份、联系信息和可见性设置。"},
+      "members": {"title": "成员", "description": "查看租户成员并安全地管理租户角色。"},
+      "invitations": {"title": "邀请", "description": "邀请用户并将其加入此租户。"},
+      "reports": {"title": "报告", "description": "生成并下载租户范围的报告。"}
+    },
+    "audit": {"title": "租户审计", "description": "当前租户敏感操作的只追加记录。"},
+    "members": {"title": "成员", "description": "角色更改和移除操作仅限租户范围并会被审计。最后一位所有者不能被降级或移除。"},
+    "profile": {"title": "资料与设置", "description": "平台控制的状态、默认版本和账单所有权无法在此更改。", "unavailable": "租户资料不可用。"},
+    "reports": {"title": "报告", "description": "租户范围的报告生成和下载。"},
+    "invitations": {"title": "邀请", "description": "一次性链接与邮箱绑定，会自动过期，并可在接受前撤销或限制发送频率。"},
+    "auditTable": {"time": "时间", "action": "操作", "actor": "操作者", "target": "目标", "requestId": "请求 ID", "system": "系统", "none": "尚未记录敏感操作。"},
+    "membersTable": {
+      "member": "成员", "title": "职务", "tenantRole": "租户角色", "removeMembership": "移除成员资格",
+      "save": "保存", "confirm": "确认", "remove": "移除",
+      "roles": {"member": "成员", "admin": "管理员", "owner": "所有者"}
+    },
+    "profileForm": {
+      "title": "租户资料与设置", "updateFailed": "更新失败", "updated": "已更新",
+      "institutionName": "机构名称", "description": "描述", "address": "地址",
+      "contact": "联系人", "phone": "电话", "email": "机构邮箱", "website": "网站",
+      "socialMedia": "社交媒体", "jsonObject": "JSON 对象",
+      "publicInfo": "无需身份验证即可显示物品信息", "save": "保存更改", "saving": "正在保存……"
+    },
+    "reportManager": {
+      "title": "库存导出", "description": "小型导出会立即下载。后台导出保留七天，并使用新授权的 60 秒下载链接。",
+      "downloadCsv": "下载库存 CSV", "queue": "加入后台导出队列", "downloaded": "库存报告已下载。",
+      "queued": "包含 {count} 行的后台报告已加入队列。", "requestFailed": "报告请求失败。",
+      "report": "报告", "status": "状态", "rows": "行数", "requested": "请求时间", "retention": "保留期限",
+      "action": "操作", "inventory": "库存", "jobFailed": "报告生成失败。",
+      "statuses": {"completed": "已完成", "failed": "失败", "expired": "已过期", "pending": "待处理", "processing": "处理中"},
+      "download": "下载", "notAvailable": "不可用", "none": "暂无后台报告。"
+    },
+    "invitationManager": {
+      "createdAt": "创建于 {date}", "delivery": "发送状态", "resend": "重新发送", "revoke": "撤销",
+      "noPendingActions": "无待处理操作", "createTitle": "创建邀请", "email": "受邀邮箱",
+      "tenantRole": "租户角色", "expiresInDays": "有效天数", "send": "发送邀请",
+      "recipient": "接收人", "role": "角色", "status": "状态", "expires": "过期时间", "actions": "操作",
+      "none": "暂无邀请。",
+      "roles": {"member": "成员", "admin": "管理员", "owner": "所有者"},
+      "statuses": {"pending": "待处理", "accepted": "已接受", "revoked": "已撤销", "expired": "已过期"},
+      "deliveryStatuses": {"pending": "待处理", "sent": "已发送", "failed": "失败"}
+    },
+    "actions": {
+      "invalidValues": "请检查提交的值。", "socialObject": "社交媒体信息必须是 JSON 对象。",
+      "socialJson": "社交媒体信息必须是有效的 JSON。", "failed": "操作失败。",
+      "profileUpdated": "租户资料和设置已更新。", "roleUpdated": "成员角色已更新。",
+      "memberRemoved": "租户成员资格已移除。"
+    },
+    "invitationActions": {
+      "invalidValues": "请检查邀请信息。", "invalidId": "邀请 ID 无效。",
+      "failed": "邀请操作失败。", "created": "邀请已创建并发送。",
+      "createdDeliveryFailed": "邀请已创建，但邮件发送失败。", "resent": "邀请已重新发送。",
+      "resentDeliveryFailed": "新的邀请令牌已保存，但邮件发送失败。", "revoked": "邀请已撤销。"
+    }
+  },
+  "Settings": {
+    "home": {
+      "dashboard": "控制面板", "title": "设置", "description": "选择要管理的配置区域。",
+      "categories": {"title": "类别", "description": "管理用于分类追踪物品的类别。"},
+      "eventTypes": {"title": "事件类型", "description": "管理整个系统中可用的事件标签。"},
+      "customFields": {"title": "自定义物品字段", "description": "定义租户物品需要收集的附加字段。"}
+    },
+    "categories": {
+      "dashboard": "控制面板", "settings": "设置", "title": "类别",
+      "description": "管理追踪物品的分类。", "add": "添加类别", "edit": "编辑类别",
+      "name": "名称", "fieldDescription": "描述", "actions": "操作", "none": "暂无类别",
+      "namePlaceholder": "类别名称", "descriptionPlaceholder": "描述（可选）",
+      "cancel": "取消", "create": "创建", "save": "保存", "nameRequired": "名称为必填项",
+      "loadFailed": "无法加载类别", "saveFailed": "无法保存类别",
+      "saveFailedMessage": "无法保存该类别。", "created": "类别已创建",
+      "updated": "类别已更新", "saved": "{name} 已成功保存。",
+      "deleteFailed": "无法删除类别", "deleteFailedMessage": "无法删除该类别。",
+      "deleted": "类别已删除", "deletedMessage": "{name} 已删除。",
+      "editLabel": "编辑 {name}", "deleteLabel": "删除 {name}"
+    },
+    "eventTypes": {
+      "dashboard": "控制面板", "settings": "设置", "title": "事件类型",
+      "description": "管理物品历史事件使用的标签。", "add": "添加事件类型", "edit": "编辑事件类型",
+      "label": "标签", "actions": "操作", "none": "暂无事件类型", "labelPlaceholder": "事件类型标签",
+      "cancel": "取消", "create": "创建", "save": "保存", "labelRequired": "标签为必填项",
+      "loadFailed": "无法加载事件类型", "saveFailed": "无法保存事件类型",
+      "saveFailedMessage": "无法保存该事件类型。", "created": "事件类型已创建",
+      "updated": "事件类型已更新", "saved": "{label} 已成功保存。",
+      "deleteFailed": "无法删除事件类型", "deleteFailedMessage": "无法删除该事件类型。",
+      "deleted": "事件类型已删除", "deletedMessage": "{label} 已删除。",
+      "editLabel": "编辑 {label}", "deleteLabel": "删除 {label}"
+    },
+    "customFields": {
+      "dashboard": "控制面板", "settings": "设置", "title": "自定义物品字段",
+      "description": "定义一个附加到物品表单的租户级架构。", "add": "添加字段",
+      "loadFailed": "无法加载自定义字段", "tenantMissing": "您的个人资料尚未分配给租户。",
+      "missingName": "缺少字段名称", "missingNameMessage": "每个自定义字段都需要名称。",
+      "duplicateName": "字段名称重复", "duplicateNameMessage": "自定义字段名称必须唯一。",
+      "saveFailed": "无法保存自定义字段", "saveFailedMessage": "无法保存自定义字段。",
+      "saved": "自定义字段已保存", "savedMessage": "新物品表单将使用此架构。",
+      "fieldName": "字段名称", "note": "备注或说明", "action": "操作",
+      "fieldNameLabel": "自定义字段 {number} 名称", "fieldNoteLabel": "自定义字段 {number} 备注",
+      "removeLabel": "移除自定义字段 {number}", "none": "暂无自定义字段", "save": "保存架构"
+    }
+  },
+  "Profile": {
+    "dashboard": "控制面板", "profile": "个人资料", "title": "我的个人资料",
+    "description": "更新您的个人和联系信息。", "loadFailed": "无法加载个人资料",
+    "loadFailedMessage": "无法加载您的个人资料。", "sessionExpired": "您的会话已过期，请重新登录。",
+    "profileMissing": "此账户没有个人资料记录。", "notAssigned": "未分配",
+    "invalidEmail": "请输入有效的联系邮箱", "saved": "个人资料已保存",
+    "savedMessage": "您的个人资料已成功更新。", "saveFailed": "无法保存个人资料",
+    "saveFailedMessage": "无法更新您的个人资料。", "accountId": "账户 ID",
+    "managedByAuth": "由身份验证系统管理", "authEmail": "身份验证邮箱",
+    "usedToSignIn": "用于登录", "group": "群组", "managedByAdmin": "由管理员管理",
+    "profileCreated": "个人资料创建时间", "firstName": "名字", "firstNamePlaceholder": "输入名字",
+    "lastName": "姓氏", "lastNamePlaceholder": "输入姓氏", "contactEmail": "联系邮箱",
+    "contactEmailPlaceholder": "输入联系邮箱", "jobTitle": "职务", "jobTitlePlaceholder": "输入职务",
+    "phone": "电话", "phonePlaceholder": "电话号码", "wechatId": "微信号", "city": "城市",
+    "province": "省 / 州", "provincePlaceholder": "输入省或州", "country": "国家",
+    "zipcode": "邮政编码", "zipcodePlaceholder": "输入邮政编码",
+    "saveChanges": "保存更改", "cancel": "取消"
+  },
+  "Events": {
+    "list": {
+      "dashboard": "控制面板", "events": "事件", "title": "事件（审计日志）", "record": "记录事件",
+      "eventType": "事件类型", "allTypes": "所有类型", "group": "群组", "allGroups": "所有群组",
+      "dateFrom": "开始日期", "startDate": "选择开始日期", "dateTo": "结束日期", "endDate": "选择结束日期",
+      "object": "物品", "type": "类型", "from": "来自", "to": "去向", "date": "日期",
+      "initial": "—（初始）", "noEvents": "未找到事件"
+    },
+    "form": {
+      "dashboard": "控制面板", "events": "事件", "record": "记录事件", "group": "群组",
+      "selectGroup": "选择群组", "object": "物品", "selectObject": "选择物品",
+      "currentCustodian": "当前保管人：{name}",
+      "noCustodian": "没有当前保管人记录。此事件将被视为初始分配。",
+      "selectObjectHelp": "选择物品以加载其当前保管人。",
+      "eventType": "事件类型", "selectEventType": "选择事件类型", "fromUser": "转出用户",
+      "fromPlaceholder": "根据当前保管人自动设置", "toUser": "接收用户",
+      "toPlaceholder": "选择接收用户", "extraData": "附加数据（JSON，可选）", "cancel": "取消",
+      "groupRequired": "群组为必填项", "objectRequired": "物品为必填项",
+      "eventTypeRequired": "事件类型为必填项", "receiverRequired": "事件必须至少包含一名接收用户。",
+      "usersMustDiffer": "转出用户和接收用户不能相同。", "invalidJson": "附加数据必须是有效的 JSON。",
+      "initialFromEmpty": "物品没有当前保管人，因此初始分配的转出用户必须留空。",
+      "initialToRequired": "初始分配需要接收用户，以正确记录第一位保管人。",
+      "fromMustMatch": "记录转移前，转出用户必须与物品的当前保管人一致。",
+      "transferToRequired": "转移需要接收用户，才能从最新事件确定下一位保管人。",
+      "error": "错误", "success": "成功", "recordFailed": "记录事件失败。",
+      "recordSuccess": "事件记录成功。"
+    }
+  },
+  "Transfers": {
+    "dashboard": "控制面板", "transfers": "转移", "title": "转移请求", "all": "全部",
+    "statuses": {"pending": "待处理", "approved": "已批准", "rejected": "已拒绝"},
+    "loadFailed": "无法加载转移请求", "loadOneFailed": "无法加载转移请求",
+    "success": "成功", "approvedMessage": "转移已批准", "rejectedMessage": "转移已拒绝",
+    "approvalFailed": "批准失败", "approveFailedMessage": "无法批准转移。",
+    "rejectionFailed": "拒绝失败", "rejectFailedMessage": "无法拒绝转移。",
+    "object": "物品", "requester": "申请人", "currentOwner": "当前所有者", "status": "状态",
+    "requestedAt": "请求时间", "actions": "操作", "approve": "批准", "reject": "拒绝",
+    "noTransfers": "未找到转移请求", "rejectTitle": "拒绝转移 #{id}",
+    "rejectionReason": "拒绝原因", "rejectionPlaceholder": "输入拒绝此转移的原因",
+    "rejectionBeforePlaceholder": "拒绝此转移前请输入原因", "cancel": "取消",
+    "rejectTransfer": "拒绝转移", "loading": "正在加载……", "notFound": "未找到",
+    "notFoundTitle": "未找到转移请求", "backToTransfers": "返回转移列表",
+    "transferNumber": "转移 #{id}", "requestNumber": "转移请求 #{id}", "back": "返回",
+    "model": "型号：{model}", "requesterNewOwner": "申请人 / 新所有者",
+    "currentOwnerRecipient": "当前所有者 / 接收人", "reason": "原因", "lastUpdated": "最后更新"
+  },
+  "Users": {
+    "list": {
+      "dashboard": "控制面板", "title": "用户", "create": "创建用户", "name": "姓名",
+      "jobTitle": "职务", "group": "群组", "email": "电子邮箱", "phone": "电话",
+      "location": "位置", "actions": "操作", "view": "查看用户", "edit": "编辑用户",
+      "noUsers": "未找到用户"
+    },
+    "detail": {
+      "dashboard": "控制面板", "users": "用户", "detail": "详情", "title": "用户详情",
+      "edit": "编辑", "firstName": "名字", "lastName": "姓氏", "email": "电子邮箱",
+      "jobTitle": "职务", "group": "群组", "phone": "电话", "city": "城市", "country": "国家",
+      "wechatId": "微信号", "eventHistory": "事件历史", "object": "物品",
+      "eventType": "事件类型", "from": "来自", "to": "去向", "date": "日期",
+      "noEvents": "暂无涉及此用户的事件"
+    },
+    "form": {
+      "dashboard": "控制面板", "users": "用户", "create": "创建", "edit": "编辑",
+      "createTitle": "创建用户资料", "editTitle": "编辑用户资料",
+      "authUserId": "身份验证用户 ID（UUID）", "authUserIdPlaceholder": "Supabase auth.users 中的 UUID",
+      "firstName": "名字", "firstNamePlaceholder": "输入名字", "lastName": "姓氏",
+      "lastNamePlaceholder": "输入姓氏", "email": "电子邮箱", "emailPlaceholder": "电子邮箱地址",
+      "jobTitle": "职务", "jobTitlePlaceholder": "输入职务", "group": "群组",
+      "groupPlaceholder": "选择群组", "phone": "电话", "phonePlaceholder": "电话号码",
+      "city": "城市", "province": "省份", "provincePlaceholder": "省 / 州",
+      "country": "国家", "zipcode": "邮政编码", "zipcodePlaceholder": "邮政编码",
+      "wechatId": "微信号", "save": "保存", "cancel": "取消",
+      "invalidUuid": "请输入与身份验证用户 ID 匹配的有效 UUID。",
+      "invalidEmail": "电子邮箱地址无效", "error": "错误", "success": "成功",
+      "createFailed": "创建用户资料失败。", "createSuccess": "用户资料创建成功。",
+      "updateFailed": "更新用户资料失败。", "updateSuccess": "用户资料更新成功。"
+    }
+  },
+  "Groups": {
+    "list": {
+      "dashboard": "控制面板", "title": "群组", "create": "创建群组",
+      "groupTitle": "标题", "description": "描述", "created": "创建时间",
+      "actions": "操作", "edit": "编辑群组", "noGroups": "未找到群组"
+    },
+    "form": {
+      "dashboard": "控制面板", "groups": "群组", "create": "创建", "edit": "编辑",
+      "createTitle": "创建群组", "editTitle": "编辑群组", "groupTitle": "标题",
+      "titlePlaceholder": "输入群组标题", "titleRequired": "标题为必填项",
+      "description": "描述", "descriptionPlaceholder": "输入群组描述",
+      "save": "保存", "cancel": "取消", "error": "错误", "success": "成功",
+      "createFailed": "创建群组失败。", "createSuccess": "群组创建成功。",
+      "updateFailed": "更新群组失败。", "updateSuccess": "群组更新成功。"
+    }
+  },
+  "Dashboard": {
+    "title": "控制面板",
+    "totalObjects": "物品总数",
+    "totalUsers": "用户总数",
+    "pendingTransfers": "待处理转移",
+    "recentEventsDays": "最近事件（{days} 天）",
+    "recentEvents": "最近事件",
+    "object": "物品",
+    "eventType": "事件类型",
+    "from": "来自",
+    "to": "去向",
+    "date": "日期",
+    "noEvents": "暂无事件"
+  },
+  "Objects": {
+    "dashboard": "控制面板",
+    "title": "物品",
+    "create": "创建物品",
+    "form": {
+      "dashboard": "控制面板",
+      "objects": "物品",
+      "create": "创建",
+      "edit": "编辑",
+      "createTitle": "创建物品",
+      "editTitle": "编辑物品",
+      "name": "名称",
+      "namePlaceholder": "输入物品名称",
+      "nameRequired": "名称为必填项",
+      "category": "类别",
+      "categoryPlaceholder": "选择类别",
+      "model": "型号",
+      "modelPlaceholder": "输入型号",
+      "description": "描述",
+      "descriptionPlaceholder": "输入描述",
+      "save": "保存",
+      "cancel": "取消",
+      "imageTooLarge": "图片过大",
+      "imageSizeHelp": "请选择不超过 2 MB 的图片。",
+      "tenantUnavailable": "租户不可用",
+      "tenantMissing": "您的个人资料尚未分配给租户。",
+      "error": "错误",
+      "success": "成功",
+      "createFailed": "创建物品失败。",
+      "createSuccess": "物品创建成功。",
+      "updateFailed": "更新物品失败。",
+      "updateSuccess": "物品更新成功。",
+      "imageUploadFailed": "图片上传失败",
+      "imageUploadFailedMessage": "无法上传图片。",
+      "imageAttachFailed": "无法附加图片",
+      "imageAttachFailedMessage": "无法将图片附加到物品。"
+    },
+    "extendedFields": {
+      "image": "图片",
+      "replaceImageHelp": "选择新图片替换当前图片。最大 2 MB。",
+      "imageHelp": "支持 JPEG、PNG、WebP 或 GIF。最大 2 MB。",
+      "chooseImage": "选择图片",
+      "customFields": "自定义字段"
+    },
+    "detail": {
+      "dashboard": "控制面板",
+      "objects": "物品",
+      "detail": "详情",
+      "title": "物品详情",
+      "object": "物品",
+      "objectInfo": "公开物品信息",
+      "edit": "编辑",
+      "imageAlt": "{name}的图片",
+      "name": "名称",
+      "category": "类别",
+      "model": "型号",
+      "created": "创建时间",
+      "description": "描述",
+      "eventHistory": "事件历史",
+      "eventType": "事件类型",
+      "group": "群组",
+      "from": "来自",
+      "to": "去向",
+      "date": "日期",
+      "initial": "—（初始）",
+      "noEvents": "此物品暂无事件记录"
+    },
+    "publicInfo": {
+      "invalid": "此物品链接无效。",
+      "unavailable": "无法加载物品信息。",
+      "notFound": "此物品不存在或其信息不公开。",
+      "eventsFailed": "无法加载事件历史。",
+      "unavailableTitle": "物品信息不可用",
+      "imageAlt": "{name}的图片",
+      "objectId": "物品 ID",
+      "institution": "机构",
+      "owner": "所有者",
+      "category": "类别",
+      "model": "型号",
+      "created": "创建时间",
+      "description": "描述",
+      "eventHistory": "事件历史",
+      "event": "事件",
+      "group": "群组",
+      "from": "来自",
+      "to": "去向",
+      "date": "日期",
+      "initial": "—（初始）",
+      "noEvents": "此物品暂无事件记录"
+    }
+  },
+  "Barcode": {
+    "dashboard": "控制面板",
+    "title": "条码",
+    "qr": {
+      "objectId": "物品 ID：{id}",
+      "description": "打开物品信息页面",
+      "openInfo": "打开物品信息",
+      "copied": "已复制",
+      "copyLink": "复制链接"
+    },
+    "generator": {
+      "qr": "二维码",
+      "selectObject": "选择物品 {id} 以生成条码",
+      "name": "名称",
+      "category": "类别",
+      "model": "型号",
+      "created": "创建时间",
+      "actions": "操作",
+      "view": "查看物品",
+      "edit": "编辑物品",
+      "noObjects": "未找到物品",
+      "title": "二维条码",
+      "description": "选择一个物品，生成可打开其信息页面的二维条码。",
+      "details": "条码详情",
+      "selectedId": "所选物品 ID：{id}",
+      "destination": "目标地址：{path}",
+      "noneSelected": "尚未选择物品。"
+    }
+  },
+  "Scan": {
+    "dashboard": "控制面板",
+    "scan": "扫描",
+    "title": "扫描二维码",
+    "description": "使用移动浏览器打开物品的二维码图片，或使用设备摄像头扫描 API 链接。"
+  },
+  "Metadata": {
+    "title": "物品追踪管理",
+    "description": "管理物品、用户、事件和转移。"
+  },
+  "LocaleSwitcher": {
+    "label": "语言"
+  },
+  "Auth": {
+    "login": {
+      "appTitle": "物品追踪",
+      "title": "管理员登录",
+      "email": "电子邮箱",
+      "password": "密码",
+      "passwordPlaceholder": "请输入密码",
+      "signIn": "登录",
+      "forgotPassword": "忘记密码？",
+      "needAccount": "需要注册账户？",
+      "invalidEmail": "电子邮箱地址无效",
+      "passwordMin": "密码必须至少包含 {count} 个字符",
+      "invalidCredentials": "电子邮箱或密码不正确。",
+      "failed": "登录失败，请重试。"
+    },
+    "register": {
+      "appTitle": "物品追踪",
+      "title": "申请访问权限",
+      "description": "创建账户不会自动获得租户访问权限。授权的租户管理员或所有者必须将您添加为该租户的成员。",
+      "email": "电子邮箱",
+      "password": "密码",
+      "confirmPassword": "确认密码",
+      "passwordPlaceholder": "创建密码",
+      "confirmPasswordPlaceholder": "再次输入密码",
+      "submit": "注册",
+      "backToLogin": "返回登录",
+      "continueSignIn": "继续登录",
+      "success": "账户已创建！请查看电子邮件中的确认链接。",
+      "invalidEmail": "电子邮箱地址无效",
+      "passwordMin": "密码必须至少包含 {count} 个字符",
+      "passwordMismatch": "两次输入的密码不一致",
+      "failed": "注册失败，请重试。"
+    },
+    "forgotPassword": {
+      "appTitle": "物品追踪",
+      "title": "重置密码",
+      "description": "请输入您的电子邮箱地址，我们会向您发送密码重置链接。",
+      "email": "电子邮箱",
+      "submit": "发送重置链接",
+      "backToLogin": "返回登录",
+      "sent": "请查看电子邮件中的密码重置链接。",
+      "invalidEmail": "电子邮箱地址无效",
+      "failed": "密码重置失败，请重试。"
+    },
+    "mfa": {
+      "title": "安全访问平台",
+      "description": "平台运维功能要求本次会话提供已验证的身份验证器代码。",
+      "setup": "设置身份验证器",
+      "qrAlt": "身份验证器设置二维码",
+      "secretHelp": "如果无法扫描二维码，请输入此密钥：",
+      "verify": "验证并继续",
+      "loadFailed": "无法加载身份验证器。",
+      "enrollFailed": "无法设置身份验证器。",
+      "verifyFailed": "无法验证身份验证器代码。"
+    },
+    "unauthorized": {
+      "title": "拒绝访问",
+      "description": "您无权访问此应用程序。只有管理员可以使用此控制面板。",
+      "returnToLogin": "返回登录"
+    }
+  },
+  "NotFound": {
+    "title": "找不到页面",
+    "description": "您请求的页面不存在或可能已被移动。",
+    "backToDashboard": "返回控制面板",
+    "manualLink": "手动前往控制面板"
+  },
+  "Invitations": {
+    "accept": {
+      "title": "租户邀请",
+      "invalidTitle": "链接无效",
+      "invalid": "此邀请链接无效。",
+      "expiredTitle": "链接已过期",
+      "expired": "此邀请已过期。请联系租户管理员重新发送。",
+      "revokedTitle": "邀请已撤销",
+      "revoked": "此邀请已被撤销，无法再接受。",
+      "acceptedTitle": "已接受",
+      "alreadyAccepted": "此邀请已被使用。",
+      "description": "您受邀加入 <tenant></tenant>。请使用 {email} 登录。",
+      "invitedEmail": "受邀的电子邮箱地址",
+      "unableTitle": "无法接受邀请",
+      "accept": "接受邀请",
+      "signIn": "登录并接受",
+      "register": "使用受邀邮箱注册",
+      "errors": {
+        "invalid": "邀请链接无效。",
+        "signInRequired": "请先登录再接受邀请。",
+        "failed": "接受邀请失败。"
+      }
+    }
+  },
+  "Shell": {
+    "header": {
+      "appTitle": "物品追踪",
+      "toggleColorScheme": "切换配色方案",
+      "userMenu": "打开用户菜单",
+      "admin": "管理员",
+      "profile": "个人资料",
+      "logout": "退出登录"
+    },
+    "sidebar": {
+      "dashboard": "控制面板",
+      "objects": "物品",
+      "users": "用户",
+      "groups": "群组",
+      "transfers": "转移",
+      "events": "事件",
+      "settings": "设置",
+      "tenantAdmin": "租户管理"
+    }
+  },
+  "Ops": {
+    "nav": {
+      "title": "平台运维",
+      "subtitle": "内部控制平台",
+      "tenants": "租户",
+      "audit": "审计与监控",
+      "customerApplication": "客户应用"
+    },
+    "tenants": {
+      "title": "租户",
+      "description": "搜索、查看、创建租户并控制租户状态。",
+      "create": "创建租户",
+      "searchLabel": "搜索租户",
+      "searchPlaceholder": "机构或电子邮箱",
+      "search": "搜索",
+      "loadFailedTitle": "无法加载租户",
+      "loadFailed": "无法加载租户记录，请重试。"
+    },
+    "audit": {
+      "title": "审计与监控",
+      "description": "跨租户的运维事件和故障指标。需要 AAL2 验证。",
+      "metrics": {
+        "invitationDeliveryFailures24h": "邀请发送失败（24 小时）",
+        "reportFailures24h": "报告失败（24 小时）",
+        "pendingWorkItems": "待处理工作项",
+        "failedWorkItems24h": "工作项失败（24 小时）"
+      }
+    },
+    "newTenant": {
+      "tenants": "租户",
+      "newTenant": "新租户",
+      "title": "创建租户",
+      "description": "租户数据、带版本的默认设置、初始所有者邀请、审计事件和排队的电子邮件任务将在一个数据库事务中创建。"
+    },
+    "tenantDetails": {
+      "tenants": "租户",
+      "provisionedTitle": "租户已创建",
+      "provisioned": "事务已成功提交，初始所有者的电子邮件任务已加入队列。",
+      "tenantNumber": "租户 #{id}",
+      "defaultsVersion": "默认设置版本",
+      "initialOwner": "初始所有者",
+      "legacyTenant": "旧版租户",
+      "notQueued": "未加入队列",
+      "lastStatusReason": "最近的状态变更原因",
+      "none": "无",
+      "statuses": { "active": "已启用", "suspended": "已停用" }
+    },
+    "tenantTable": {
+      "institution": "机构",
+      "status": "状态",
+      "ownerInvitation": "所有者邀请",
+      "defaults": "默认设置",
+      "created": "创建时间",
+      "noInstitutionEmail": "无机构电子邮箱",
+      "legacyTenant": "旧版租户",
+      "empty": "未找到租户。",
+      "statuses": { "active": "已启用", "suspended": "已停用" }
+    },
+    "auditTable": {
+      "time": "时间",
+      "tenant": "租户",
+      "action": "操作",
+      "actor": "操作者",
+      "target": "目标",
+      "requestId": "请求 ID",
+      "platform": "平台",
+      "system": "系统"
+    },
+    "provisionForm": {
+      "failedTitle": "无法创建租户",
+      "institutionName": "机构名称",
+      "ownerEmail": "初始所有者电子邮箱",
+      "ownerEmailDescription": "事务提交后，所有者邀请仅会加入此租户的发送队列。",
+      "description": "描述",
+      "address": "地址",
+      "contact": "联系人",
+      "phone": "电话",
+      "institutionEmail": "机构电子邮箱",
+      "website": "网站",
+      "create": "创建租户",
+      "creating": "正在创建租户…"
+    },
+    "tenantForm": {
+      "profileTitle": "租户资料",
+      "updateFailed": "更新失败",
+      "updated": "已更新",
+      "institutionName": "机构名称",
+      "description": "描述",
+      "address": "地址",
+      "contact": "联系人",
+      "phone": "电话",
+      "institutionEmail": "机构电子邮箱",
+      "website": "网站",
+      "socialMedia": "社交媒体",
+      "jsonObject": "JSON 对象",
+      "save": "保存租户",
+      "saving": "正在保存…",
+      "statusTitle": "{action}租户",
+      "statusDescription": "这会更改由平台控制的租户状态，必须填写原因并明确确认。",
+      "statusFailed": "状态更改失败",
+      "statusChanged": "状态已更改",
+      "reason": "原因",
+      "confirmation": "我确认要{action}此租户。",
+      "verbs": { "active": "启用", "suspended": "停用" },
+      "statusSubmit": { "active": "启用租户", "suspended": "停用租户" },
+      "statusPending": { "active": "正在启用…", "suspended": "正在停用…" }
+    },
+    "actions": {
+      "invalidValues": "请检查提交的内容。",
+      "provisionFailed": "无法创建租户，请重试。",
+      "socialMediaObject": "社交媒体内容必须是 JSON 对象。",
+      "socialMediaJson": "社交媒体内容必须是有效的 JSON。",
+      "updateFailed": "无法更新租户资料。",
+      "updated": "租户资料已更新。",
+      "statusFailed": "无法更改租户状态。",
+      "statuses": { "active": "租户已启用。", "suspended": "租户已停用。" }
+    }
+  }
+}
