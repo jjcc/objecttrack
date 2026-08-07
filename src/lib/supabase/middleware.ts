@@ -44,7 +44,8 @@ export async function updateSession(request: NextRequest) {
   const isPublicResource =
     request.nextUrl.pathname.startsWith("/object-info/") ||
     request.nextUrl.pathname.startsWith("/api/qr/") ||
-    request.nextUrl.pathname.startsWith("/invitations/accept");
+    request.nextUrl.pathname.startsWith("/invitations/accept") ||
+    request.nextUrl.pathname.startsWith("/auth/callback");
 
   if (!user && !isPublicAuthPage && !isPublicResource) {
     const url = request.nextUrl.clone();

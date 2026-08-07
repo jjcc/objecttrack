@@ -1,169 +1,86 @@
-"use client";
-
 import {
   Alert,
   Anchor,
-  Button,
   Center,
   Paper,
-  PasswordInput,
   Stack,
-  Text,
-  TextInput,
   Title,
 } from "@mantine/core";
-import { useForm, zodResolver } from "@mantine/form";
-import { IconAlertCircle } from "@tabler/icons-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { z } from "zod";
-import { getSupabaseClient } from "@/lib/supabase/client";
+import { getTranslations } from "next-intl/server";
+import { RegisterForm } from "@/app/register/_components/RegisterForm";
+import { hashInvitationToken } from "@/lib/invitations/token";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-type RegisterFormValues = { email: string; password: string; confirmPassword: string };
+export const dynamic = "force-dynamic";
 
-export default function RegisterPage() {
-  const t = useTranslations("Auth.register");
-  const searchParams = useSearchParams();
-  const requestedNext = searchParams.get("next");
-  const nextPath =
-    requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
-      ? requestedNext
-      : "/dashboard";
-  const router = useRouter();
-  const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const registerSchema = z
-    .object({
-      email: z.string().email(t("invalidEmail")),
-      password: z.string().min(8, t("passwordMin", { count: 8 })),
-      confirmPassword: z.string().min(8, t("passwordMin", { count: 8 })),
-    })
-    .refine((values) => values.password === values.confirmPassword, {
-      message: t("passwordMismatch"),
-      path: ["confirmPassword"],
+function safeNextPath(value?: string): string | null {
+  return value?.startsWith("/") && !value.startsWith("//") ? value : null;
+}
+
+function invitationToken(nextPath: string | null): string | null {
+  if (!nextPath) return null;
+
+  const url = new URL(nextPath, "https://objecttrack.local");
+  if (url.pathname !== "/invitations/accept") return null;
+
+  const token = url.searchParams.get("token");
+  return token && token.length >= 20 && token.length <= 500 ? token : null;
+}
+
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams?: { next?: string };
+}) {
+  const t = await getTranslations("Auth.register");
+  const nextPath = safeNextPath(searchParams?.next);
+  const token = invitationToken(nextPath);
+  let invitation: {
+    invitedEmail: string;
+    tenantName: string;
+  } | null = null;
+
+  if (token) {
+    const supabase = await createServerSupabaseClient();
+    const { data } = await supabase.rpc("invitation_registration_context", {
+      p_token_hash: hashInvitationToken(token),
     });
+    const context = data?.[0];
 
-  const form = useForm<RegisterFormValues>({
-    initialValues: {
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-    validate: zodResolver(registerSchema),
-  });
-
-  const handleSubmit = async (values: RegisterFormValues) => {
-    setError(null);
-    setIsPending(true);
-    try {
-      const supabase = getSupabaseClient();
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}${nextPath}`,
-          data: {
-            email: values.email,
-          },
-        },
-      });
-
-      if (signUpError) {
-        setError(t("failed"));
-        return;
-      }
-
-      if (data.session) {
-        router.replace(nextPath);
-        return;
-      }
-
-      setSuccess(true);
-    } catch {
-      setError(t("failed"));
-    } finally {
-      setIsPending(false);
+    if (
+      context?.status === "pending" &&
+      context.invited_email &&
+      context.tenant_name
+    ) {
+      invitation = {
+        invitedEmail: context.invited_email,
+        tenantName: context.tenant_name,
+      };
     }
-  };
+  }
 
-  return (
-    <Center h="100vh" bg="gray.1" px="md">
-      <Paper shadow="md" p={30} radius="md" w={420}>
-        <Title order={2} ta="center" mb="lg">
-          {t("appTitle")}
-        </Title>
-        <Title order={4} ta="center" mb="xs" c="dimmed">
-          {t("title")}
-        </Title>
-        <Text size="sm" c="dimmed" ta="center" mb="lg">
-          {t("description")}
-        </Text>
-
-        {error && (
-          <Alert
-            icon={<IconAlertCircle size={16} />}
-            color="red"
-            mb="md"
-            onClose={() => setError(null)}
-            withCloseButton
-          >
-            {error}
-          </Alert>
-        )}
-
-        {success ? (
+  if (!invitation || !nextPath) {
+    return (
+      <Center h="100vh" bg="gray.1" px="md">
+        <Paper shadow="md" p={30} radius="md" w={420}>
           <Stack>
-            <Alert color="green" mb="md">
-              {t("success")}
-            </Alert>
-            <Anchor
-              component={Link}
-              href={`/login?next=${encodeURIComponent(nextPath)}`}
-              size="sm"
-              ta="center"
-            >
-              {t("continueSignIn")}
+            <Title order={2}>{t("invitationRequiredTitle")}</Title>
+            <Alert color="yellow">{t("invitationRequired")}</Alert>
+            <Anchor component={Link} href="/login" ta="center">
+              {t("backToLogin")}
             </Anchor>
           </Stack>
-        ) : (
-          <form onSubmit={form.onSubmit(handleSubmit)}>
-            <Stack>
-              <TextInput
-                label={t("email")}
-                placeholder="name@example.com"
-                required
-                {...form.getInputProps("email")}
-              />
-              <PasswordInput
-                label={t("password")}
-                placeholder={t("passwordPlaceholder")}
-                required
-                {...form.getInputProps("password")}
-              />
-              <PasswordInput
-                label={t("confirmPassword")}
-                placeholder={t("confirmPasswordPlaceholder")}
-                required
-                {...form.getInputProps("confirmPassword")}
-              />
-              <Button type="submit" fullWidth loading={isPending}>
-                {t("submit")}
-              </Button>
-              <Anchor
-                component={Link}
-                href={`/login?next=${encodeURIComponent(nextPath)}`}
-                size="sm"
-                ta="center"
-              >
-                {t("backToLogin")}
-              </Anchor>
-            </Stack>
-          </form>
-        )}
-      </Paper>
-    </Center>
+        </Paper>
+      </Center>
+    );
+  }
+
+  return (
+    <RegisterForm
+      invitedEmail={invitation.invitedEmail}
+      tenantName={invitation.tenantName}
+      nextPath={nextPath}
+    />
   );
 }

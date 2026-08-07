@@ -18,6 +18,7 @@ export default async function AcceptInvitationPage({
   let status = "invalid";
   let tenantName: string | null = null;
   let maskedEmail: string | null = null;
+  let invitedEmail: string | null = null;
 
   if (token.length >= 20 && token.length <= 500) {
     const { data } = await supabase.rpc("invitation_link_status", {
@@ -29,7 +30,21 @@ export default async function AcceptInvitationPage({
       tenantName = invitation.tenant_name;
       maskedEmail = invitation.invited_email_masked;
     }
+
+    if (status === "pending") {
+      const { data: registrationData } = await supabase.rpc(
+        "invitation_registration_context",
+        { p_token_hash: hashInvitationToken(token) }
+      );
+      invitedEmail = registrationData?.[0]?.invited_email ?? null;
+    }
   }
+
+  const signedInEmail = user?.email ?? null;
+  const emailMatches =
+    !signedInEmail ||
+    !invitedEmail ||
+    signedInEmail.toLowerCase() === invitedEmail.toLowerCase();
 
   return (
     <AcceptInvitationView
@@ -38,6 +53,8 @@ export default async function AcceptInvitationPage({
       tenantName={tenantName}
       maskedEmail={maskedEmail}
       authenticated={Boolean(user)}
+      signedInEmail={signedInEmail}
+      emailMatches={emailMatches}
     />
   );
 }

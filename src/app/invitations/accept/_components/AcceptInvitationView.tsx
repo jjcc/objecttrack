@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   Alert,
   Anchor,
@@ -17,6 +19,7 @@ import {
   acceptInvitationAction,
   type AcceptInvitationState,
 } from "@/app/invitations/accept/actions";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const initialState: AcceptInvitationState = { status: "idle", code: "" };
 
@@ -36,19 +39,33 @@ export function AcceptInvitationView({
   tenantName,
   maskedEmail,
   authenticated,
+  signedInEmail,
+  emailMatches,
 }: {
   token: string;
   status: string;
   tenantName: string | null;
   maskedEmail: string | null;
   authenticated: boolean;
+  signedInEmail: string | null;
+  emailMatches: boolean;
 }) {
   const t = useTranslations("Invitations.accept");
+  const router = useRouter();
+  const [isSwitchingAccount, setIsSwitchingAccount] = useState(false);
   const [state, action] = useFormState(acceptInvitationAction, initialState);
   const nextPath =
     "/invitations/accept?token=" + encodeURIComponent(token);
   const loginHref = "/login?next=" + encodeURIComponent(nextPath);
   const registerHref = "/register?next=" + encodeURIComponent(nextPath);
+
+  async function switchAccount() {
+    setIsSwitchingAccount(true);
+    const supabase = getSupabaseClient();
+    await supabase.auth.signOut();
+    router.refresh();
+    setIsSwitchingAccount(false);
+  }
 
   return (
     <Center mih="100vh" bg="gray.1" p="md">
@@ -86,10 +103,28 @@ export function AcceptInvitationView({
                 </Alert>
               )}
               {authenticated ? (
-                <form action={action}>
-                  <input type="hidden" name="token" value={token} />
-                  <AcceptButton />
-                </form>
+                emailMatches ? (
+                  <form action={action}>
+                    <input type="hidden" name="token" value={token} />
+                    <AcceptButton />
+                  </form>
+                ) : (
+                  <Stack gap="xs">
+                    <Alert color="yellow" title={t("wrongAccountTitle")}>
+                      {t("wrongAccount", {
+                        email: signedInEmail ?? t("unknownEmail"),
+                      })}
+                    </Alert>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      loading={isSwitchingAccount}
+                      onClick={switchAccount}
+                    >
+                      {t("switchAccount")}
+                    </Button>
+                  </Stack>
+                )
               ) : (
                 <Stack gap="xs">
                   <Button component={Link} href={loginHref}>

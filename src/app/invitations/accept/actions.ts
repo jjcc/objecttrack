@@ -7,7 +7,13 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export type AcceptInvitationState = {
   status: "idle" | "error";
-  code: "" | "invalid" | "signInRequired" | "failed";
+  code:
+    | ""
+    | "invalid"
+    | "signInRequired"
+    | "wrongEmail"
+    | "alreadyMember"
+    | "failed";
 };
 
 export async function acceptInvitationAction(
@@ -32,7 +38,15 @@ export async function acceptInvitationAction(
     const { error } = await supabase.rpc("accept_tenant_invitation", {
       p_token_hash: hashInvitationToken(parsed.data),
     });
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.message.includes("Sign in with the invited email address")) {
+        return { status: "error", code: "wrongEmail" };
+      }
+      if (error.message.includes("already has a tenant membership")) {
+        return { status: "error", code: "alreadyMember" };
+      }
+      return { status: "error", code: "failed" };
+    }
   } catch {
     return {
       status: "error",

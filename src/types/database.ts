@@ -658,6 +658,14 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      invitation_registration_context: {
+        Args: { p_token_hash: string }
+        Returns: {
+          invited_email: string
+          status: string
+          tenant_name: string
+        }[]
+      }
       is_platform_operator: { Args: never; Returns: boolean }
       migrate_tenant_defaults: {
         Args: { p_target_version: number; p_tenant_id: number }
