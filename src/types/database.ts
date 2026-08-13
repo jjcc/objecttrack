@@ -340,9 +340,11 @@ export type Database = {
           created_at: string
           defaults_version: number
           description: string | null
+          edition: string
           email: string | null
           id: number
           institution_name: string
+          member_visibility: string
           phone: string | null
           show_object_info_without_authentication: boolean
           social_media: Json
@@ -351,6 +353,7 @@ export type Database = {
           suspended_at: string | null
           updated_at: string
           website: string | null
+          workspace_kind: string | null
         }
         Insert: {
           address?: string | null
@@ -359,9 +362,11 @@ export type Database = {
           created_at?: string
           defaults_version?: number
           description?: string | null
+          edition?: string
           email?: string | null
           id?: never
           institution_name: string
+          member_visibility?: string
           phone?: string | null
           show_object_info_without_authentication?: boolean
           social_media?: Json
@@ -370,6 +375,7 @@ export type Database = {
           suspended_at?: string | null
           updated_at?: string
           website?: string | null
+          workspace_kind?: string | null
         }
         Update: {
           address?: string | null
@@ -378,9 +384,11 @@ export type Database = {
           created_at?: string
           defaults_version?: number
           description?: string | null
+          edition?: string
           email?: string | null
           id?: never
           institution_name?: string
+          member_visibility?: string
           phone?: string | null
           show_object_info_without_authentication?: boolean
           social_media?: Json
@@ -389,6 +397,7 @@ export type Database = {
           suspended_at?: string | null
           updated_at?: string
           website?: string | null
+          workspace_kind?: string | null
         }
         Relationships: []
       }
@@ -624,7 +633,25 @@ export type Database = {
           tenant_name: string
         }[]
       }
+      current_tenant_edition: { Args: never; Returns: string }
       current_tenant_id: { Args: never; Returns: number }
+      current_tenant_product_context: {
+        Args: never
+        Returns: {
+          advanced_transfers: boolean
+          audit_ui: boolean
+          custom_categories: boolean
+          edition: string
+          groups: boolean
+          max_objects: number
+          max_users: number
+          member_visibility: string
+          reports: boolean
+          tenant_id: number
+          tenant_status: string
+          workspace_kind: string
+        }[]
+      }
       current_tenant_role: { Args: never; Returns: string }
       expire_tenant_report_jobs: {
         Args: never
@@ -649,6 +676,10 @@ export type Database = {
         Args: { p_permission: string; p_tenant_id?: number }
         Returns: boolean
       }
+      has_tenant_entitlement: {
+        Args: { p_entitlement: string; p_tenant_id?: number }
+        Returns: boolean
+      }
       invitation_link_status: {
         Args: { p_token_hash: string }
         Returns: {
@@ -657,7 +688,6 @@ export type Database = {
           tenant_name: string
         }[]
       }
-      is_admin: { Args: never; Returns: boolean }
       invitation_registration_context: {
         Args: { p_token_hash: string }
         Returns: {
@@ -666,6 +696,7 @@ export type Database = {
           tenant_name: string
         }[]
       }
+      is_admin: { Args: never; Returns: boolean }
       is_platform_operator: { Args: never; Returns: boolean }
       migrate_tenant_defaults: {
         Args: { p_target_version: number; p_tenant_id: number }
@@ -830,15 +861,25 @@ export type Database = {
         Args: never
         Returns: {
           address: string
+          advanced_transfers: boolean
+          audit_ui: boolean
           contact: string
+          custom_categories: boolean
           description: string
+          edition: string
           email: string
+          groups: boolean
           id: number
           institution_name: string
+          max_objects: number
+          max_users: number
+          member_visibility: string
           phone: string
+          reports: boolean
           show_object_info_without_authentication: boolean
           social_media: Json
           website: string
+          workspace_kind: string
         }[]
       }
       tenant_audit_events: {
