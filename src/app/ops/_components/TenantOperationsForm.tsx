@@ -46,7 +46,7 @@ export type PlatformTenantDetails = {
 
 export type PlatformTenantProductContext = {
   edition: "simple" | "full";
-  workspace_kind: "family" | "business" | "club" | "other";
+  workspace_kind: "family" | "business" | "club" | "collector" | "other";
   member_visibility: "private" | "shared";
   active_users: number;
   pending_invitations: number;

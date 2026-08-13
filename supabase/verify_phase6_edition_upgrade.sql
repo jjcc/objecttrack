@@ -115,14 +115,14 @@ SELECT set_config('request.jwt.claim.role', 'authenticated', true);
 SELECT set_config('request.jwt.claim.aal', 'aal1', true);
 SELECT set_config('request.jwt.claim.sub', '97600000-0000-4000-8000-000000000001', true);
 
-SELECT public.update_current_tenant_workspace('family', 'shared');
+SELECT public.update_current_tenant_workspace('collector', 'shared');
 
 DO $$
 DECLARE v_profile record;
 BEGIN
   SELECT * INTO v_profile FROM public.tenant_admin_profile();
   IF v_profile.edition <> 'simple'
-     OR v_profile.workspace_kind <> 'family'
+     OR v_profile.workspace_kind <> 'collector'
      OR v_profile.member_visibility <> 'shared'
      OR v_profile.max_users <> 5
      OR v_profile.max_objects <> 100

@@ -37,7 +37,7 @@ export type TenantAdminProfile = {
   social_media: unknown;
   show_object_info_without_authentication: boolean;
   edition: "simple" | "full";
-  workspace_kind: "family" | "business" | "club" | "other";
+  workspace_kind: "family" | "business" | "club" | "collector" | "other";
   member_visibility: "private" | "shared";
   max_users: number | null;
   max_objects: number | null;
@@ -156,7 +156,7 @@ export function TenantProfileForm({
                 label={t("workspaceKind")}
                 defaultValue={tenant.workspace_kind}
                 data={(
-                  ["family", "business", "club", "other"] as const
+                  ["family", "business", "club", "collector", "other"] as const
                 ).map((value) => ({
                   value,
                   label: t(`workspaceKinds.${value}`),

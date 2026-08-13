@@ -21,7 +21,11 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 
 type LoginFormValues = { email: string; password: string };
 
-export function LoginForm() {
+export function LoginForm({
+  selfServiceRegistrationEnabled,
+}: {
+  selfServiceRegistrationEnabled: boolean;
+}) {
   const t = useTranslations("Auth.login");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -109,14 +113,16 @@ export function LoginForm() {
           <Anchor component={Link} href="/forgot-password" size="sm" ta="center">
             {t("forgotPassword")}
           </Anchor>
-          <Anchor
-            component={Link}
-            href={`/register?next=${encodeURIComponent(nextPath)}`}
-            size="sm"
-            ta="center"
-          >
-            {t("needAccount")}
-          </Anchor>
+          {selfServiceRegistrationEnabled && (
+            <Anchor
+              component={Link}
+              href={`/register?next=${encodeURIComponent(nextPath)}`}
+              size="sm"
+              ta="center"
+            >
+              {t("needAccount")}
+            </Anchor>
+          )}
         </Stack>
       </form>
     </Paper>
