@@ -622,6 +622,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      create_simple_workspace: {
+        Args: { p_workspace_kind?: string; p_workspace_name: string }
+        Returns: {
+          created: boolean
+          result_code: string
+          tenant_id: number
+        }[]
+      }
       create_tenant_invitation: {
         Args: {
           p_expires_at: string

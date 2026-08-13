@@ -35,10 +35,19 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  function redirectPreservingCookies(url: URL) {
+    const response = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((cookie) =>
+      response.cookies.set(cookie)
+    );
+    return response;
+  }
+
   const isLoginPage = request.nextUrl.pathname === "/login";
   const isRegisterPage = request.nextUrl.pathname === "/register";
   const isForgotPasswordPage = request.nextUrl.pathname === "/forgot-password";
   const isUnauthorizedPage = request.nextUrl.pathname === "/unauthorized";
+  const isOnboardingPage = request.nextUrl.pathname === "/onboarding";
   const isPublicAuthPage =
     isLoginPage || isRegisterPage || isForgotPasswordPage;
   const isPublicResource =
@@ -50,24 +59,48 @@ export async function updateSession(request: NextRequest) {
   if (!user && !isPublicAuthPage && !isPublicResource) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return redirectPreservingCookies(url);
   }
 
-  if (user && isPublicAuthPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
-  }
-
-  if (user && !isPublicAuthPage && !isUnauthorizedPage && !isPublicResource) {
+  let accessError: AuthorizationError | null = null;
+  if (user && !request.nextUrl.pathname.startsWith("/auth/callback")) {
     try {
       await getAuthenticatedAccessContext(supabase, user);
     } catch (error) {
       if (!(error instanceof AuthorizationError)) throw error;
-      const url = request.nextUrl.clone();
-      url.pathname = "/unauthorized";
-      return NextResponse.redirect(url);
+      accessError = error;
     }
+  }
+
+  if (user && isPublicAuthPage) {
+    const url = request.nextUrl.clone();
+    url.pathname = accessError?.code === "membership_required"
+      ? "/onboarding"
+      : "/dashboard";
+    return redirectPreservingCookies(url);
+  }
+
+  if (
+    user &&
+    accessError?.code === "membership_required" &&
+    !isOnboardingPage &&
+    !isPublicResource
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/onboarding";
+    return redirectPreservingCookies(url);
+  }
+
+  if (
+    user &&
+    accessError &&
+    accessError.code !== "membership_required" &&
+    !isUnauthorizedPage &&
+    !isPublicResource
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/unauthorized";
+    return redirectPreservingCookies(url);
   }
 
   return supabaseResponse;

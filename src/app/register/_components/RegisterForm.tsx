@@ -7,6 +7,7 @@ import {
   Center,
   Paper,
   PasswordInput,
+  Select,
   Stack,
   Text,
   TextInput,
@@ -21,16 +22,24 @@ import { useState } from "react";
 import { z } from "zod";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-type RegisterFormValues = { email: string; password: string; confirmPassword: string };
+type RegisterFormValues = {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  workspaceName: string;
+  workspaceKind: "family" | "business" | "club" | "collector" | "other";
+};
 
 export function RegisterForm({
   invitedEmail,
   tenantName,
   nextPath,
+  mode,
 }: {
-  invitedEmail: string;
-  tenantName: string;
+  invitedEmail?: string;
+  tenantName?: string;
   nextPath: string;
+  mode: "invitation" | "selfService";
 }) {
   const t = useTranslations("Auth.register");
   const router = useRouter();
@@ -42,17 +51,25 @@ export function RegisterForm({
       email: z.string().email(t("invalidEmail")),
       password: z.string().min(8, t("passwordMin", { count: 8 })),
       confirmPassword: z.string().min(8, t("passwordMin", { count: 8 })),
+      workspaceName: z.string().trim(),
+      workspaceKind: z.enum(["family", "business", "club", "collector", "other"]),
     })
     .refine((values) => values.password === values.confirmPassword, {
       message: t("passwordMismatch"),
       path: ["confirmPassword"],
-    });
+    })
+    .refine(
+      (values) => mode === "invitation" || values.workspaceName.length >= 2,
+      { message: t("workspaceNameMin"), path: ["workspaceName"] }
+    );
 
   const form = useForm<RegisterFormValues>({
     initialValues: {
-      email: invitedEmail,
+      email: invitedEmail ?? "",
       password: "",
       confirmPassword: "",
+      workspaceName: "",
+      workspaceKind: "family",
     },
     validate: zodResolver(registerSchema),
   });
@@ -71,6 +88,14 @@ export function RegisterForm({
           emailRedirectTo: confirmationUrl.toString(),
           data: {
             email: values.email,
+            registration_mode:
+              mode === "selfService" ? "self_service" : "invitation",
+            ...(mode === "selfService"
+              ? {
+                  workspace_name: values.workspaceName.trim(),
+                  workspace_kind: values.workspaceKind,
+                }
+              : {}),
           },
         },
       });
@@ -81,6 +106,26 @@ export function RegisterForm({
       }
 
       if (data.session) {
+        if (mode === "selfService") {
+          const { data: provisioning, error: provisioningError } =
+            await supabase.rpc("create_simple_workspace", {
+              p_workspace_name: values.workspaceName.trim(),
+              p_workspace_kind: values.workspaceKind,
+            });
+          const result = provisioning?.[0];
+          if (
+            provisioningError ||
+            !result ||
+            !["created", "existing"].includes(result.result_code)
+          ) {
+            router.replace("/onboarding?provisioning=failed");
+            router.refresh();
+            return;
+          }
+          router.replace("/onboarding?created=1");
+          router.refresh();
+          return;
+        }
         router.replace(nextPath);
         router.refresh();
         return;
@@ -101,10 +146,15 @@ export function RegisterForm({
           {t("appTitle")}
         </Title>
         <Title order={4} ta="center" mb="xs" c="dimmed">
-          {t("invitationTitle")}
+          {t(mode === "invitation" ? "invitationTitle" : "selfServiceTitle")}
         </Title>
         <Text size="sm" c="dimmed" ta="center" mb="lg">
-          {t("invitationDescription", { email: invitedEmail, tenant: tenantName })}
+          {mode === "invitation"
+            ? t("invitationDescription", {
+                email: invitedEmail ?? "",
+                tenant: tenantName ?? "",
+              })
+            : t("selfServiceDescription")}
         </Text>
 
         {error && (
@@ -122,7 +172,7 @@ export function RegisterForm({
         {success ? (
           <Stack>
             <Alert color="green" mb="md">
-              {t("success")}
+              {t(mode === "invitation" ? "success" : "successSelfService")}
             </Alert>
             <Anchor
               component={Link}
@@ -141,8 +191,30 @@ export function RegisterForm({
                 placeholder="name@example.com"
                 required
                 {...form.getInputProps("email")}
-                readOnly
+                readOnly={mode === "invitation"}
               />
+              {mode === "selfService" ? (
+                <>
+                  <TextInput
+                    label={t("workspaceName")}
+                    placeholder={t("workspaceNamePlaceholder")}
+                    required
+                    {...form.getInputProps("workspaceName")}
+                  />
+                  <Select
+                    label={t("workspaceKind")}
+                    data={[
+                      { value: "family", label: t("workspaceKinds.family") },
+                      { value: "business", label: t("workspaceKinds.business") },
+                      { value: "club", label: t("workspaceKinds.club") },
+                      { value: "collector", label: t("workspaceKinds.collector") },
+                      { value: "other", label: t("workspaceKinds.other") },
+                    ]}
+                    allowDeselect={false}
+                    {...form.getInputProps("workspaceKind")}
+                  />
+                </>
+              ) : null}
               <PasswordInput
                 label={t("password")}
                 placeholder={t("passwordPlaceholder")}
@@ -156,7 +228,7 @@ export function RegisterForm({
                 {...form.getInputProps("confirmPassword")}
               />
               <Button type="submit" fullWidth loading={isPending}>
-                {t("submit")}
+                {t(mode === "invitation" ? "submit" : "createWorkspace")}
               </Button>
               <Anchor
                 component={Link}

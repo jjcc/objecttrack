@@ -60,7 +60,7 @@ export default async function RegisterPage({
     }
   }
 
-  if (!invitation || !nextPath) {
+  if (nextPath && (!invitation || !token)) {
     return (
       <Center h="100vh" bg="gray.1" px="md">
         <Paper shadow="md" p={30} radius="md" w={420}>
@@ -76,11 +76,16 @@ export default async function RegisterPage({
     );
   }
 
+  if (!invitation || !nextPath) {
+    return <RegisterForm mode="selfService" nextPath="/onboarding" />;
+  }
+
   return (
     <RegisterForm
       invitedEmail={invitation.invitedEmail}
       tenantName={invitation.tenantName}
       nextPath={nextPath}
+      mode="invitation"
     />
   );
 }
