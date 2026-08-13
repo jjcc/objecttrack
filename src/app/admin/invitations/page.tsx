@@ -14,8 +14,13 @@ export default async function TenantInvitationsPage() {
   const { supabase, context } = await requireTenantAdminAccess(
     "tenant.users.invite"
   );
-  const { data, error } = await supabase.rpc("tenant_invitations");
-  if (error) throw new Error(error.message);
+  const [invitationResult, usageResult] = await Promise.all([
+    supabase.rpc("tenant_invitations"),
+    supabase.rpc("current_tenant_usage"),
+  ]);
+  if (invitationResult.error) throw new Error(invitationResult.error.message);
+  if (usageResult.error) throw new Error(usageResult.error.message);
+  const usage = usageResult.data?.[0] ?? null;
   const allowedRoles: TenantRole[] = context.tenantEdition === "simple"
     ? ["member", "owner"]
     : context.tenantRole === "owner"
@@ -31,8 +36,11 @@ export default async function TenantInvitationsPage() {
         </Text>
       </div>
       <InvitationManager
-        invitations={(data ?? []) as TenantInvitation[]}
+        invitations={(invitationResult.data ?? []) as TenantInvitation[]}
         allowedRoles={allowedRoles}
+        activeUsers={Number(usage?.active_users ?? 0)}
+        pendingInvitations={Number(usage?.pending_invitations ?? 0)}
+        maxUsers={usage?.max_users ?? null}
       />
     </Stack>
   );

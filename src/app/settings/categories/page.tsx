@@ -43,6 +43,7 @@ export default function CategorySettingsPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [canManage, setCanManage] = useState(false);
   const [opened, { open, close }] = useDisclosure(false);
   const categorySchema = z.object({ name: z.string().trim().min(1, t("nameRequired")), description: z.string() });
 
@@ -55,10 +56,13 @@ export default function CategorySettingsPage() {
     setIsLoading(true);
     setLoadError(null);
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*")
-      .order("name");
+    const [categoriesResult, productResult] = await Promise.all([
+      supabase.from("categories").select("*").order("name"),
+      supabase.rpc("current_tenant_product_context"),
+    ]);
+    const { data, error } = categoriesResult;
+    const product = productResult.data?.[0];
+    setCanManage(product?.custom_categories ?? false);
 
     if (error) {
       setLoadError(t("loadFailed"));
@@ -164,7 +168,11 @@ export default function CategorySettingsPage() {
               {t("description")}
             </Text>
           </div>
-          <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
+          <Button
+            leftSection={<IconPlus size={16} />}
+            onClick={openCreate}
+            disabled={!canManage}
+          >
             {t("add")}
           </Button>
         </Group>
@@ -176,6 +184,12 @@ export default function CategorySettingsPage() {
             icon={<IconAlertCircle size={18} />}
           >
             {loadError}
+          </Alert>
+        )}
+
+        {!canManage && (
+          <Alert color="blue" title={t("predefinedTitle")}>
+            {t("predefinedDescription")}
           </Alert>
         )}
 
@@ -206,6 +220,7 @@ export default function CategorySettingsPage() {
                           variant="subtle"
                           aria-label={t("editLabel", { name: category.name })}
                           onClick={() => openEdit(category)}
+                          disabled={!canManage}
                         >
                           <IconEdit size={16} />
                         </ActionIcon>
@@ -214,7 +229,7 @@ export default function CategorySettingsPage() {
                           color="red"
                           aria-label={t("deleteLabel", { name: category.name })}
                           loading={deletingId === category.id}
-                          disabled={deletingId !== null}
+                          disabled={!canManage || deletingId !== null}
                           onClick={() => handleDelete(category)}
                         >
                           <IconTrash size={16} />

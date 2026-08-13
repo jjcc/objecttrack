@@ -36,15 +36,31 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [showTenantAdmin, setShowTenantAdmin] = useState(false);
+  const [features, setFeatures] = useState({
+    groups: false,
+    advancedTransfers: false,
+  });
 
   useEffect(() => {
     let cancelled = false;
 
     async function resolveTenantRole() {
       const supabase = getSupabaseClient();
-      const { data } = await supabase.rpc("current_tenant_role");
+      const [roleResult, productResult] = await Promise.all([
+        supabase.rpc("current_tenant_role"),
+        supabase.rpc("current_tenant_product_context"),
+      ]);
       if (!cancelled) {
-        setShowTenantAdmin(data === "admin" || data === "owner");
+        setShowTenantAdmin(
+          roleResult.data === "admin" || roleResult.data === "owner"
+        );
+        const product = productResult.data?.[0];
+        if (product) {
+          setFeatures({
+            groups: product.groups,
+            advancedTransfers: product.advanced_transfers,
+          });
+        }
       }
     }
 
@@ -54,9 +70,14 @@ export function Sidebar() {
     };
   }, []);
 
+  const editionItems = navItems.filter(
+    (item) =>
+      (item.key !== "groups" || features.groups) &&
+      (item.key !== "transfers" || features.advancedTransfers)
+  );
   const visibleItems = showTenantAdmin
-    ? [...navItems, tenantAdminItem]
-    : navItems;
+    ? [...editionItems, tenantAdminItem]
+    : editionItems;
 
   return (
     <ScrollArea>

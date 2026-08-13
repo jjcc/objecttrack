@@ -11,6 +11,8 @@ import {
   Select,
   Button,
   Group,
+  Alert,
+  Text,
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
@@ -38,6 +40,10 @@ export default function ObjectCreatePage() {
   const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>([]);
   const [extraValues, setExtraValues] = useState<Record<string, string>>({});
   const [image, setImage] = useState<File | null>(null);
+  const [usage, setUsage] = useState<{
+    object_count: number;
+    max_objects: number | null;
+  } | null>(null);
   const objectSchema = z.object({
     name: z.string().min(1, t("nameRequired")),
     description: z.string().optional(),
@@ -67,6 +73,18 @@ export default function ObjectCreatePage() {
       setCustomFields(Array.isArray(data?.fields) ? data.fields : []);
     }
     fetchTenantSchema();
+    async function fetchUsage() {
+      const supabase = getSupabaseClient();
+      const { data } = await supabase.rpc("current_tenant_usage");
+      const current = data?.[0];
+      if (current) {
+        setUsage({
+          object_count: Number(current.object_count),
+          max_objects: current.max_objects,
+        });
+      }
+    }
+    void fetchUsage();
   }, []);
 
   const form = useForm<ObjectFormValues>({
@@ -107,7 +125,9 @@ export default function ObjectCreatePage() {
         showNotification({
           color: "red",
           title: t("error"),
-          message: t("createFailed"),
+          message: error.message.includes("quota.objects.exceeded")
+            ? t("objectLimitReached")
+            : t("createFailed"),
         });
         return;
       }
@@ -161,6 +181,20 @@ export default function ObjectCreatePage() {
 
         <Title order={2}>{t("createTitle")}</Title>
 
+        {usage?.max_objects != null && (
+          <Alert
+            color={usage.object_count >= usage.max_objects ? "red" : "blue"}
+            title={t("objectUsage", {
+              count: usage.object_count,
+              limit: usage.max_objects,
+            })}
+          >
+            {usage.object_count >= usage.max_objects
+              ? t("objectLimitReached")
+              : <Text size="sm">{t("objectUsageHelp")}</Text>}
+          </Alert>
+        )}
+
         <Paper withBorder p="md" radius="md" maw={600}>
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack>
@@ -199,7 +233,14 @@ export default function ObjectCreatePage() {
                 onImageChange={setImage}
               />
               <Group>
-                <Button type="submit" loading={isPending}>
+                <Button
+                  type="submit"
+                  loading={isPending}
+                  disabled={
+                    usage?.max_objects != null &&
+                    usage.object_count >= usage.max_objects
+                  }
+                >
                   {t("create")}
                 </Button>
                 <Button

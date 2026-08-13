@@ -41,6 +41,8 @@
       "tenantRole": "Tenant role", "expiresInDays": "Expires in days", "send": "Send invitation",
       "recipient": "Recipient", "role": "Role", "status": "Status", "expires": "Expires", "actions": "Actions",
       "none": "No invitations yet.",
+      "userUsage": "{active} active members and {pending} pending invitations use {limit} available seats.",
+      "userLimitReached": "Revoke a pending invitation or remove a member before inviting someone else.",
       "roles": {"viewer": "Viewer", "member": "Member", "admin": "Admin", "owner": "Owner"},
       "statuses": {"pending": "Pending", "accepted": "Accepted", "revoked": "Revoked", "expired": "Expired"},
       "deliveryStatuses": {"pending": "Pending", "sent": "Sent", "failed": "Failed"}
@@ -55,7 +57,8 @@
       "invalidValues": "Check the invitation values.", "invalidId": "Invitation ID is invalid.",
       "failed": "Invitation operation failed.", "created": "Invitation created and sent.",
       "createdDeliveryFailed": "Invitation created, but email delivery failed.", "resent": "Invitation resent.",
-      "resentDeliveryFailed": "A new invitation token was saved, but email delivery failed.", "revoked": "Invitation revoked."
+      "resentDeliveryFailed": "A new invitation token was saved, but email delivery failed.", "revoked": "Invitation revoked.",
+      "userLimitReached": "This workspace has reached its member limit."
     }
   },
   "Settings": {
@@ -76,7 +79,9 @@
       "updated": "Category updated", "saved": "{name} was saved successfully.",
       "deleteFailed": "Unable to delete category", "deleteFailedMessage": "The category could not be deleted.",
       "deleted": "Category deleted", "deletedMessage": "{name} was deleted.",
-      "editLabel": "Edit {name}", "deleteLabel": "Delete {name}"
+      "editLabel": "Edit {name}", "deleteLabel": "Delete {name}",
+      "predefinedTitle": "Predefined categories",
+      "predefinedDescription": "Simple workspaces use a fixed category list. Custom category management is available in the Full edition."
     },
     "eventTypes": {
       "dashboard": "Dashboard", "settings": "Settings", "title": "Event Types",
@@ -261,6 +266,9 @@
       "error": "Error",
       "success": "Success",
       "createFailed": "Failed to create object.",
+      "objectUsage": "{count} of {limit} objects used",
+      "objectUsageHelp": "The limit is enforced for every object creation path.",
+      "objectLimitReached": "This workspace has reached its object limit.",
       "createSuccess": "Object created successfully.",
       "updateFailed": "Failed to update object.",
       "updateSuccess": "Object updated successfully.",

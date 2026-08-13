@@ -188,6 +188,27 @@ export async function getAuthenticatedAccessContext(
     );
   }
 
+  const entitlements: TenantEntitlements = product
+    ? {
+        maxUsers: product.max_users ?? null,
+        maxObjects: product.max_objects ?? null,
+        customCategories: product.custom_categories,
+        groups: product.groups,
+        advancedTransfers: product.advanced_transfers,
+        reports: product.reports,
+        auditUi: product.audit_ui,
+      }
+    : NO_TENANT_ENTITLEMENTS;
+  const permissions = new Set(permissionsForRoles(roles));
+  if (!entitlements.customCategories) permissions.delete("tenant.categories.manage");
+  if (!entitlements.groups) permissions.delete("tenant.groups.manage");
+  if (!entitlements.advancedTransfers) {
+    permissions.delete("tenant.transfers.participate");
+    permissions.delete("tenant.transfers.manage");
+  }
+  if (!entitlements.reports) permissions.delete("tenant.reports.generate");
+  if (!entitlements.auditUi) permissions.delete("tenant.audit.read");
+
   return {
     userId: user.id,
     tenantId: profileResult.data?.tenant_id ?? null,
@@ -196,20 +217,10 @@ export async function getAuthenticatedAccessContext(
     workspaceKind,
     memberVisibility,
     tenantStatus,
-    entitlements: product
-      ? {
-          maxUsers: product.max_users ?? null,
-          maxObjects: product.max_objects ?? null,
-          customCategories: product.custom_categories,
-          groups: product.groups,
-          advancedTransfers: product.advanced_transfers,
-          reports: product.reports,
-          auditUi: product.audit_ui,
-        }
-      : NO_TENANT_ENTITLEMENTS,
+    entitlements,
     isPlatformOperator,
     roles,
-    permissions: permissionsForRoles(roles),
+    permissions,
   };
 }
 

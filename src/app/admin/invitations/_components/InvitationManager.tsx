@@ -43,10 +43,12 @@ function ActionButton({
   children,
   color,
   variant,
+  disabled,
 }: {
   children: React.ReactNode;
   color?: string;
   variant?: string;
+  disabled?: boolean;
 }) {
   const { pending } = useFormStatus();
   return (
@@ -56,6 +58,7 @@ function ActionButton({
       loading={pending}
       color={color}
       variant={variant}
+      disabled={disabled}
     >
       {children}
     </Button>
@@ -145,9 +148,15 @@ function InvitationRow({ invitation }: { invitation: TenantInvitation }) {
 export function InvitationManager({
   invitations,
   allowedRoles,
+  activeUsers,
+  pendingInvitations,
+  maxUsers,
 }: {
   invitations: TenantInvitation[];
   allowedRoles: TenantRole[];
+  activeUsers: number;
+  pendingInvitations: number;
+  maxUsers: number | null;
 }) {
   const t = useTranslations("Admin.invitationManager");
   const [createState, createAction] = useFormState(
@@ -155,6 +164,8 @@ export function InvitationManager({
     initialState
   );
   const roles = allowedRoles.map((role) => ({ value: role, label: t(`roles.${role}`) }));
+  const reservedUsers = activeUsers + pendingInvitations;
+  const atUserLimit = maxUsers != null && reservedUsers >= maxUsers;
 
   return (
     <Stack gap="lg">
@@ -162,6 +173,16 @@ export function InvitationManager({
         <form action={createAction}>
           <Stack>
             <Title order={3}>{t("createTitle")}</Title>
+            {maxUsers != null && (
+              <Alert color={atUserLimit ? "red" : "blue"}>
+                {t("userUsage", {
+                  active: activeUsers,
+                  pending: pendingInvitations,
+                  limit: maxUsers,
+                })}
+                {atUserLimit && ` ${t("userLimitReached")}`}
+              </Alert>
+            )}
             {createState.status !== "idle" && (
               <Alert
                 color={
@@ -198,7 +219,7 @@ export function InvitationManager({
                 required
               />
             </SimpleGrid>
-            <ActionButton>{t("send")}</ActionButton>
+            <ActionButton disabled={atUserLimit}>{t("send")}</ActionButton>
           </Stack>
         </form>
       </Paper>

@@ -41,6 +41,8 @@
       "tenantRole": "租户角色", "expiresInDays": "有效天数", "send": "发送邀请",
       "recipient": "接收人", "role": "角色", "status": "状态", "expires": "过期时间", "actions": "操作",
       "none": "暂无邀请。",
+      "userUsage": "{active} 名现有成员和 {pending} 个待处理邀请共占用 {limit} 个席位。",
+      "userLimitReached": "请先撤销待处理邀请或移除成员，再邀请其他人。",
       "roles": {"viewer": "查看者", "member": "成员", "admin": "管理员", "owner": "所有者"},
       "statuses": {"pending": "待处理", "accepted": "已接受", "revoked": "已撤销", "expired": "已过期"},
       "deliveryStatuses": {"pending": "待处理", "sent": "已发送", "failed": "失败"}
@@ -55,7 +57,8 @@
       "invalidValues": "请检查邀请信息。", "invalidId": "邀请 ID 无效。",
       "failed": "邀请操作失败。", "created": "邀请已创建并发送。",
       "createdDeliveryFailed": "邀请已创建，但邮件发送失败。", "resent": "邀请已重新发送。",
-      "resentDeliveryFailed": "新的邀请令牌已保存，但邮件发送失败。", "revoked": "邀请已撤销。"
+      "resentDeliveryFailed": "新的邀请令牌已保存，但邮件发送失败。", "revoked": "邀请已撤销。",
+      "userLimitReached": "此工作区已达到成员数量上限。"
     }
   },
   "Settings": {
@@ -76,7 +79,9 @@
       "updated": "类别已更新", "saved": "{name} 已成功保存。",
       "deleteFailed": "无法删除类别", "deleteFailedMessage": "无法删除该类别。",
       "deleted": "类别已删除", "deletedMessage": "{name} 已删除。",
-      "editLabel": "编辑 {name}", "deleteLabel": "删除 {name}"
+      "editLabel": "编辑 {name}", "deleteLabel": "删除 {name}",
+      "predefinedTitle": "预定义类别",
+      "predefinedDescription": "简易版工作区使用固定类别列表。完整版可管理自定义类别。"
     },
     "eventTypes": {
       "dashboard": "控制面板", "settings": "设置", "title": "事件类型",
@@ -261,6 +266,9 @@
       "error": "错误",
       "success": "成功",
       "createFailed": "创建物品失败。",
+      "objectUsage": "已使用 {count}/{limit} 个物品",
+      "objectUsageHelp": "所有物品创建方式都会执行此上限。",
+      "objectLimitReached": "此工作区已达到物品数量上限。",
       "createSuccess": "物品创建成功。",
       "updateFailed": "更新物品失败。",
       "updateSuccess": "物品更新成功。",

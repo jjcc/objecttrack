@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       admin_users: {
@@ -27,6 +52,8 @@ export type Database = {
           description: string | null
           id: number
           name: string
+          system_key: string | null
+          system_managed: boolean
           tenant_id: number
         }
         Insert: {
@@ -34,6 +61,8 @@ export type Database = {
           description?: string | null
           id?: never
           name: string
+          system_key?: string | null
+          system_managed?: boolean
           tenant_id: number
         }
         Update: {
@@ -41,6 +70,8 @@ export type Database = {
           description?: string | null
           id?: never
           name?: string
+          system_key?: string | null
+          system_managed?: boolean
           tenant_id?: number
         }
         Relationships: [
@@ -665,6 +696,16 @@ export type Database = {
         }[]
       }
       current_tenant_role: { Args: never; Returns: string }
+      current_tenant_usage: {
+        Args: never
+        Returns: {
+          active_users: number
+          max_objects: number
+          max_users: number
+          object_count: number
+          pending_invitations: number
+        }[]
+      }
       expire_tenant_report_jobs: {
         Args: never
         Returns: {
@@ -1136,6 +1177,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

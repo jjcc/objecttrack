@@ -109,8 +109,14 @@ export async function createTenantInvitationAction(
           status: "warning",
           message: t("createdDeliveryFailed"),
         };
-  } catch {
-    return { status: "error", message: t("failed") };
+  } catch (error) {
+    return {
+      status: "error",
+      message:
+        error instanceof Error && error.message.includes("quota.users.exceeded")
+          ? t("userLimitReached")
+          : t("failed"),
+    };
   }
 }
 
