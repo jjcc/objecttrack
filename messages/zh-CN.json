@@ -162,7 +162,7 @@
     "success": "成功", "approvedMessage": "转移已批准", "rejectedMessage": "转移已拒绝",
     "approvalFailed": "批准失败", "approveFailedMessage": "无法批准转移。",
     "rejectionFailed": "拒绝失败", "rejectFailedMessage": "无法拒绝转移。",
-    "object": "物品", "requester": "申请人", "currentOwner": "当前所有者", "status": "状态",
+    "object": "物品", "requester": "申请人", "currentOwner": "当前保管人", "status": "状态",
     "requestedAt": "请求时间", "actions": "操作", "approve": "批准", "reject": "拒绝",
     "noTransfers": "未找到转移请求", "rejectTitle": "拒绝转移 #{id}",
     "rejectionReason": "拒绝原因", "rejectionPlaceholder": "输入拒绝此转移的原因",
@@ -170,8 +170,8 @@
     "rejectTransfer": "拒绝转移", "loading": "正在加载……", "notFound": "未找到",
     "notFoundTitle": "未找到转移请求", "backToTransfers": "返回转移列表",
     "transferNumber": "转移 #{id}", "requestNumber": "转移请求 #{id}", "back": "返回",
-    "model": "型号：{model}", "requesterNewOwner": "申请人 / 新所有者",
-    "currentOwnerRecipient": "当前所有者 / 接收人", "reason": "原因", "lastUpdated": "最后更新"
+    "model": "型号：{model}", "requesterNewOwner": "申请人 / 下一位保管人",
+    "currentOwnerRecipient": "当前保管人 / 接收人", "reason": "原因", "lastUpdated": "最后更新"
   },
   "Users": {
     "list": {
@@ -317,7 +317,7 @@
       "imageAlt": "{name}的图片",
       "objectId": "物品 ID",
       "institution": "机构",
-      "owner": "所有者",
+      "owner": "当前保管人",
       "category": "类别",
       "model": "型号",
       "created": "创建时间",
@@ -353,6 +353,7 @@
       "view": "查看物品",
       "edit": "编辑物品",
       "noObjects": "未找到物品",
+      "noVisibleObjects": "当前权限下没有可见物品。",
       "loadFailed": "无法加载物品，请重试。",
       "title": "二维条码",
       "description": "选择一个物品，生成可打开其信息页面的二维条码。",
@@ -366,7 +367,17 @@
     "dashboard": "控制面板",
     "scan": "扫描",
     "title": "扫描二维码",
-    "description": "使用移动浏览器打开物品的二维码图片，或使用设备摄像头扫描 API 链接。"
+    "description": "使用移动浏览器打开物品的二维码图片，或使用设备摄像头扫描 API 链接。",
+    "lookupTitle": "查找当前保管人",
+    "lookupDescription": "输入物品 ID，仅查看当前工作区内该物品的基本信息和当前保管人。",
+    "objectId": "物品 ID",
+    "lookup": "查找保管人",
+    "notFound": "当前工作区内没有与该 ID 匹配的物品。",
+    "object": "物品",
+    "currentHolder": "当前保管人",
+    "unassigned": "未分配",
+    "category": "类别",
+    "model": "型号"
   },
   "Metadata": {
     "title": "物品追踪管理",
@@ -519,6 +530,7 @@
     "sidebar": {
       "dashboard": "控制面板",
       "objects": "物品",
+      "holderLookup": "保管人查找",
       "users": "用户",
       "groups": "群组",
       "transfers": "转移",

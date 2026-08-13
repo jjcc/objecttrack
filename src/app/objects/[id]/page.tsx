@@ -36,6 +36,7 @@ export default function ObjectShowPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [canManageObjects, setCanManageObjects] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -44,7 +45,7 @@ export default function ObjectShowPage() {
       const supabase = getSupabaseClient();
 
       try {
-        const [objectResult, eventsResult] = await Promise.all([
+        const [objectResult, eventsResult, roleResult] = await Promise.all([
           supabase
             .from("objects")
             .select("*, categories!objects_category_tenant_fkey(name)")
@@ -56,7 +57,11 @@ export default function ObjectShowPage() {
             .eq("object_id", Number(id))
             .order("created_at", { ascending: false })
             .limit(50),
+          supabase.rpc("current_tenant_role"),
         ]);
+        setCanManageObjects(
+          roleResult.data === "admin" || roleResult.data === "owner"
+        );
 
         if (objectResult.error || eventsResult.error) {
           setLoadError(t("loadFailed"));
@@ -114,13 +119,15 @@ export default function ObjectShowPage() {
             >
               {t("objectInfo")}
             </Button>
-            <Button
-              leftSection={<IconEdit size={16} />}
-              variant="outline"
-              onClick={() => router.push(`/objects/${id}/edit`)}
-            >
-              {t("edit")}
-            </Button>
+            {canManageObjects ? (
+              <Button
+                leftSection={<IconEdit size={16} />}
+                variant="outline"
+                onClick={() => router.push(`/objects/${id}/edit`)}
+              >
+                {t("edit")}
+              </Button>
+            ) : null}
           </Group>
         </Group>
 

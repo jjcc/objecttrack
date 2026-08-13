@@ -42,11 +42,15 @@ export default function EventsListPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [canRecordEvents, setCanRecordEvents] = useState(false);
   const pageSize = 20;
 
   useEffect(() => {
     async function fetchFilters() {
       const supabase = getSupabaseClient();
+
+      const { data: role } = await supabase.rpc("current_tenant_role");
+      setCanRecordEvents(role === "admin" || role === "owner");
 
       const { data: eventTypes } = await supabase
         .from("event_types")
@@ -115,12 +119,14 @@ export default function EventsListPage() {
 
         <Group justify="space-between">
           <Title order={2}>{t("title")}</Title>
-          <Button
-            leftSection={<IconPlus size={16} />}
-            onClick={() => router.push("/events/create")}
-          >
-            {t("record")}
-          </Button>
+          {canRecordEvents ? (
+            <Button
+              leftSection={<IconPlus size={16} />}
+              onClick={() => router.push("/events/create")}
+            >
+              {t("record")}
+            </Button>
+          ) : null}
         </Group>
 
         <Paper withBorder p="md" radius="md">

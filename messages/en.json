@@ -162,7 +162,7 @@
     "success": "Success", "approvedMessage": "Transfer approved", "rejectedMessage": "Transfer rejected",
     "approvalFailed": "Approval failed", "approveFailedMessage": "Unable to approve transfer.",
     "rejectionFailed": "Rejection failed", "rejectFailedMessage": "Unable to reject transfer.",
-    "object": "Object", "requester": "Requester", "currentOwner": "Current Owner", "status": "Status",
+    "object": "Object", "requester": "Requester", "currentOwner": "Current holder", "status": "Status",
     "requestedAt": "Requested At", "actions": "Actions", "approve": "Approve", "reject": "Reject",
     "noTransfers": "No transfer requests found", "rejectTitle": "Reject transfer #{id}",
     "rejectionReason": "Rejection reason", "rejectionPlaceholder": "Enter a reason for rejecting this transfer",
@@ -170,8 +170,8 @@
     "rejectTransfer": "Reject transfer", "loading": "Loading...", "notFound": "Not Found",
     "notFoundTitle": "Transfer Request Not Found", "backToTransfers": "Back to Transfers",
     "transferNumber": "Transfer #{id}", "requestNumber": "Transfer Request #{id}", "back": "Back",
-    "model": "Model: {model}", "requesterNewOwner": "Requester / New Owner",
-    "currentOwnerRecipient": "Current Owner / Recipient", "reason": "Reason", "lastUpdated": "Last Updated"
+    "model": "Model: {model}", "requesterNewOwner": "Requester / next holder",
+    "currentOwnerRecipient": "Current holder / recipient", "reason": "Reason", "lastUpdated": "Last Updated"
   },
   "Users": {
     "list": {
@@ -317,7 +317,7 @@
       "imageAlt": "{name} image",
       "objectId": "Object ID",
       "institution": "Institution",
-      "owner": "Owner",
+      "owner": "Current holder",
       "category": "Category",
       "model": "Model",
       "created": "Created",
@@ -353,6 +353,7 @@
       "view": "View object",
       "edit": "Edit object",
       "noObjects": "No objects found",
+      "noVisibleObjects": "No objects are visible with your current access.",
       "loadFailed": "Unable to load objects. Please try again.",
       "title": "2D Barcode",
       "description": "Select an object to generate a 2D barcode that opens its object information page.",
@@ -366,7 +367,17 @@
     "dashboard": "Dashboard",
     "scan": "Scan",
     "title": "Scan QR Code",
-    "description": "Use a mobile browser to open an object's QR image, or use the device camera to scan the API link."
+    "description": "Use a mobile browser to open an object's QR image, or use the device camera to scan the API link.",
+    "lookupTitle": "Find the current holder",
+    "lookupDescription": "Enter an object ID to see only its basic identity and current holder within your workspace.",
+    "objectId": "Object ID",
+    "lookup": "Look up holder",
+    "notFound": "No object in your workspace matches that ID.",
+    "object": "Object",
+    "currentHolder": "Current holder",
+    "unassigned": "Unassigned",
+    "category": "Category",
+    "model": "Model"
   },
   "Metadata": {
     "title": "Object Tracking Admin",
@@ -519,6 +530,7 @@
     "sidebar": {
       "dashboard": "Dashboard",
       "objects": "Objects",
+      "holderLookup": "Holder lookup",
       "users": "Users",
       "groups": "Groups",
       "transfers": "Transfers",

@@ -17,7 +17,7 @@ export default function BarcodePage() {
 
         <Title order={2}>{t("title")}</Title>
 
-        <ObjectBarcodeGenerator />
+        <ObjectBarcodeGenerator canManageObjects />
       </Stack>
     </AppShell>
   );

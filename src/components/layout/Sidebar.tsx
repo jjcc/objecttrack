@@ -7,6 +7,7 @@ import {
   IconDashboard,
   IconSettings,
   IconShieldLock,
+  IconScan,
   IconTransfer,
   IconUsers,
 } from "@tabler/icons-react";
@@ -18,6 +19,7 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 const navItems = [
   { key: "dashboard", icon: IconDashboard, href: "/dashboard" },
   { key: "objects", icon: IconBox, href: "/objects" },
+  { key: "holderLookup", icon: IconScan, href: "/scan" },
   { key: "users", icon: IconUsers, href: "/users" },
   { key: "groups", icon: IconCategory, href: "/groups" },
   { key: "transfers", icon: IconTransfer, href: "/transfers" },
@@ -36,6 +38,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [showTenantAdmin, setShowTenantAdmin] = useState(false);
+  const [tenantRole, setTenantRole] = useState<string | null>(null);
   const [features, setFeatures] = useState({
     groups: false,
     advancedTransfers: false,
@@ -54,6 +57,7 @@ export function Sidebar() {
         setShowTenantAdmin(
           roleResult.data === "admin" || roleResult.data === "owner"
         );
+        setTenantRole(roleResult.data);
         const product = productResult.data?.[0];
         if (product) {
           setFeatures({
@@ -72,7 +76,15 @@ export function Sidebar() {
 
   const editionItems = navItems.filter(
     (item) =>
+      (item.key !== "users" ||
+        tenantRole === "admin" ||
+        tenantRole === "owner") &&
+      (item.key !== "settings" ||
+        tenantRole === "admin" ||
+        tenantRole === "owner") &&
+      (item.key !== "events" || tenantRole !== "viewer") &&
       (item.key !== "groups" || features.groups) &&
+      (item.key !== "groups" || tenantRole === "owner") &&
       (item.key !== "transfers" || features.advancedTransfers)
   );
   const visibleItems = showTenantAdmin

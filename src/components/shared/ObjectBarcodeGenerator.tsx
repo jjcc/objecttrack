@@ -19,7 +19,11 @@ import dayjs from "dayjs";
 import { ObjectQrCode } from "@/components/shared/ObjectQrCode";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-export function ObjectBarcodeGenerator() {
+export function ObjectBarcodeGenerator({
+  canManageObjects,
+}: {
+  canManageObjects: boolean;
+}) {
   const t = useTranslations("Barcode.generator");
   const format = useFormatter();
   const router = useRouter();
@@ -124,15 +128,17 @@ export function ObjectBarcodeGenerator() {
                 >
                   <IconEye size={16} />
                 </ActionIcon>
-                <ActionIcon
-                  aria-label={t("edit")}
-                  variant="subtle"
-                  onClick={() =>
-                    router.push(`/objects/${(record as Record<string, unknown>).id}/edit`)
-                  }
-                >
-                  <IconEdit size={16} />
-                </ActionIcon>
+                {canManageObjects ? (
+                  <ActionIcon
+                    aria-label={t("edit")}
+                    variant="subtle"
+                    onClick={() =>
+                      router.push(`/objects/${(record as Record<string, unknown>).id}/edit`)
+                    }
+                  >
+                    <IconEdit size={16} />
+                  </ActionIcon>
+                ) : null}
               </Group>
             ),
           },
@@ -142,7 +148,7 @@ export function ObjectBarcodeGenerator() {
         page={page}
         onPageChange={setPage}
         paginationSize="sm"
-        noRecordsText={t("noObjects")}
+        noRecordsText={t("noVisibleObjects")}
       />
 
       <Paper withBorder p="md" radius="md">

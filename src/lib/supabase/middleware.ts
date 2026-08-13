@@ -1,6 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { AuthorizationError, getAuthenticatedAccessContext } from "@/lib/auth/tenant-context";
+import {
+  AuthorizationError,
+  getAuthenticatedAccessContext,
+  type AccessContext,
+} from "@/lib/auth/tenant-context";
 import type { Database } from "@/types/database";
 
 export async function updateSession(request: NextRequest) {
@@ -63,9 +67,10 @@ export async function updateSession(request: NextRequest) {
   }
 
   let accessError: AuthorizationError | null = null;
+  let accessContext: AccessContext | null = null;
   if (user && !request.nextUrl.pathname.startsWith("/auth/callback")) {
     try {
-      await getAuthenticatedAccessContext(supabase, user);
+      accessContext = await getAuthenticatedAccessContext(supabase, user);
     } catch (error) {
       if (!(error instanceof AuthorizationError)) throw error;
       accessError = error;
@@ -95,6 +100,50 @@ export async function updateSession(request: NextRequest) {
     user &&
     accessError &&
     accessError.code !== "membership_required" &&
+    !isUnauthorizedPage &&
+    !isPublicResource
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/unauthorized";
+    return redirectPreservingCookies(url);
+  }
+
+  const pathname = request.nextUrl.pathname;
+  const canAccessRoute = !accessContext || (() => {
+    const permissions = accessContext.permissions;
+    if (
+      pathname === "/objects/create" ||
+      /^\/objects\/[^/]+\/edit$/.test(pathname) ||
+      pathname === "/events/create" ||
+      pathname === "/barcode"
+    ) {
+      return permissions.has("tenant.objects.manage");
+    }
+    if (pathname.startsWith("/users")) {
+      return permissions.has("tenant.users.read");
+    }
+    if (pathname.startsWith("/groups")) {
+      return permissions.has("tenant.groups.manage");
+    }
+    if (pathname.startsWith("/settings")) {
+      return permissions.has("tenant.admin.access");
+    }
+    if (pathname.startsWith("/transfers")) {
+      return (
+        permissions.has("tenant.transfers.participate") ||
+        permissions.has("tenant.transfers.manage")
+      );
+    }
+    if (pathname.startsWith("/events")) {
+      return accessContext.tenantRole !== "viewer";
+    }
+    return true;
+  })();
+
+  if (
+    user &&
+    accessContext &&
+    !canAccessRoute &&
     !isUnauthorizedPage &&
     !isPublicResource
   ) {

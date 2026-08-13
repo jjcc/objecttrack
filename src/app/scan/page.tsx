@@ -1,6 +1,7 @@
 import { Anchor, Breadcrumbs, Stack, Title, Paper, Text } from "@mantine/core";
 import { AppShell } from "@/components/layout/AppShell";
 import { getTranslations } from "next-intl/server";
+import { HolderLookup } from "@/components/objects/HolderLookup";
 
 export default async function ScanPage() {
   const t = await getTranslations("Scan");
@@ -21,6 +22,7 @@ export default async function ScanPage() {
             </Text>
           </Stack>
         </Paper>
+        <HolderLookup />
       </Stack>
     </AppShell>
   );

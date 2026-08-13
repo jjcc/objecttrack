@@ -633,6 +633,14 @@ export type Database = {
         Args: { p_storage_path: string }
         Returns: boolean
       }
+      can_read_object: {
+        Args: {
+          p_current_holder_id: string
+          p_object_id: number
+          p_tenant_id: number
+        }
+        Returns: boolean
+      }
       can_view_object_image: { Args: { p_name: string }; Returns: boolean }
       claim_tenant_report_jobs: {
         Args: { p_limit?: number }
@@ -751,6 +759,16 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_platform_operator: { Args: never; Returns: boolean }
+      lookup_object_holder: {
+        Args: { p_object_id: number }
+        Returns: {
+          category_name: string
+          current_holder_name: string
+          model: string
+          object_id: number
+          object_name: string
+        }[]
+      }
       migrate_tenant_defaults: {
         Args: { p_target_version: number; p_tenant_id: number }
         Returns: undefined
