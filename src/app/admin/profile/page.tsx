@@ -13,10 +13,16 @@ export default async function TenantAdminProfilePage() {
   const { supabase } = await requireTenantAdminAccess(
     "tenant.settings.update"
   );
-  const { data, error } = await supabase.rpc("tenant_admin_profile");
-  if (error) throw new Error(error.message);
-  const tenant = data?.[0];
+  const [profileResult, usageResult] = await Promise.all([
+    supabase.rpc("tenant_admin_profile"),
+    supabase.rpc("current_tenant_usage"),
+  ]);
+  if (profileResult.error) throw new Error(profileResult.error.message);
+  if (usageResult.error) throw new Error(usageResult.error.message);
+  const tenant = profileResult.data?.[0];
+  const usage = usageResult.data?.[0];
   if (!tenant) throw new Error(t("unavailable"));
+  if (!usage) throw new Error(t("unavailable"));
 
   return (
     <Stack gap="lg">
@@ -26,7 +32,10 @@ export default async function TenantAdminProfilePage() {
           {t("description")}
         </Text>
       </div>
-      <TenantProfileForm tenant={tenant as TenantAdminProfile} />
+      <TenantProfileForm
+        tenant={tenant as TenantAdminProfile}
+        usage={usage}
+      />
     </Stack>
   );
 }

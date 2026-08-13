@@ -2,8 +2,10 @@
 
 import {
   Alert,
+  Badge,
   Checkbox,
   Divider,
+  Group,
   Paper,
   SimpleGrid,
   Stack,
@@ -15,6 +17,7 @@ import {
 import { useFormState } from "react-dom";
 import {
   setTenantStatusAction,
+  upgradeTenantToFullAction,
   updateTenantAction,
   type OpsActionState,
 } from "@/app/ops/actions";
@@ -41,10 +44,23 @@ export type PlatformTenantDetails = {
   initial_owner_status: string | null;
 };
 
+export type PlatformTenantProductContext = {
+  edition: "simple" | "full";
+  workspace_kind: "family" | "business" | "club" | "other";
+  member_visibility: "private" | "shared";
+  active_users: number;
+  pending_invitations: number;
+  max_users: number | null;
+  object_count: number;
+  max_objects: number | null;
+};
+
 export function TenantOperationsForm({
   tenant,
+  product,
 }: {
   tenant: PlatformTenantDetails;
+  product: PlatformTenantProductContext;
 }) {
   const t = useTranslations("Ops.tenantForm");
   const [updateState, updateAction] = useFormState(
@@ -55,11 +71,78 @@ export function TenantOperationsForm({
     setTenantStatusAction,
     initialState
   );
+  const [upgradeState, upgradeAction] = useFormState(
+    upgradeTenantToFullAction,
+    initialState
+  );
   const nextStatus = tenant.status === "active" ? "suspended" : "active";
   const statusVerb = t(`verbs.${nextStatus}`);
 
   return (
     <Stack gap="lg">
+      <Paper withBorder p="lg" radius="md">
+        <Stack>
+          <Group justify="space-between">
+            <Title order={3}>{t("editionTitle")}</Title>
+            <Badge
+              size="lg"
+              color={product.edition === "full" ? "blue" : "gray"}
+            >
+              {t(`editions.${product.edition}`)}
+            </Badge>
+          </Group>
+          <Text size="sm" c="dimmed">
+            {t("editionSummary", {
+              kind: t(`workspaceKinds.${product.workspace_kind}`),
+              visibility: t(`visibilities.${product.member_visibility}`),
+            })}
+          </Text>
+          <SimpleGrid cols={{ base: 1, sm: 2 }}>
+            <Text size="sm">
+              {t("memberUsage", {
+                used: product.active_users + product.pending_invitations,
+                limit: product.max_users ?? t("unlimited"),
+              })}
+            </Text>
+            <Text size="sm">
+              {t("objectUsage", {
+                used: product.object_count,
+                limit: product.max_objects ?? t("unlimited"),
+              })}
+            </Text>
+          </SimpleGrid>
+          {product.edition === "simple" ? (
+            <form action={upgradeAction}>
+              <Stack>
+                {upgradeState.status !== "idle" && (
+                  <Alert
+                    color={upgradeState.status === "error" ? "red" : "green"}
+                  >
+                    {upgradeState.message}
+                  </Alert>
+                )}
+                <Text size="sm">{t("upgradeDescription")}</Text>
+                <input type="hidden" name="tenantId" value={tenant.id} />
+                <Checkbox
+                  name="confirmation"
+                  value="confirmed"
+                  label={t("upgradeConfirmation")}
+                  required
+                />
+                <SubmitButton
+                  idleLabel={t("upgrade")}
+                  pendingLabel={t("upgrading")}
+                />
+              </Stack>
+            </form>
+          ) : (
+            <Text size="sm" c="dimmed">
+              {t("fullDescription")}
+            </Text>
+          )}
+        </Stack>
+      </Paper>
+
       <Paper withBorder p="lg" radius="md">
         <form action={updateAction}>
           <Stack>
@@ -67,7 +150,11 @@ export function TenantOperationsForm({
             {updateState.status !== "idle" && (
               <Alert
                 color={updateState.status === "error" ? "red" : "green"}
-                title={updateState.status === "error" ? t("updateFailed") : t("updated")}
+                title={
+                  updateState.status === "error"
+                    ? t("updateFailed")
+                    : t("updated")
+                }
               >
                 {updateState.message}
               </Alert>

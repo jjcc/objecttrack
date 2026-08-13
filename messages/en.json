@@ -21,6 +21,15 @@
     },
     "profileForm": {
       "title": "Tenant profile and settings", "updateFailed": "Update failed", "updated": "Updated",
+      "productTitle": "Workspace edition", "editions": {"simple": "Simple", "full": "Full"},
+      "memberUsage": "Member seats in use", "objectUsage": "Tracked objects", "unlimited": "Unlimited",
+      "featuresTitle": "Feature availability", "included": "Included", "fullOnly": "Full only",
+      "features": {"customCategories": "Custom categories", "groups": "Groups", "advancedTransfers": "Advanced transfers", "reports": "Reports", "audit": "Audit interface"},
+      "simpleExplanation": "Full-only controls are hidden elsewhere so unavailable actions do not fail unexpectedly. A platform operator can upgrade this workspace without moving its data.",
+      "workspaceTitle": "Workspace preferences", "workspaceDescription": "These settings describe the workspace and control whether members see only their own objects or the shared workspace inventory.",
+      "workspaceKind": "Workspace kind", "workspaceKinds": {"family": "Family", "business": "Business", "club": "Club", "other": "Other"},
+      "memberVisibility": "Member visibility", "visibilityDescription": "Private limits members to their assigned objects; shared lets members view the workspace inventory.",
+      "visibilities": {"private": "Private", "shared": "Shared"}, "saveWorkspace": "Save workspace preferences",
       "institutionName": "Institution name", "description": "Description", "address": "Address",
       "contact": "Contact", "phone": "Phone", "email": "Institution email", "website": "Website",
       "socialMedia": "Social media", "jsonObject": "JSON object",
@@ -51,7 +60,7 @@
       "invalidValues": "Check the submitted values.", "socialObject": "Social media must be a JSON object.",
       "socialJson": "Social media must be valid JSON.", "failed": "The operation failed.",
       "profileUpdated": "Tenant profile and settings updated.", "roleUpdated": "Member role updated.",
-      "memberRemoved": "Tenant membership removed."
+      "memberRemoved": "Tenant membership removed.", "workspaceUpdated": "Workspace preferences updated."
     },
     "invitationActions": {
       "invalidValues": "Check the invitation values.", "invalidId": "Invitation ID is invalid.",
@@ -623,6 +632,13 @@
     },
     "tenantForm": {
       "profileTitle": "Tenant profile",
+      "editionTitle": "Workspace edition", "editions": {"simple": "Simple", "full": "Full"},
+      "editionSummary": "{kind} workspace · {visibility} member visibility", "workspaceKinds": {"family": "Family", "business": "Business", "club": "Club", "other": "Other"},
+      "visibilities": {"private": "Private", "shared": "Shared"}, "unlimited": "Unlimited",
+      "memberUsage": "Member seats: {used} / {limit}", "objectUsage": "Objects: {used} / {limit}",
+      "upgradeDescription": "Upgrade in place to enable Full roles and features immediately. Existing users, objects, categories, events, transfers, invitations, history, images, and QR identifiers are preserved.",
+      "upgradeConfirmation": "I confirm this irreversible Simple-to-Full upgrade.", "upgrade": "Upgrade to Full", "upgrading": "Upgrading…",
+      "fullDescription": "Full entitlements are active. Automated downgrade is intentionally unavailable.",
       "updateFailed": "Update failed",
       "updated": "Updated",
       "institutionName": "Institution name",
@@ -654,7 +670,8 @@
       "updateFailed": "The tenant profile could not be updated.",
       "updated": "Tenant profile updated.",
       "statusFailed": "The tenant status could not be changed.",
-      "statuses": { "active": "Tenant activated.", "suspended": "Tenant suspended." }
+      "statuses": { "active": "Tenant activated.", "suspended": "Tenant suspended." },
+      "upgradeFailed": "The workspace could not be upgraded.", "upgraded": "Workspace upgraded to Full."
     }
   }
 }

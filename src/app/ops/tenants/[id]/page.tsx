@@ -15,6 +15,7 @@ import {
 import {
   TenantOperationsForm,
   type PlatformTenantDetails,
+  type PlatformTenantProductContext,
 } from "@/app/ops/_components/TenantOperationsForm";
 import { requirePlatformAccess } from "@/lib/ops/access";
 import { getTranslations } from "next-intl/server";
@@ -33,13 +34,16 @@ export default async function TenantOperationsPage({
   if (!Number.isSafeInteger(tenantId) || tenantId <= 0) notFound();
 
   const { supabase } = await requirePlatformAccess("platform.tenants.update");
-  const { data, error } = await supabase.rpc("platform_tenant", {
-    p_tenant_id: tenantId,
-  });
-  if (error) throw new Error(error.message);
+  const [tenantResult, productResult] = await Promise.all([
+    supabase.rpc("platform_tenant", { p_tenant_id: tenantId }),
+    supabase.rpc("platform_tenant_product_context", { p_tenant_id: tenantId }),
+  ]);
+  if (tenantResult.error) throw new Error(tenantResult.error.message);
+  if (productResult.error) throw new Error(productResult.error.message);
 
-  const tenant = data?.[0];
-  if (!tenant) notFound();
+  const tenant = tenantResult.data?.[0];
+  const product = productResult.data?.[0];
+  if (!tenant || !product) notFound();
 
   return (
     <Stack gap="lg">
@@ -94,7 +98,10 @@ export default async function TenantOperationsPage({
         </Paper>
       </SimpleGrid>
 
-      <TenantOperationsForm tenant={tenant as PlatformTenantDetails} />
+      <TenantOperationsForm
+        tenant={tenant as PlatformTenantDetails}
+        product={product as PlatformTenantProductContext}
+      />
     </Stack>
   );
 }

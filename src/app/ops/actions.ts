@@ -41,6 +41,11 @@ const statusSchema = z.object({
   confirmation: z.literal("confirmed"),
 });
 
+const upgradeSchema = z.object({
+  tenantId: z.coerce.number().int().positive(),
+  confirmation: z.literal("confirmed"),
+});
+
 function formValue(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
@@ -179,4 +184,32 @@ export async function setTenantStatusAction(
     status: "success",
     message: t(`statuses.${parsed.data.status}`),
   };
+}
+
+export async function upgradeTenantToFullAction(
+  _previousState: OpsActionState,
+  formData: FormData
+): Promise<OpsActionState> {
+  const t = await getTranslations("Ops.actions");
+  const parsed = upgradeSchema.safeParse({
+    tenantId: formValue(formData, "tenantId"),
+    confirmation: formValue(formData, "confirmation"),
+  });
+  if (!parsed.success) {
+    return { status: "error", message: t("invalidValues") };
+  }
+
+  try {
+    const { supabase } = await requirePlatformAccess("platform.tenants.update");
+    const { error } = await supabase.rpc("upgrade_tenant_to_full", {
+      p_tenant_id: parsed.data.tenantId,
+    });
+    if (error) throw new Error(error.message);
+  } catch {
+    return { status: "error", message: t("upgradeFailed") };
+  }
+
+  revalidatePath("/ops");
+  revalidatePath(`/ops/tenants/${parsed.data.tenantId}`);
+  return { status: "success", message: t("upgraded") };
 }

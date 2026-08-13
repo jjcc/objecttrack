@@ -26,6 +26,11 @@ const profileSchema = z.object({
   publicObjectInfo: z.boolean(),
 });
 
+const workspaceSchema = z.object({
+  workspaceKind: z.enum(["family", "business", "club", "other"]),
+  memberVisibility: z.enum(["private", "shared"]),
+});
+
 const roleSchema = z.object({
   userId: z.string().uuid(),
   tenantRole: z.enum(["viewer", "member", "admin", "owner"]),
@@ -97,6 +102,37 @@ export async function updateCurrentTenantProfileAction(
   revalidatePath("/admin");
   revalidatePath("/admin/profile");
   return { status: "success", message: t("profileUpdated") };
+}
+
+export async function updateCurrentTenantWorkspaceAction(
+  _previousState: TenantAdminActionState,
+  formData: FormData
+): Promise<TenantAdminActionState> {
+  const t = await getTranslations("Admin.actions");
+  const parsed = workspaceSchema.safeParse({
+    workspaceKind: formValue(formData, "workspaceKind"),
+    memberVisibility: formValue(formData, "memberVisibility"),
+  });
+  if (!parsed.success) {
+    return { status: "error", message: t("invalidValues") };
+  }
+
+  try {
+    const { supabase } = await requireTenantAdminAccess(
+      "tenant.settings.update"
+    );
+    const { error } = await supabase.rpc("update_current_tenant_workspace", {
+      p_workspace_kind: parsed.data.workspaceKind,
+      p_member_visibility: parsed.data.memberVisibility,
+    });
+    if (error) throw new Error(error.message);
+  } catch {
+    return { status: "error", message: t("failed") };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/profile");
+  return { status: "success", message: t("workspaceUpdated") };
 }
 
 export async function updateTenantMemberRoleAction(

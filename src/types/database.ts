@@ -844,6 +844,25 @@ export type Database = {
           website: string
         }[]
       }
+      platform_tenant_product_context: {
+        Args: { p_tenant_id: number }
+        Returns: {
+          active_users: number
+          advanced_transfers: boolean
+          audit_ui: boolean
+          custom_categories: boolean
+          edition: string
+          groups: boolean
+          max_objects: number
+          max_users: number
+          member_visibility: string
+          object_count: number
+          pending_invitations: number
+          reports: boolean
+          tenant_id: number
+          workspace_kind: string
+        }[]
+      }
       platform_tenants: {
         Args: { p_search?: string }
         Returns: {
@@ -1034,6 +1053,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_current_tenant_workspace: {
+        Args: { p_member_visibility: string; p_workspace_kind: string }
+        Returns: undefined
+      }
       update_own_profile: {
         Args: {
           p_city?: string
@@ -1066,6 +1089,14 @@ export type Database = {
       update_tenant_member_role: {
         Args: { p_tenant_role: string; p_user_id: string }
         Returns: undefined
+      }
+      upgrade_tenant_to_full: {
+        Args: { p_tenant_id: number }
+        Returns: {
+          edition: string
+          tenant_id: number
+          upgraded: boolean
+        }[]
       }
     }
     Enums: {

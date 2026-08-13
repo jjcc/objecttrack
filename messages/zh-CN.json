@@ -21,6 +21,15 @@
     },
     "profileForm": {
       "title": "租户资料与设置", "updateFailed": "更新失败", "updated": "已更新",
+      "productTitle": "工作区版本", "editions": {"simple": "简易版", "full": "完整版"},
+      "memberUsage": "已用成员席位", "objectUsage": "追踪物品", "unlimited": "无限制",
+      "featuresTitle": "功能可用性", "included": "已包含", "fullOnly": "仅完整版",
+      "features": {"customCategories": "自定义类别", "groups": "群组", "advancedTransfers": "高级转移", "reports": "报告", "audit": "审计界面"},
+      "simpleExplanation": "其他页面会隐藏仅完整版可用的控件，避免不可用操作意外失败。平台运营人员可升级此工作区，无需迁移数据。",
+      "workspaceTitle": "工作区偏好", "workspaceDescription": "这些设置描述工作区，并控制成员仅查看自己的物品还是共享工作区库存。",
+      "workspaceKind": "工作区类型", "workspaceKinds": {"family": "家庭", "business": "企业", "club": "社团", "other": "其他"},
+      "memberVisibility": "成员可见性", "visibilityDescription": "私有模式仅显示分配给成员的物品；共享模式允许成员查看工作区库存。",
+      "visibilities": {"private": "私有", "shared": "共享"}, "saveWorkspace": "保存工作区偏好",
       "institutionName": "机构名称", "description": "描述", "address": "地址",
       "contact": "联系人", "phone": "电话", "email": "机构邮箱", "website": "网站",
       "socialMedia": "社交媒体", "jsonObject": "JSON 对象",
@@ -51,7 +60,7 @@
       "invalidValues": "请检查提交的值。", "socialObject": "社交媒体信息必须是 JSON 对象。",
       "socialJson": "社交媒体信息必须是有效的 JSON。", "failed": "操作失败。",
       "profileUpdated": "租户资料和设置已更新。", "roleUpdated": "成员角色已更新。",
-      "memberRemoved": "租户成员资格已移除。"
+      "memberRemoved": "租户成员资格已移除。", "workspaceUpdated": "工作区偏好已更新。"
     },
     "invitationActions": {
       "invalidValues": "请检查邀请信息。", "invalidId": "邀请 ID 无效。",
@@ -623,6 +632,13 @@
     },
     "tenantForm": {
       "profileTitle": "租户资料",
+      "editionTitle": "工作区版本", "editions": {"simple": "简易版", "full": "完整版"},
+      "editionSummary": "{kind}工作区 · 成员可见性为{visibility}", "workspaceKinds": {"family": "家庭", "business": "企业", "club": "社团", "other": "其他"},
+      "visibilities": {"private": "私有", "shared": "共享"}, "unlimited": "无限制",
+      "memberUsage": "成员席位：{used} / {limit}", "objectUsage": "物品：{used} / {limit}",
+      "upgradeDescription": "原地升级后将立即启用完整版角色和功能。现有用户、物品、类别、事件、转移、邀请、历史、图片和二维码标识符都会保留。",
+      "upgradeConfirmation": "我确认执行不可逆的简易版到完整版升级。", "upgrade": "升级到完整版", "upgrading": "正在升级……",
+      "fullDescription": "完整版权益已启用。系统有意不提供自动降级。",
       "updateFailed": "更新失败",
       "updated": "已更新",
       "institutionName": "机构名称",
@@ -654,7 +670,8 @@
       "updateFailed": "无法更新租户资料。",
       "updated": "租户资料已更新。",
       "statusFailed": "无法更改租户状态。",
-      "statuses": { "active": "租户已启用。", "suspended": "租户已停用。" }
+      "statuses": { "active": "租户已启用。", "suspended": "租户已停用。" },
+      "upgradeFailed": "无法升级工作区。", "upgraded": "工作区已升级到完整版。"
     }
   }
 }
