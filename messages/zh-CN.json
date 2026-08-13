@@ -17,7 +17,7 @@
     "membersTable": {
       "member": "成员", "title": "职务", "tenantRole": "租户角色", "removeMembership": "移除成员资格",
       "save": "保存", "confirm": "确认", "remove": "移除",
-      "roles": {"member": "成员", "admin": "管理员", "owner": "所有者"}
+      "roles": {"viewer": "查看者", "member": "成员", "admin": "管理员", "owner": "所有者"}
     },
     "profileForm": {
       "title": "租户资料与设置", "updateFailed": "更新失败", "updated": "已更新",
@@ -41,7 +41,7 @@
       "tenantRole": "租户角色", "expiresInDays": "有效天数", "send": "发送邀请",
       "recipient": "接收人", "role": "角色", "status": "状态", "expires": "过期时间", "actions": "操作",
       "none": "暂无邀请。",
-      "roles": {"member": "成员", "admin": "管理员", "owner": "所有者"},
+      "roles": {"viewer": "查看者", "member": "成员", "admin": "管理员", "owner": "所有者"},
       "statuses": {"pending": "待处理", "accepted": "已接受", "revoked": "已撤销", "expired": "已过期"},
       "deliveryStatuses": {"pending": "待处理", "sent": "已发送", "failed": "失败"}
     },

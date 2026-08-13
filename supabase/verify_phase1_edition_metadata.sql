@@ -118,11 +118,11 @@ BEGIN
     RAISE EXCEPTION 'Simple tenant received a Full entitlement';
   END IF;
 
-  v_permission_before := public.has_permission('tenant.data.read');
+  v_permission_before := public.has_permission('tenant.objects.read_assigned');
   UPDATE public.tenant
   SET workspace_kind = 'club', member_visibility = 'shared'
   WHERE id = 971000002;
-  IF public.has_permission('tenant.data.read') IS DISTINCT FROM v_permission_before THEN
+  IF public.has_permission('tenant.objects.read_assigned') IS DISTINCT FROM v_permission_before THEN
     RAISE EXCEPTION 'Workspace kind or visibility changed role authorization';
   END IF;
 
@@ -189,4 +189,3 @@ RESET ROLE;
 
 SELECT 'phase 1 edition metadata verification passed' AS result;
 ROLLBACK;
-

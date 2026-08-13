@@ -5,11 +5,15 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AuthorizationError } from "@/lib/auth/tenant-context";
 import { requireTenantAdminAccess } from "@/lib/tenant-admin/access";
 import { getTranslations } from "next-intl/server";
+import type { Permission } from "@/lib/auth/permissions";
 
 const adminLinks = [
-  { href: "/admin", key: "overview" }, { href: "/admin/profile", key: "profile" },
-  { href: "/admin/members", key: "members" }, { href: "/admin/invitations", key: "invitations" },
-  { href: "/admin/reports", key: "reports" }, { href: "/admin/audit", key: "audit" },
+  { href: "/admin", key: "overview", permission: "tenant.admin.access" },
+  { href: "/admin/profile", key: "profile", permission: "tenant.settings.update" },
+  { href: "/admin/members", key: "members", permission: "tenant.users.roles.update" },
+  { href: "/admin/invitations", key: "invitations", permission: "tenant.users.invite" },
+  { href: "/admin/reports", key: "reports", permission: "tenant.reports.generate" },
+  { href: "/admin/audit", key: "audit", permission: "tenant.audit.read" },
 ] as const;
 
 export default async function TenantAdminLayout({
@@ -18,21 +22,21 @@ export default async function TenantAdminLayout({
   children: React.ReactNode;
 }) {
   const t = await getTranslations("Admin.nav");
-  let authorized = false;
+  let permissions: ReadonlySet<Permission> | null = null;
   try {
-    await requireTenantAdminAccess("tenant.settings.update");
-    authorized = true;
+    const { context } = await requireTenantAdminAccess("tenant.admin.access");
+    permissions = context.permissions;
   } catch (error) {
     if (!(error instanceof AuthorizationError)) throw error;
   }
 
-  if (!authorized) redirect("/unauthorized");
+  if (!permissions) redirect("/unauthorized");
 
   return (
     <AppShell>
       <Stack gap="lg">
         <Group gap="lg">
-          {adminLinks.map((link) => (
+          {adminLinks.filter((link) => permissions.has(link.permission)).map((link) => (
             <Anchor component={Link} href={link.href} key={link.href}>
               {t(link.key)}
             </Anchor>

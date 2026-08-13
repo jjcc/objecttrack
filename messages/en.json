@@ -17,7 +17,7 @@
     "membersTable": {
       "member": "Member", "title": "Title", "tenantRole": "Tenant role", "removeMembership": "Remove membership",
       "save": "Save", "confirm": "Confirm", "remove": "Remove",
-      "roles": {"member": "Member", "admin": "Admin", "owner": "Owner"}
+      "roles": {"viewer": "Viewer", "member": "Member", "admin": "Admin", "owner": "Owner"}
     },
     "profileForm": {
       "title": "Tenant profile and settings", "updateFailed": "Update failed", "updated": "Updated",
@@ -41,7 +41,7 @@
       "tenantRole": "Tenant role", "expiresInDays": "Expires in days", "send": "Send invitation",
       "recipient": "Recipient", "role": "Role", "status": "Status", "expires": "Expires", "actions": "Actions",
       "none": "No invitations yet.",
-      "roles": {"member": "Member", "admin": "Admin", "owner": "Owner"},
+      "roles": {"viewer": "Viewer", "member": "Member", "admin": "Admin", "owner": "Owner"},
       "statuses": {"pending": "Pending", "accepted": "Accepted", "revoked": "Revoked", "expired": "Expired"},
       "deliveryStatuses": {"pending": "Pending", "sent": "Sent", "failed": "Failed"}
     },

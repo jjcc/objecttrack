@@ -5,6 +5,7 @@ import {
 } from "@/app/admin/_components/TenantMembersTable";
 import { requireTenantAdminAccess } from "@/lib/tenant-admin/access";
 import { getTranslations } from "next-intl/server";
+import type { TenantRole } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,11 @@ export default async function TenantMembersPage() {
   );
   const { data, error } = await supabase.rpc("tenant_members");
   if (error) throw new Error(error.message);
+  const allowedRoles: TenantRole[] = context.tenantEdition === "simple"
+    ? ["member", "owner"]
+    : context.tenantRole === "owner"
+      ? ["viewer", "member", "admin", "owner"]
+      : ["viewer", "member", "admin"];
 
   return (
     <Stack gap="lg">
@@ -28,6 +34,7 @@ export default async function TenantMembersPage() {
         members={(data ?? []) as TenantMember[]}
         actorRole={context.tenantRole === "owner" ? "owner" : "admin"}
         actorId={context.userId}
+        allowedRoles={allowedRoles}
       />
     </Stack>
   );

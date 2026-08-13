@@ -5,6 +5,7 @@ import {
 } from "@/app/admin/invitations/_components/InvitationManager";
 import { requireTenantAdminAccess } from "@/lib/tenant-admin/access";
 import { getTranslations } from "next-intl/server";
+import type { TenantRole } from "@/lib/auth/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,11 @@ export default async function TenantInvitationsPage() {
   );
   const { data, error } = await supabase.rpc("tenant_invitations");
   if (error) throw new Error(error.message);
+  const allowedRoles: TenantRole[] = context.tenantEdition === "simple"
+    ? ["member", "owner"]
+    : context.tenantRole === "owner"
+      ? ["viewer", "member", "admin", "owner"]
+      : ["viewer", "member", "admin"];
 
   return (
     <Stack gap="lg">
@@ -26,7 +32,7 @@ export default async function TenantInvitationsPage() {
       </div>
       <InvitationManager
         invitations={(data ?? []) as TenantInvitation[]}
-        actorRole={context.tenantRole === "owner" ? "owner" : "admin"}
+        allowedRoles={allowedRoles}
       />
     </Stack>
   );

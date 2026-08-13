@@ -15,7 +15,7 @@ export type InvitationActionState = {
 
 const createSchema = z.object({
   email: z.string().trim().email(),
-  intendedRole: z.enum(["member", "admin", "owner"]),
+  intendedRole: z.enum(["viewer", "member", "admin", "owner"]),
   expiresInDays: z.coerce.number().int().min(1).max(30),
 });
 

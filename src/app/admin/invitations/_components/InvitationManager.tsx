@@ -22,6 +22,7 @@ import {
   revokeTenantInvitationAction,
   type InvitationActionState,
 } from "@/app/admin/invitations/actions";
+import type { TenantRole } from "@/lib/auth/permissions";
 
 const initialState: InvitationActionState = { status: "idle", message: "" };
 
@@ -99,7 +100,7 @@ function InvitationRow({ invitation }: { invitation: TenantInvitation }) {
           </Alert>
         )}
       </Table.Td>
-      <Table.Td>{invitation.intended_role === "member" || invitation.intended_role === "admin" || invitation.intended_role === "owner" ? t(`roles.${invitation.intended_role}`) : invitation.intended_role}</Table.Td>
+      <Table.Td>{invitation.intended_role === "viewer" || invitation.intended_role === "member" || invitation.intended_role === "admin" || invitation.intended_role === "owner" ? t(`roles.${invitation.intended_role}`) : invitation.intended_role}</Table.Td>
       <Table.Td>
         <Badge
           color={
@@ -143,21 +144,17 @@ function InvitationRow({ invitation }: { invitation: TenantInvitation }) {
 
 export function InvitationManager({
   invitations,
-  actorRole,
+  allowedRoles,
 }: {
   invitations: TenantInvitation[];
-  actorRole: "admin" | "owner";
+  allowedRoles: TenantRole[];
 }) {
   const t = useTranslations("Admin.invitationManager");
   const [createState, createAction] = useFormState(
     createTenantInvitationAction,
     initialState
   );
-  const roleValues: Array<"member" | "admin" | "owner"> =
-    actorRole === "owner"
-      ? ["member", "admin", "owner"]
-      : ["member", "admin"];
-  const roles = roleValues.map((role) => ({ value: role, label: t(`roles.${role}`) }));
+  const roles = allowedRoles.map((role) => ({ value: role, label: t(`roles.${role}`) }));
 
   return (
     <Stack gap="lg">

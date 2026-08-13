@@ -18,6 +18,7 @@ import {
   updateTenantMemberRoleAction,
   type TenantAdminActionState,
 } from "@/app/admin/actions";
+import type { TenantRole } from "@/lib/auth/permissions";
 
 const initialState: TenantAdminActionState = { status: "idle", message: "" };
 
@@ -34,13 +35,15 @@ export type TenantMember = {
 function PendingButton({
   children,
   color,
+  disabled,
 }: {
   children: React.ReactNode;
   color?: string;
+  disabled?: boolean;
 }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="xs" loading={pending} color={color}>
+    <Button type="submit" size="xs" loading={pending} color={color} disabled={disabled}>
       {children}
     </Button>
   );
@@ -50,10 +53,12 @@ function MemberRow({
   member,
   actorRole,
   actorId,
+  allowedRoles,
 }: {
   member: TenantMember;
   actorRole: "admin" | "owner";
   actorId: string;
+  allowedRoles: TenantRole[];
 }) {
   const t = useTranslations("Admin.membersTable");
   const [roleState, roleAction] = useFormState(
@@ -64,12 +69,12 @@ function MemberRow({
     removeTenantMemberAction,
     initialState
   );
-  const roleValues: Array<"member" | "admin" | "owner"> =
-    actorRole === "owner"
-      ? ["member", "admin", "owner"]
-      : ["member", "admin"];
+  const roleValues = allowedRoles.includes(member.tenant_role as TenantRole)
+    ? allowedRoles
+    : [...allowedRoles, member.tenant_role as TenantRole];
   const roles = roleValues.map((role) => ({ value: role, label: t(`roles.${role}`) }));
   const isSelf = member.id === actorId;
+  const ownerProtected = actorRole !== "owner" && member.tenant_role === "owner";
 
   return (
     <Table.Tr>
@@ -109,7 +114,7 @@ function MemberRow({
               size="xs"
               disabled={
                 isSelf ||
-                (actorRole !== "owner" && member.tenant_role === "owner")
+                ownerProtected
               }
             />
             <PendingButton>{t("save")}</PendingButton>
@@ -125,10 +130,12 @@ function MemberRow({
               value="confirmed"
               label={t("confirm")}
               size="xs"
-              disabled={isSelf}
+              disabled={isSelf || ownerProtected}
               required
             />
-            <PendingButton color="red">{t("remove")}</PendingButton>
+            <PendingButton color="red" disabled={isSelf || ownerProtected}>
+              {t("remove")}
+            </PendingButton>
           </Stack>
         </form>
       </Table.Td>
@@ -140,10 +147,12 @@ export function TenantMembersTable({
   members,
   actorRole,
   actorId,
+  allowedRoles,
 }: {
   members: TenantMember[];
   actorRole: "admin" | "owner";
   actorId: string;
+  allowedRoles: TenantRole[];
 }) {
   const t = useTranslations("Admin.membersTable");
   return (
@@ -163,6 +172,7 @@ export function TenantMembersTable({
                 member={member}
                 actorRole={actorRole}
                 actorId={actorId}
+                allowedRoles={allowedRoles}
               />
             ))}
           </Table.Tbody>

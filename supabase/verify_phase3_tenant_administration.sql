@@ -86,17 +86,18 @@ BEGIN
     RAISE EXCEPTION 'Admin member list exposed another tenant';
   END IF;
 
-  PERFORM public.update_current_tenant_profile(
-    'Phase 3 tenant A updated',
-    'Updated and audited',
-    '300 Admin Street',
-    'Admin Contact',
-    '+1 555 0300',
-    'phase3@example.test',
-    'https://phase3.example.test',
-    '{"linkedin":"https://linkedin.example.test/phase3"}'::jsonb,
-    false
-  );
+  v_denied := false;
+  BEGIN
+    PERFORM public.update_current_tenant_profile(
+      'Forged admin update', NULL, NULL, NULL, NULL, NULL, NULL,
+      '{}'::jsonb, true
+    );
+  EXCEPTION WHEN sqlstate '42501' THEN
+    v_denied := true;
+  END;
+  IF NOT v_denied THEN
+    RAISE EXCEPTION 'Tenant Admin updated owner-only tenant settings';
+  END IF;
 
   PERFORM public.update_tenant_member_role(
     '93000000-0000-4000-8000-000000000004',
@@ -170,6 +171,18 @@ DECLARE
   v_denied boolean := false;
   v_rows bigint;
 BEGIN
+  PERFORM public.update_current_tenant_profile(
+    'Phase 3 tenant A updated',
+    'Updated and audited',
+    '300 Owner Street',
+    'Owner Contact',
+    '+1 555 0300',
+    'phase3@example.test',
+    'https://phase3.example.test',
+    '{"linkedin":"https://linkedin.example.test/phase3"}'::jsonb,
+    false
+  );
+
   PERFORM public.update_tenant_member_role(
     '93000000-0000-4000-8000-000000000002',
     'admin'

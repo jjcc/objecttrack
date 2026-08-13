@@ -594,6 +594,10 @@ export type Database = {
         Args: { p_report_job_id: string }
         Returns: string
       }
+      can_assign_tenant_role: {
+        Args: { p_tenant_id: number; p_tenant_role: string }
+        Returns: boolean
+      }
       can_download_tenant_report: {
         Args: { p_storage_path: string }
         Returns: boolean

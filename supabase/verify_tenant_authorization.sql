@@ -172,15 +172,16 @@ begin
     raise exception 'Member unexpectedly received an elevated role';
   end if;
 
-  if not public.has_permission('tenant.data.read')
-     or not public.has_permission('tenant.users.read') then
+  if not public.has_permission('tenant.objects.read_assigned')
+     or not public.has_permission('tenant.transfers.participate') then
     raise exception 'Member is missing a tenant read permission';
   end if;
 
   if public.has_permission('tenant.settings.update')
      or public.has_permission('tenant.users.invite')
      or public.has_permission('tenant.users.roles.update')
-     or public.has_permission('tenant.data.update')
+     or public.has_permission('tenant.objects.manage')
+     or public.has_permission('tenant.users.read')
      or public.has_permission('tenant.reports.generate')
      or public.has_permission('platform.tenants.create')
      or public.has_permission('platform.tenants.suspend') then
@@ -327,18 +328,19 @@ begin
     raise exception 'Tenant admin role or tenant context is incorrect';
   end if;
 
-  if not public.has_permission('tenant.settings.update')
-     or not public.has_permission('tenant.data.read')
+  if not public.has_permission('tenant.admin.access')
+     or not public.has_permission('tenant.objects.read_all')
      or not public.has_permission('tenant.users.read')
      or not public.has_permission('tenant.users.invite')
      or not public.has_permission('tenant.users.roles.update')
-     or not public.has_permission('tenant.data.update')
-     or not public.has_permission('tenant.reports.generate') then
+     or not public.has_permission('tenant.objects.manage')
+     or public.has_permission('tenant.settings.update')
+     or public.has_permission('tenant.reports.generate') then
     raise exception 'Tenant admin is missing a tenant-management permission';
   end if;
   if public.has_permission('platform.tenants.create')
      or public.has_permission('platform.tenants.suspend')
-     or public.has_permission('tenant.data.update', 910000002) then
+     or public.has_permission('tenant.objects.manage', 910000002) then
     raise exception 'Tenant admin received platform or cross-tenant permission';
   end if;
 
@@ -354,14 +356,14 @@ begin
     raise exception 'Tenant admin granted the owner role';
   end if;
 
-  insert into public.groups (title)
-  values ('admin-own-tenant-insert');
-  select count(*) into v_count
-  from public.groups
-  where title = 'admin-own-tenant-insert'
-    and tenant_id = 910000001;
-  if v_count <> 1 then
-    raise exception 'Tenant trigger did not assign the admin tenant';
+  v_denied := false;
+  begin
+    insert into public.groups (title)
+    values ('admin-own-tenant-insert');
+  exception when sqlstate '42501' then v_denied := true;
+  end;
+  if not v_denied then
+    raise exception 'Admin created an Owner-only group';
   end if;
 
   v_denied := false;
@@ -402,10 +404,11 @@ begin
     update public.groups
     set tenant_id = 910000002
     where id = 910000001;
+    get diagnostics v_rows = row_count;
   exception
     when sqlstate '42501' or sqlstate 'P0001' then v_denied := true;
   end;
-  if not v_denied then
+  if not v_denied and v_rows <> 0 then
     raise exception 'Admin moved a row into another tenant';
   end if;
 
@@ -413,8 +416,8 @@ begin
   set description = 'admin own-tenant update'
   where id = 910000001;
   get diagnostics v_rows = row_count;
-  if v_rows <> 1 then
-    raise exception 'Admin could not update own tenant settings';
+  if v_rows <> 0 then
+    raise exception 'Admin updated Owner-only tenant settings';
   end if;
 
   update public.tenant
@@ -436,17 +439,19 @@ select set_config(
 );
 
 do $$
+declare
+  v_count bigint;
 begin
   if public.current_tenant_role() is distinct from 'owner'
      or not public.is_admin() then
     raise exception 'Owner did not inherit tenant-administrator behavior';
   end if;
   if not public.has_permission('tenant.settings.update')
-     or not public.has_permission('tenant.data.read')
+     or not public.has_permission('tenant.objects.read_all')
      or not public.has_permission('tenant.users.read')
      or not public.has_permission('tenant.users.invite')
      or not public.has_permission('tenant.users.roles.update')
-     or not public.has_permission('tenant.data.update')
+     or not public.has_permission('tenant.objects.manage')
      or not public.has_permission('tenant.reports.generate') then
     raise exception 'Owner is missing a tenant-management permission';
   end if;
@@ -455,6 +460,14 @@ begin
      or public.has_permission('platform.tenants.suspend') then
     raise exception 'Owner unexpectedly received platform access';
   end if;
+  insert into public.groups (title) values ('owner-own-tenant-insert');
+  select count(*) into v_count from public.groups
+  where title = 'owner-own-tenant-insert' and tenant_id = 910000001;
+  if v_count <> 1 then
+    raise exception 'Owner could not create a tenant group';
+  end if;
+  update public.tenant set description = 'owner own-tenant update'
+  where id = 910000001;
 end;
 $$;
 
@@ -482,12 +495,12 @@ begin
     raise exception 'Platform operator is missing a platform permission';
   end if;
   if public.is_admin()
-     or public.has_permission('tenant.data.read')
+     or public.has_permission('tenant.objects.read_all')
      or public.has_permission('tenant.users.read')
      or public.has_permission('tenant.settings.update')
      or public.has_permission('tenant.users.invite')
      or public.has_permission('tenant.users.roles.update')
-     or public.has_permission('tenant.data.update')
+     or public.has_permission('tenant.objects.manage')
      or public.has_permission('tenant.reports.generate') then
     raise exception 'Platform operator unexpectedly received a tenant permission';
   end if;

@@ -171,6 +171,7 @@ DO $$
 DECLARE
   v_tenant_id bigint;
   v_denied boolean := false;
+  v_rows bigint := 0;
 BEGIN
   SELECT tenant_id INTO v_tenant_id FROM phase2_result;
   BEGIN
@@ -179,10 +180,11 @@ BEGIN
         status_reason = 'forged tenant-admin status',
         suspended_at = now()
     WHERE id = v_tenant_id;
+    GET DIAGNOSTICS v_rows = ROW_COUNT;
   EXCEPTION WHEN sqlstate '42501' THEN
     v_denied := true;
   END;
-  IF NOT v_denied THEN
+  IF NOT v_denied AND v_rows <> 0 THEN
     RAISE EXCEPTION 'Tenant administrator changed platform-managed fields';
   END IF;
 END;

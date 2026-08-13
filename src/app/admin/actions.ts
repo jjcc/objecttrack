@@ -28,7 +28,7 @@ const profileSchema = z.object({
 
 const roleSchema = z.object({
   userId: z.string().uuid(),
-  tenantRole: z.enum(["member", "admin", "owner"]),
+  tenantRole: z.enum(["viewer", "member", "admin", "owner"]),
 });
 
 const removalSchema = z.object({

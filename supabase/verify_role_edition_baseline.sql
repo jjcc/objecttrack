@@ -49,17 +49,18 @@ BEGIN
      OR public.current_tenant_role() <> 'member' THEN
     RAISE EXCEPTION 'Member tenant context is incorrect';
   END IF;
-  IF NOT public.has_permission('tenant.data.read')
-     OR NOT public.has_permission('tenant.users.read') THEN
+  IF NOT public.has_permission('tenant.objects.read_assigned')
+     OR NOT public.has_permission('tenant.transfers.participate') THEN
     RAISE EXCEPTION 'Member baseline read permissions are missing';
   END IF;
-  IF public.has_permission('tenant.data.update')
+  IF public.has_permission('tenant.objects.manage')
+     OR public.has_permission('tenant.users.read')
      OR public.has_permission('tenant.users.invite')
      OR public.has_permission('tenant.reports.generate')
      OR public.has_permission('tenant.audit.read') THEN
     RAISE EXCEPTION 'Member received a privileged tenant permission';
   END IF;
-  IF public.has_permission('tenant.data.read', 970000002) THEN
+  IF public.has_permission('tenant.objects.read_assigned', 970000002) THEN
     RAISE EXCEPTION 'Member permission crossed the tenant boundary';
   END IF;
 END;
@@ -76,20 +77,29 @@ DECLARE
   v_permission text;
 BEGIN
   FOREACH v_permission IN ARRAY ARRAY[
-    'tenant.data.read',
-    'tenant.data.update',
-    'tenant.settings.update',
+    'tenant.admin.access',
     'tenant.users.read',
     'tenant.users.invite',
     'tenant.users.roles.update',
-    'tenant.reports.generate',
-    'tenant.audit.read'
+    'tenant.objects.read_all',
+    'tenant.objects.manage',
+    'tenant.categories.manage',
+    'tenant.event_types.manage',
+    'tenant.custom_fields.manage',
+    'tenant.transfers.participate',
+    'tenant.transfers.manage',
+    'tenant.holder.lookup'
   ] LOOP
     IF NOT public.has_permission(v_permission) THEN
       RAISE EXCEPTION 'Admin baseline permission is missing: %', v_permission;
     END IF;
   END LOOP;
-  IF public.has_permission('tenant.data.read', 970000002) THEN
+  IF public.has_permission('tenant.settings.update')
+     OR public.has_permission('tenant.reports.generate')
+     OR public.has_permission('tenant.audit.read') THEN
+    RAISE EXCEPTION 'Admin received Owner-only permission';
+  END IF;
+  IF public.has_permission('tenant.objects.read_all', 970000002) THEN
     RAISE EXCEPTION 'Admin permission crossed the tenant boundary';
   END IF;
 END;
@@ -106,12 +116,16 @@ DECLARE
   v_permission text;
 BEGIN
   FOREACH v_permission IN ARRAY ARRAY[
-    'tenant.data.read',
-    'tenant.data.update',
+    'tenant.admin.access',
     'tenant.settings.update',
+    'tenant.billing.manage',
+    'tenant.owners.manage',
     'tenant.users.read',
     'tenant.users.invite',
     'tenant.users.roles.update',
+    'tenant.objects.read_all',
+    'tenant.objects.manage',
+    'tenant.groups.manage',
     'tenant.reports.generate',
     'tenant.audit.read'
   ] LOOP
@@ -153,7 +167,7 @@ BEGIN
       RAISE EXCEPTION 'Platform Operator permission is missing: %', v_permission;
     END IF;
   END LOOP;
-  IF public.has_permission('tenant.data.read') THEN
+  IF public.has_permission('tenant.objects.read_all') THEN
     RAISE EXCEPTION 'Platform Operator received tenant permission without membership';
   END IF;
 END;
@@ -163,4 +177,3 @@ RESET ROLE;
 
 SELECT 'role and edition Phase 0 baseline verification passed' AS result;
 ROLLBACK;
-

@@ -10,6 +10,7 @@ import { logSecurityEvent } from "@/lib/observability/security";
 
 type TenantPermission = Extract<
   Permission,
+  | "tenant.admin.access"
   | "tenant.settings.update"
   | "tenant.users.roles.update"
   | "tenant.users.invite"
@@ -18,7 +19,7 @@ type TenantPermission = Extract<
 >;
 
 export async function requireTenantAdminAccess(
-  permission: TenantPermission = "tenant.settings.update"
+  permission: TenantPermission = "tenant.admin.access"
 ) {
   const supabase = await createServerSupabaseClient();
   const {
