@@ -34,6 +34,7 @@ type ObjectFormValues = { name: string; description?: string; category_id?: stri
 export default function ObjectCreatePage() {
   const t = useTranslations("Objects.form");
   const router = useRouter();
+  const [canManageObjects, setCanManageObjects] = useState<boolean | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
   const [tenantId, setTenantId] = useState<number | null>(null);
@@ -52,6 +53,22 @@ export default function ObjectCreatePage() {
   });
 
   useEffect(() => {
+    async function resolveAccess() {
+      const { data: role } = await getSupabaseClient().rpc(
+        "current_tenant_role"
+      );
+      const canManage = role === "admin" || role === "owner";
+      setCanManageObjects(canManage);
+      if (!canManage) {
+        router.replace("/unauthorized");
+      }
+    }
+    void resolveAccess();
+  }, [router]);
+
+  useEffect(() => {
+    if (canManageObjects !== true) return;
+
     async function fetchCategories() {
       const supabase = getSupabaseClient();
       const { data } = await supabase.from("categories").select("id, name").order("name") as unknown as { data: { id: number; name: string }[] };
@@ -85,7 +102,7 @@ export default function ObjectCreatePage() {
       }
     }
     void fetchUsage();
-  }, []);
+  }, [canManageObjects]);
 
   const form = useForm<ObjectFormValues>({
     initialValues: {
@@ -98,6 +115,8 @@ export default function ObjectCreatePage() {
   });
 
   const handleSubmit = async (values: ObjectFormValues) => {
+    if (canManageObjects !== true) return;
+
     if (image && image.size > MAX_IMAGE_SIZE) {
       showNotification({ color: "red", title: t("imageTooLarge"), message: t("imageSizeHelp") });
       return;
@@ -169,6 +188,8 @@ export default function ObjectCreatePage() {
       setIsPending(false);
     }
   };
+
+  if (canManageObjects !== true) return null;
 
   return (
     <AppShell>
