@@ -41,3 +41,4 @@ Thumbs.db
 # misc
 *.pem
 *.tsbuildinfo
+.env*
