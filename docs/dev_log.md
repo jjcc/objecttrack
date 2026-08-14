@@ -245,3 +245,56 @@ The current mobile `approve_transfer` implementation assigns ownership to
 - Verified with a rollback-only anonymous database test that a publicly
   shareable object returns its event type and group through the new RPC.
 - TypeScript validation and the production build completed successfully.
+
+## 2026-08-13 — Simple/Full editions and granular workspace roles
+
+- Completed local implementation Phases 0-6 and local Phase 7 acceptance for
+  the role-and-edition program. Existing workspaces were preserved as Full and
+  no remote database was changed.
+- Added durable Simple/Full editions, optional workspace kind, private/shared
+  Simple visibility, protected product context, configurable entitlements, and
+  database-enforced quotas.
+- Backfilled existing workspaces without changing tenant data or existing
+  identifiers.
+- Added the Full Viewer role and granular permissions. Admin handles supported
+  operations while governance, billing, Owner management, reports, and audit
+  remain Owner-only.
+- Added recoverable self-service Simple registration that transactionally
+  creates one workspace, its Owner membership, and versioned predefined
+  categories while preserving invitation-bound registration.
+- Enforced immutable Simple categories, five-user and 100-object limits, and
+  Full-only feature boundaries in the database.
+- Implemented Simple private/shared access, Full Member assigned/group scope,
+  Viewer assigned-only reads, and a limited holder lookup without directory
+  exposure.
+- Added Owner-facing edition and quota administration plus a locked, audited,
+  idempotent AAL2 Platform Operator Simple-to-Full upgrade that preserves IDs.
+- Added the fail-closed `SELF_SERVICE_REGISTRATION_ENABLED` flag. Disabling
+  direct registration does not block invitation-bound registration.
+- Verification applied migrations through
+  `20260813231938_phase7_registration_rollout_hardening.sql`; all fourteen SQL
+  suites, database lint, generated types, TypeScript, i18n parity (875
+  messages), `git diff --check`, and the 40-route production build passed. Local
+  browser acceptance covered both registration paths, Simple Owner/Member, and
+  Full Owner/Admin/Member/Viewer sessions.
+
+## 2026-08-14 — Phase 7 hosted staging and production rollout
+
+- Restored the disposable free `ObjectTrack-stage` project and applied all nine
+  migrations missing from it. All fourteen rollback-only SQL suites passed
+  against hosted staging. Browser acceptance passed for Simple family
+  provisioning and Member invitation acceptance.
+- Confirmed the free hosted Auth email limit can return HTTP 429 during rapid
+  signup testing. This was an email-capacity limit, not an invitation workflow
+  failure; confirmation and acceptance passed when tested independently.
+- Vercel automatically deployed the Phase 7 commits from `main` before the
+  production database was migrated. Production `/admin` then reported the
+  missing `current_tenant_product_context()` RPC.
+- After explicit production approval, applied all eight staged migrations
+  missing from `ObjectTrack2`. The existing tenant remained Full and active,
+  permission and entitlement catalogs matched staging, and production-context
+  RPC plus anonymous browser smoke tests passed.
+- Enabled `SELF_SERVICE_REGISTRATION_ENABLED=true` in Vercel Production and
+  redeployed the existing Phase 7 build. The production login registration link
+  and direct `/register` Household/Small business form both passed browser smoke
+  verification, with no new runtime errors during the observation check.

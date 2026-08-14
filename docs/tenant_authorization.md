@@ -1,77 +1,121 @@
 # Tenant Authorization Model
 
-This document defines the Phase 1 authorization boundary for tenant management.
-Database row-level security (RLS) and backend authorization are authoritative;
-hiding a control in the user interface is not an authorization check.
+This document defines the authorization boundary after local Phase 7 acceptance
+of the Simple/Full role-and-edition work on 2026-08-13. Staging and production
+rollout remain pending. Database RLS, protected RPCs, and backend authorization
+are authoritative; hiding a control in the UI is not an authorization check.
 
-## Roles
+Every protected operation evaluates all applicable dimensions:
+
+```text
+Allowed = tenant membership
+          AND role permission
+          AND edition entitlement
+          AND resource visibility or relationship
+          AND tenant status
+```
+
+Edition, tenant role, and object relationship are separate. Edition controls
+features and quotas, role controls permitted actions, and visibility or
+holder/group relationships control which resources a user may access.
+
+## Roles and editions
 
 | Role | Scope | Purpose |
 | --- | --- | --- |
-| `member` | One tenant | Uses tenant data and manages their own supported profile fields. |
-| `admin` | One tenant | Manages the tenant's settings, members, data, invitations, and reports. |
-| `owner` | One tenant | Has tenant-admin capabilities and controls owner-level membership changes. At least one owner must remain. |
-| Platform operator | Platform | Performs explicitly granted internal operations, such as provisioning or suspending tenants. This is not a tenant role. |
+| `viewer` | One Full workspace | Reads assigned objects and uses the limited current-holder lookup. |
+| `member` | One workspace | Reads relationship-visible objects and participates in permitted transfers. |
+| `admin` | One Full workspace | Performs delegated operations without workspace governance, reports, audit, billing, or Owner management. |
+| `owner` | One workspace | Governs the workspace and also receives Admin operational permissions. At least one Owner must remain. |
+| Platform Operator | Platform | Performs explicitly granted internal operations. This is independent of tenant roles and requires TOTP-verified AAL2. |
 
-`user_profiles.tenant_role` stores the tenant role (`member`, `admin`, or
-`owner`). Membership and role checks must also match the active tenant.
-`platform_operators` stores the separately granted platform identity. A platform
-operator receives no tenant permissions merely by being an operator.
+`user_profiles.tenant_role` stores `viewer`, `member`, `admin`, or
+`owner`. Simple permits only Owner and Member; Full permits all four roles.
+`platform_operators` stores the separate platform identity. A person may have
+both identities, but Platform Operator status alone grants no tenant access.
 
-## Permission Matrix
+## Permission matrix
 
-`✓` means the role receives the permission by default. `—` means denied.
+`✓` means the role receives the permission before edition filtering.
 
-| Permission | Member | Admin | Owner | Platform operator |
-| --- | :---: | :---: | :---: | :---: |
-| `tenant.data.read` | ✓ | ✓ | ✓ | — |
-| `tenant.users.read` | ✓ | ✓ | ✓ | — |
-| `tenant.settings.update` | — | ✓ | ✓ | — |
-| `tenant.users.invite` | — | ✓ | ✓ | — |
-| `tenant.users.roles.update` | — | ✓ | ✓ | — |
-| `tenant.data.update` | — | ✓ | ✓ | — |
-| `tenant.reports.generate` | — | ✓ | ✓ | — |
-| `platform.tenants.create` | — | — | — | ✓ |
-| `platform.tenants.suspend` | — | — | — | ✓ |
+| Permission group | Viewer | Member | Admin | Owner | Platform Operator |
+| --- | :---: | :---: | :---: | :---: | :---: |
+| Assigned-object read and holder lookup | ✓ | ✓ | ✓ | ✓ | — |
+| Participate in transfers | — | ✓ | ✓ | ✓ | — |
+| Read all workspace objects | — | — | ✓ | ✓ | — |
+| Manage objects, categories, event types, custom fields, and advanced transfers | — | — | ✓ | ✓ | — |
+| Read users, invite users, and manage supported non-Owner roles | — | — | ✓ | ✓ | — |
+| Access tenant administration | — | — | ✓ | ✓ | — |
+| Update workspace settings; manage billing and Owners | — | — | — | ✓ | — |
+| Manage groups, generate reports, and read tenant audit | — | — | — | ✓ | — |
+| Create, update, or suspend tenants; read platform audit | — | — | — | — | ✓ |
 
-Owner-only business rules still apply on top of the catalog. In particular, an
-admin cannot grant an owner or platform-operator role, and no action may demote
-or remove the last owner. The Phase 1 permission catalog establishes the
-authorization vocabulary; invitation, report, provisioning, suspension, and
-last-owner workflows are completed in later phases.
+The exact synchronized catalog lives in
+[`src/lib/auth/permissions.ts`](../src/lib/auth/permissions.ts). Edition
+entitlements subtract permissions from this role baseline. Simple disables
+custom categories, groups, advanced transfers, reports, and tenant audit. Its
+current limits are five active users and 100 non-deleted objects; the database
+enforces both transactionally. Workspace kind is descriptive and never changes
+authorization.
 
-## Enforcement Rules
+Owner-only invariants apply in addition to the catalog. An Admin cannot grant,
+demote, or remove an Owner, and no action may remove the final Owner.
 
-- Derive tenant context from the authenticated user's membership. Never accept
-  a client-provided `tenant_id` as proof of access.
-- Every tenant-owned query must be scoped to `current_tenant_id()`. This applies
-  to reads, inserts, updates, and deletes.
-- Inserts may omit `tenant_id` when a trusted database trigger assigns the
-  authenticated tenant. An explicitly supplied different tenant must fail.
-- Updates require both an RLS `USING` predicate and a `WITH CHECK` predicate so
-  a row cannot be moved into another tenant.
+## Object visibility and lookup
+
+- Simple `private`: Members see objects currently assigned to them.
+- Simple `shared`: Members may read all workspace objects, while mutation and
+  transfer access remains relationship- and permission-scoped.
+- Full Member: access follows the configured assigned/group scope.
+- Viewer: assigned-object read only, plus the minimal holder lookup.
+- Owner and Admin: read all workspace objects and perform permitted operations.
+
+The holder lookup returns approved fields for one object; it does not grant
+directory access or broad object visibility. Public Object Info and QR routes
+use separate display-safe RPCs and remain subject to the workspace's anonymous
+sharing setting.
+
+## Enforcement rules
+
+- Derive tenant context from authenticated membership. Never accept a
+  client-supplied `tenant_id` as proof of access.
+- Scope every tenant-owned read and mutation to `current_tenant_id()`.
+- Inserts may rely on a trusted trigger to assign the tenant, but an explicitly
+  supplied different tenant must fail.
+- Updates require both RLS `USING` and `WITH CHECK` predicates so rows cannot
+  move across tenants.
+- Resolve edition, visibility, status, limits, and feature flags through
+  `current_tenant_product_context()`; never trust browser-supplied product
+  context. Suspended workspaces receive no active tenant entitlements.
 - Tenant membership never grants cross-tenant access. Platform operations use a
-  separate, explicit operator authorization path and must be audited.
+  separate, audited AAL2 authorization path.
+- Sensitive mutations, quota checks, provisioning, invitation acceptance, and
+  edition upgrades use transactional RPC contracts.
 - Authorization data belongs in database membership records or trusted app
   metadata, never user-editable JWT `user_metadata`.
-- Backend endpoints should return a consistent forbidden response for denied
-  operations and must not reveal whether a cross-tenant record exists.
+- Denials must not reveal whether a cross-tenant record exists.
+
+## Application enforcement layers
+
+| Layer | Responsibility |
+| --- | --- |
+| Middleware | Refresh the session, handle public routes, and perform coarse route/permission redirects. |
+| Client navigation and gates | Reflect access for usability only; never establish authority. |
+| Server helpers | Build validated access context, require tenant/platform permissions, and enforce operator AAL2. |
+| Database | Enforce tenant isolation, roles, entitlements, resource scope, quotas, and transactional invariants. |
 
 ## Verification
 
-[`supabase/verify_tenant_authorization.sql`](../supabase/verify_tenant_authorization.sql)
-creates two isolated tenants and representative users inside a transaction. It
-checks tenant-derived context, cross-tenant reads and writes, forged tenant IDs,
-and member/admin/owner permission boundaries, then always rolls back.
-
-Run it only against a local or disposable database after all migrations:
+The rollback-only suites under `supabase/verify_*.sql` cover tenant isolation,
+granular roles, edition metadata, self-service provisioning, Simple
+entitlements and quotas, object visibility and holder lookup, and in-place
+edition upgrades. Run every suite against a local or disposable database:
 
 ```sh
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
-  -f supabase/verify_tenant_authorization.sql
+  -f supabase/verify_phase5_object_visibility.sql
 ```
 
-The connecting role must be able to create the rollback-only fixtures in
-`auth.users` and switch locally to `authenticated` (the local Supabase
-`postgres` role satisfies this). A successful run prints a completion message
-and persists no fixture data.
+The connecting role must be able to create rollback-only `auth.users` fixtures
+and switch locally to `authenticated`; the local Supabase `postgres` role
+satisfies this. Never run these suites against production.

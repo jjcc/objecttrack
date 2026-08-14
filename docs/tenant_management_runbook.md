@@ -15,6 +15,39 @@ services or reviewed migrations; do not edit tenant-owned rows directly.
 - Review operator assignments quarterly. Disable access immediately when it is
   no longer required.
 
+## Editions, roles, and registration
+
+- Simple workspaces support Owner and Member roles, predefined categories, a
+  five-user limit, a 100-object limit, and private/shared member visibility.
+- Full workspaces support Owner, Admin, Member, and Viewer roles plus entitled
+  administration features. Admin is operational; workspace governance,
+  billing, Owner management, reports, and audit remain Owner-only.
+- `workspace_kind` controls onboarding wording only and never authorization.
+- Direct self-registration is controlled by
+  `SELF_SERVICE_REGISTRATION_ENABLED`. It defaults to disabled when absent.
+  Invitation-bound registration remains available when direct registration is
+  disabled.
+- Keep the flag disabled until schema, application, callback allowlists, email
+  confirmation, and both registration paths pass acceptance in the target
+  environment.
+
+## Upgrade a Simple workspace
+
+1. Sign in with an authorized AAL2 Platform Operator session.
+2. Open the workspace under `/ops/tenants/[id]` and confirm its identity,
+   current edition, membership, and quota usage.
+3. Select the Simple-to-Full upgrade and submit once.
+4. Confirm the workspace reports Full entitlements immediately.
+5. Verify the dedicated `tenant.edition.upgraded` audit event.
+6. Confirm existing users, roles, objects, categories, events, transfers,
+   invitations, images, public links, and identifiers are unchanged.
+
+The upgrade is locked, idempotent, and in-place. Repeated requests and existing
+Full workspaces are no-ops. There is no automated downgrade. Never change the
+edition directly or delete Full-only data to simulate a downgrade; follow the
+validation requirements in
+[role_implementation_plan.md](role_implementation_plan.md#future-guarded-downgrade-requirements).
+
 ## Provision a tenant
 
 1. Sign in with an authorized AAL2 platform-operator session.
@@ -104,8 +137,16 @@ or credentials.
 ## Verification and incident response
 
 - Before deployment, run a clean local migration reset, every rollback SQL
-  verification suite, schema lint, generated types, TypeScript, and the
-  production build.
+  verification suite, schema lint/advisors, generated types, TypeScript, i18n
+  parity, and the production build.
+- In staging, exercise direct Simple registration and invitation-bound
+  registration with email confirmation enabled; verify Simple private/shared
+  behavior and Full Owner, Admin, Member, and Viewer sessions.
+- Before enabling production registration, smoke-test an existing Full
+  workspace and a newly created Simple workspace, then monitor authorization
+  denials, provisioning failures, invitation failures, and quota errors.
+- If rollout signals regress, disable self-service registration first. Keep
+  additive schema and role values in place during application rollback.
 - For suspected cross-tenant access, disable the involved account/operator,
   preserve gateway and database logs, identify request IDs, determine affected
   resources, rotate exposed credentials, and follow the notification process.
