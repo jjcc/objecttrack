@@ -644,6 +644,17 @@ export type Database = {
           workspace_id: number
         }[]
       }
+      billing_dunning_due: {
+        Args: never
+        Returns: {
+          grace_started_at: string
+          grace_until: string
+          owner_email: string
+          stage_day: number
+          tenant_id: number
+          workspace_name: string
+        }[]
+      }
       can_assign_tenant_role: {
         Args: { p_tenant_id: number; p_tenant_role: string }
         Returns: boolean
@@ -703,6 +714,15 @@ export type Database = {
           tenant_name: string
         }[]
       }
+      current_tenant_billing_status: {
+        Args: never
+        Returns: {
+          cancel_at_period_end: boolean
+          current_period_end: string
+          grace_until: string
+          subscription_status: string
+        }[]
+      }
       current_tenant_edition: { Args: never; Returns: string }
       current_tenant_id: { Args: never; Returns: number }
       current_tenant_plan: {
@@ -742,6 +762,13 @@ export type Database = {
           max_users: number
           object_count: number
           pending_invitations: number
+        }[]
+      }
+      expire_billing_grace: {
+        Args: never
+        Returns: {
+          previous_plan: string
+          tenant_id: number
         }[]
       }
       expire_tenant_report_jobs: {
@@ -939,6 +966,14 @@ export type Database = {
           p_website?: string
         }
         Returns: number
+      }
+      record_billing_dunning_sent: {
+        Args: {
+          p_grace_started_at: string
+          p_stage_day: number
+          p_tenant_id: number
+        }
+        Returns: boolean
       }
       record_platform_operator_access: {
         Args: { p_path: string; p_target_tenant_id?: number }

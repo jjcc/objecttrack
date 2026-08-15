@@ -234,7 +234,11 @@
       "intervals": {
         "month": "Monthly",
         "year": "Annual"
-      }
+      },
+      "overQuotaTitle": "Above your plan limit",
+      "overQuota": "Nothing has been deleted and everything stays readable and editable. You cannot create new items until you are back under the limit or move to a larger plan.",
+      "paymentFailedTitle": "Payment failed",
+      "paymentFailed": "We could not process your latest payment. Your workspace keeps its current plan for {days} more day(s). Update your payment details to avoid moving to the Free plan. Nothing will be deleted."
     }
   },
   "Settings": {

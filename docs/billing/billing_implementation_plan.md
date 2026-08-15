@@ -231,21 +231,37 @@ Exit met: 17 suites pass, lint and advisors clean, tsc/i18n (889 messages)/
 Exit: a test-mode subscription creates, upgrades, and cancels end to end
 against a local or staging deployment driven by the Stripe CLI.
 
-### Phase 4: Lifecycle, dunning, and over-quota policy
+### Phase 4: Lifecycle, dunning, and over-quota policy — **complete**
 
-- [ ] Map subscription status to plan: `active`/`trialing` hold the paid plan;
-      `past_due` enters grace; `canceled`/`unpaid` fall back to Free.
-- [ ] Implement the agreed dunning window with emails through the existing
-      Resend integration.
-- [ ] Implement the over-quota policy: block creation, never delete, surface a
-      persistent banner with the current count against the limit.
-- [ ] Implement grandfathering per the Phase 0 decision.
-- [ ] `verify_billing_downgrade_safety.sql`: a downgraded over-quota tenant
-      keeps every existing object readable, cannot create new ones, and loses
-      no rows.
+Delivered by `20260815081500_billing_phase4_lifecycle.sql` and
+`scripts/process-billing-lifecycle.mjs`.
 
-Exit: the full subscription lifecycle is exercised, including a failed payment
-driven by a Stripe test card.
+- [x] Status mapping: `active`/`trialing`/`past_due` hold the purchased plan;
+      terminal statuses fall back to Free.
+- [x] 30-day grace window opened on `past_due` and closed on recovery. A
+      repeated `payment_failed` keeps the original start, so the deadline cannot
+      be extended indefinitely.
+- [x] Dunning at day 0, 7, 21, and 29 through Resend, driven by
+      `billing_dunning_due()` and recorded by `record_billing_dunning_sent()`.
+      A reminder is recorded only after Resend accepts it, so a transient
+      failure retries rather than being silently swallowed.
+- [x] `expire_billing_grace()` downgrades expired windows and is idempotent.
+- [x] Over-quota policy: creation blocked, nothing deleted or hidden, with
+      Owner-facing banners for both over-quota and payment-failed states in
+      both locales.
+- [x] Grandfathering was delivered in Phase 1.
+- [x] `verify_billing_downgrade_safety.sql`: 40 objects survive a downgrade to
+      a 10-object plan and stay readable, creation is blocked, the sweep is
+      idempotent, grace cannot be extended, reminders fire in stage order and
+      never twice, recovery clears the schedule, and the lifecycle surface is
+      unreachable by an authenticated user or platform operator.
+
+Exit met: 19 suites pass, lint and advisors clean, tsc/i18n (898 messages)/
+41-route build pass. Not yet exercised against a real Stripe test card.
+
+**The worker needs scheduling.** `npm run billing:worker` is a one-shot script
+like the report worker, and must run daily. Nothing downgrades and no reminder
+is sent until it is scheduled.
 
 ### Phase 5: User interface and i18n
 

@@ -525,6 +525,42 @@ The current mobile `approve_transfer` implementation assigns ownership to
   `BILLING_WEBHOOK_RPC_SECRET` in the environment plus the Stripe CLI, none of
   which the MCP connector can provide to the running application.
 
+## 2026-08-15 — Billing Phase 4: lifecycle, dunning, and downgrade safety
+
+- Implemented the 30-day grace window from decision 4. Entering `past_due`
+  opens it and records `grace_started_at`/`grace_until`; recovering to `active`
+  or `trialing` closes it. A repeated `payment_failed` keeps the original start
+  date, so a customer cannot extend the deadline indefinitely by failing again.
+  A verify case backdates a window and asserts the deadline does not move.
+- Added `private.billing_dunning_log`, keyed by workspace, grace window, and
+  stage, so a reminder is never sent twice for the same window. Stages are day
+  0, 7, 21, and 29 per decision 4.
+- Added `billing_dunning_due()` and `record_billing_dunning_sent()`, plus
+  `expire_billing_grace()` which downgrades expired windows, audits the change
+  with `source: grace_expired`, and is idempotent.
+- All three are granted to `service_role` only. A verify case asserts that even
+  an AAL2 platform operator cannot run the sweep or read the dunning queue
+  directly.
+- Added `scripts/process-billing-lifecycle.mjs` and `npm run billing:worker`,
+  mirroring the report worker as a one-shot scheduled script. It sends reminders
+  first and expires grace second, so the day-29 notice always precedes the
+  day-30 downgrade. A reminder is recorded only after Resend accepts it, so a
+  transient delivery failure retries on the next run instead of being lost.
+- Added `current_tenant_billing_status()` and Owner-facing banners for the
+  over-quota and payment-failed states, in both catalogues (898 messages). Both
+  say plainly that nothing is deleted, because decision 3 makes that true and
+  the wording is what stops a downgrade reading as data loss.
+- Added `verify_billing_downgrade_safety.sql`. Its central case puts 40 objects
+  in a Business workspace, expires the grace window, and asserts all 40 survive
+  the downgrade to a 10-object plan, remain readable by name, and that only
+  creation is blocked.
+- Verification: clean local reset; all nineteen suites pass; `db lint` and
+  `db advisors --level warn` clean; `npx tsc --noEmit`, `npm run i18n:check`
+  (898 messages), and the 41-route production build pass.
+- Two operational prerequisites remain and neither is code: the worker must be
+  scheduled daily, and Stripe's own retry settings must be extended so it does
+  not cancel or mark a subscription unpaid before our day 30.
+
 ## 2026-08-15 — Activate the edge middleware, which had never run
 
 - Found that the edge middleware had never executed in production. Unauthenticated

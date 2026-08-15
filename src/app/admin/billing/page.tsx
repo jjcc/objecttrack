@@ -43,10 +43,22 @@ function usagePercent(used: number, limit: number | null): number | null {
 export default async function TenantBillingPage() {
   const t = await getTranslations("Admin.billing");
   const { supabase } = await requireTenantAdminAccess("tenant.billing.manage");
-  const { data, error } = await supabase.rpc("current_tenant_plan");
-  if (error) throw new Error(error.message);
+  const [planResult, statusResult] = await Promise.all([
+    supabase.rpc("current_tenant_plan"),
+    supabase.rpc("current_tenant_billing_status"),
+  ]);
+  if (planResult.error) throw new Error(planResult.error.message);
+  if (statusResult.error) throw new Error(statusResult.error.message);
 
-  const plan = (data ?? [])[0] as TenantPlan | undefined;
+  const plan = (planResult.data ?? [])[0] as TenantPlan | undefined;
+  const billingStatus = (statusResult.data ?? [])[0] as
+    | {
+        subscription_status: string | null;
+        grace_until: string | null;
+        cancel_at_period_end: boolean;
+        current_period_end: string | null;
+      }
+    | undefined;
 
   if (!plan) {
     return (
@@ -64,6 +76,24 @@ export default async function TenantBillingPage() {
   const objectPercent = usagePercent(plan.object_count, plan.max_objects);
   const userPercent = usagePercent(plan.active_users, plan.max_users);
 
+  // Over quota means at or above the ceiling. Existing records stay readable
+  // and editable; only creation is blocked. See decision 3 of the billing plan.
+  const overQuota =
+    (plan.max_objects !== null && plan.object_count >= plan.max_objects) ||
+    (plan.max_users !== null && plan.active_users >= plan.max_users);
+
+  const graceDaysLeft =
+    billingStatus?.subscription_status === "past_due" &&
+    billingStatus.grace_until
+      ? Math.max(
+          0,
+          Math.ceil(
+            (new Date(billingStatus.grace_until).getTime() - Date.now()) /
+              86_400_000
+          )
+        )
+      : null;
+
   return (
     <Stack gap="lg">
       <div>
@@ -72,6 +102,18 @@ export default async function TenantBillingPage() {
           {t("description")}
         </Text>
       </div>
+
+      {graceDaysLeft !== null && (
+        <Alert color="orange" title={t("paymentFailedTitle")}>
+          {t("paymentFailed", { days: graceDaysLeft })}
+        </Alert>
+      )}
+
+      {overQuota && (
+        <Alert color="yellow" title={t("overQuotaTitle")}>
+          {t("overQuota")}
+        </Alert>
+      )}
 
       <Card withBorder radius="md" padding="lg">
         <Stack gap="md">

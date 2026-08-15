@@ -9,7 +9,8 @@
     "i18n:check": "node scripts/check-i18n-messages.mjs",
     "start": "next start",
     "lint": "next lint",
-    "reports:worker": "node scripts/process-report-jobs.mjs"
+    "reports:worker": "node scripts/process-report-jobs.mjs",
+    "billing:worker": "node scripts/process-billing-lifecycle.mjs"
   },
   "dependencies": {
     "@mantine/core": "^8.3.16",

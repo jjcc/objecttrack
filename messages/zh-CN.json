@@ -234,7 +234,11 @@
       "intervals": {
         "month": "按月",
         "year": "按年"
-      }
+      },
+      "overQuotaTitle": "已超出套餐上限",
+      "overQuota": "系统未删除任何数据，全部内容仍可查看和编辑。在回到上限以内或升级套餐之前，将无法新建条目。",
+      "paymentFailedTitle": "支付失败",
+      "paymentFailed": "最近一次扣款未能完成。工作区将继续保留当前套餐 {days} 天。请更新支付方式，以免转为免费版。系统不会删除任何数据。"
     }
   },
   "Settings": {
