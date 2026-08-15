@@ -334,9 +334,10 @@ begin
      or not public.has_permission('tenant.users.invite')
      or not public.has_permission('tenant.users.roles.update')
      or not public.has_permission('tenant.objects.manage')
-     or public.has_permission('tenant.settings.update')
-     or public.has_permission('tenant.reports.generate') then
-    raise exception 'Tenant admin is missing a tenant-management permission';
+     -- tenant.reports.generate moved to Admin on 2026-08-14.
+     or not public.has_permission('tenant.reports.generate')
+     or public.has_permission('tenant.settings.update') then
+    raise exception 'Tenant admin permission boundary is incorrect';
   end if;
   if public.has_permission('platform.tenants.create')
      or public.has_permission('platform.tenants.suspend')
@@ -356,14 +357,13 @@ begin
     raise exception 'Tenant admin granted the owner role';
   end if;
 
-  v_denied := false;
-  begin
-    insert into public.groups (title)
-    values ('admin-own-tenant-insert');
-  exception when sqlstate '42501' then v_denied := true;
-  end;
-  if not v_denied then
-    raise exception 'Admin created an Owner-only group';
+  -- tenant.groups.manage moved from Owner to Admin on 2026-08-14, so this
+  -- insert into the admin's own tenant must now succeed.
+  insert into public.groups (title)
+  values ('admin-own-tenant-insert');
+  get diagnostics v_rows = row_count;
+  if v_rows <> 1 then
+    raise exception 'Admin could not create a group in its own tenant';
   end if;
 
   v_denied := false;

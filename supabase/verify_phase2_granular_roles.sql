@@ -41,16 +41,18 @@ BEGIN
     'tenant.objects.manage', 'tenant.categories.manage',
     'tenant.event_types.manage', 'tenant.custom_fields.manage',
     'tenant.transfers.participate', 'tenant.transfers.manage',
-    'tenant.holder.lookup'
+    'tenant.holder.lookup',
+    -- Operational permissions moved from Owner to Admin on 2026-08-14.
+    'tenant.groups.manage', 'tenant.reports.generate'
   ] LOOP
     IF NOT public.has_permission(permission_name) THEN
       RAISE EXCEPTION 'Admin permission missing: %', permission_name;
     END IF;
   END LOOP;
+  -- The remaining Owner governance core stays exclusive.
   FOREACH permission_name IN ARRAY ARRAY[
     'tenant.settings.update', 'tenant.billing.manage',
-    'tenant.owners.manage', 'tenant.groups.manage',
-    'tenant.reports.generate', 'tenant.audit.read'
+    'tenant.owners.manage', 'tenant.audit.read'
   ] LOOP
     IF public.has_permission(permission_name) THEN
       RAISE EXCEPTION 'Admin received Owner permission: %', permission_name;

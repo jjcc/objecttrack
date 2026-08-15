@@ -94,8 +94,9 @@ BEGIN
       RAISE EXCEPTION 'Admin baseline permission is missing: %', v_permission;
     END IF;
   END LOOP;
+  -- tenant.reports.generate moved to Admin on 2026-08-14; settings and audit
+  -- remain part of the Owner governance core.
   IF public.has_permission('tenant.settings.update')
-     OR public.has_permission('tenant.reports.generate')
      OR public.has_permission('tenant.audit.read') THEN
     RAISE EXCEPTION 'Admin received Owner-only permission';
   END IF;
