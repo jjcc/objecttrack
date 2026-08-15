@@ -376,4 +376,64 @@ The current mobile `approve_transfer` implementation assigns ownership to
   types differed only by the generator's trailing blank line; `npx tsc
   --noEmit`, `npm run i18n:check` (875 messages), and the 40-route production
   build passed. No new user-facing strings were required.
-- Not yet applied to `ObjectTrack2` production or to `ObjectTrack-stage`.
+- Applied to `ObjectTrack2` production via `supabase db push --linked` after a
+  dry run confirmed exactly one pending migration; it registered under its own
+  filename, leaving 29 migrations with zero local/remote mismatches. Applied to
+  `ObjectTrack-stage` through the Supabase MCP connector, because the CLI still
+  cannot provision its `cli_login_postgres` login role there. Both remotes were
+  verified to show `tenant.groups.manage` and `tenant.reports.generate` on admin
+  and owner, `tenant.audit.read` and `tenant.owners.manage` on owner only, and
+  the three renamed `Tenant managers ... groups` policies.
+
+## 2026-08-15 — Activate the edge middleware, which had never run
+
+- Found that the edge middleware had never executed in production. Unauthenticated
+  requests to `/admin`, `/dashboard`, `/objects`, `/events`, `/transfers`,
+  `/settings`, and `/ops` all returned HTTP 200 with `x-matched-path` set and no
+  `location` header, and an unknown path returned 404 rather than redirecting.
+- Cause: the App Router lives under `src/`, so Next.js expects
+  `src/middleware.ts`. The file sat at the repository root, where it is silently
+  ignored. It compiled, type-checked, and built cleanly the whole time.
+  `middleware-manifest.json` listed no entries and `npm run build` printed no
+  `ƒ Middleware` line. The file dated from 2026-07-21, so the layer had been
+  inert since it was written.
+- No data was exposed. The database remained authoritative throughout, and
+  server components and actions still called `requireTenantAdminAccess` and
+  `requirePlatformAccess`, so protected pages returned an empty shell while the
+  data fetch threw. What was missing was the outermost layer only: edge session
+  refresh, the public-route allowlist, onboarding and unauthorized redirects,
+  and the coarse per-path permission gate.
+- The 2026-08-14 record that unauthenticated `/admin` "redirects to `/login`"
+  was a correct browser observation attributed to the wrong layer. The
+  client-side `AuthGate` produced the same visible outcome.
+- Fixed by `git mv middleware.ts src/middleware.ts`. No logic change. The build
+  now reports `ƒ Middleware 76.2 kB` and the manifest lists one entry.
+- Verified against the production build served locally, anonymous only:
+  `/admin`, `/dashboard`, `/objects`, `/events`, `/transfers`, `/settings`,
+  `/ops`, `/groups`, `/users`, `/unauthorized`, and an unknown path each return
+  a single 307 to `/login` and settle there in exactly one hop, with no redirect
+  loops. `/login`, `/register`, `/forgot-password`, `/object-info/1`, and
+  `/invitations/accept` return 200 unredirected. `/api/qr/1` passes through to
+  its route handler, and `_next/static` chunks are unaffected.
+- Authenticated behaviour is not verified here: creating a session would have
+  required credentials against the production Supabase project. The onboarding,
+  unauthorized, and per-path permission branches need a browser pass.
+- Known rough edge: unauthenticated calls to `/api/admin/reports` now receive a
+  307 redirect to `/login` rather than a JSON 401. Harmless for the app, which
+  only calls it with a session, but worth tightening if that route ever gets an
+  external caller.
+- Enabling this layer adds three Supabase calls per matched request through
+  `getAuthenticatedAccessContext`, including RSC prefetches. Worth watching on
+  the free plan.
+- Deployed as commit `9f7c318` in `dpl_6D7Tv3PwMNnPTzmpSAtbJzwCc3pB`; the
+  middleware began serving roughly 30 seconds after the build started.
+  Production now matches the local results exactly: eleven protected paths each
+  return a single 307 to `/login` and settle in one hop, and the four public
+  paths return 200 unredirected.
+- The Vercel runtime-error table corroborates the diagnosis. An
+  `Error: Authentication is required.` group on `/admin`, first seen
+  2026-07-31, records the old behaviour: the request reached the server
+  component, which threw while the page still returned a 200 shell. Its final
+  occurrences are attributed to `dpl_44aurmddmxzvJzM53kXopU1cbVq2`, the last
+  pre-fix deployment, and came from this investigation's own probes. With the
+  middleware live those requests no longer reach the server component.
