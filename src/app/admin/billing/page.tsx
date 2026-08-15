@@ -1,7 +1,20 @@
-import { Alert, Card, Group, Progress, Stack, Text, Title } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  Card,
+  Group,
+  Progress,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { requireTenantAdminAccess } from "@/lib/tenant-admin/access";
 import { isBillingEnabled } from "@/lib/billing/flags";
+import { BILLING_INTERVALS } from "@/lib/billing/stripe";
+import { openBillingPortal, startCheckout } from "@/app/admin/billing/actions";
 import { getTranslations } from "next-intl/server";
+
+const PAID_PLANS = ["hobby", "business"] as const;
 
 type TenantPlan = {
   plan_code: string;
@@ -111,10 +124,40 @@ export default async function TenantBillingPage() {
         </Stack>
       </Card>
 
-      {isBillingEnabled() ? (
-        <Alert color="blue">{t("changePlanAvailable")}</Alert>
-      ) : (
+      {!isBillingEnabled() ? (
         <Alert color="gray">{t("changePlanUnavailable")}</Alert>
+      ) : (
+        <Card withBorder radius="md" padding="lg">
+          <Stack gap="md">
+            <Text fw={600}>{t("changePlan")}</Text>
+            <Group gap="sm" wrap="wrap">
+              {PAID_PLANS.filter((code) => code !== plan.plan_code).flatMap(
+                (code) =>
+                  BILLING_INTERVALS.map((interval) => (
+                    <form action={startCheckout} key={`${code}-${interval}`}>
+                      <input type="hidden" name="planCode" value={code} />
+                      <input
+                        type="hidden"
+                        name="billingInterval"
+                        value={interval}
+                      />
+                      <Button type="submit" variant="light">
+                        {t("upgradeTo", {
+                          plan: t(`plans.${code}`),
+                          interval: t(`intervals.${interval}`),
+                        })}
+                      </Button>
+                    </form>
+                  ))
+              )}
+            </Group>
+            <form action={openBillingPortal}>
+              <Button type="submit" variant="subtle">
+                {t("manageBilling")}
+              </Button>
+            </form>
+          </Stack>
+        </Card>
       )}
     </Stack>
   );

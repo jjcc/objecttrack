@@ -2,7 +2,7 @@ import "server-only";
 
 type SecurityEvent = {
   event: "authorization_denied" | "mfa_required";
-  area: "tenant_admin" | "platform_ops";
+  area: "tenant_admin" | "platform_ops" | "billing_webhook";
   permission: string;
   actorId?: string;
   reason: string;

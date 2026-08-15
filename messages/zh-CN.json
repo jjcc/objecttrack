@@ -227,6 +227,13 @@
         "free": "免费版",
         "hobby": "兴趣版",
         "business": "商业版"
+      },
+      "changePlan": "变更套餐",
+      "upgradeTo": "{plan} — {interval}",
+      "manageBilling": "管理账单与发票",
+      "intervals": {
+        "month": "按月",
+        "year": "按年"
       }
     }
   },

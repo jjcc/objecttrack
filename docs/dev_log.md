@@ -468,6 +468,63 @@ The current mobile `approve_transfer` implementation assigns ownership to
 - Not applied to any remote. Phase 3 onward is blocked on a Stripe account,
   price identifiers, and the open pricing, currency, tax, and trial decisions.
 
+## 2026-08-15 — Billing Phase 3: Stripe integration
+
+- Pricing decided: Hobby $5/month and $50/year, Business $20/month and
+  $200/year, USD, annual at ten times monthly (two months free), no trial, and
+  Stripe Tax off for now.
+- Created the products and four recurring prices in the test-mode
+  `Metavues Tech Inc.` account (`acct_1AyxKGExuGi7DZSF`) through the Stripe
+  connector. Each price carries `lookup_key` plus `plan_code` and `interval`
+  metadata so the mapping never depends on a hardcoded identifier.
+- Added `private.plan_prices` keyed by `(plan_code, billing_interval)`, which
+  the monthly-plus-annual decision requires; price identifiers live in the
+  catalog rather than on the plan row. Free has no Stripe price: it is the
+  absence of a subscription.
+- Added `private.tenant_billing` (Stripe identifiers and subscription state, no
+  card data ever) and `private.billing_events`, keyed by Stripe event ID as an
+  idempotency and replay ledger.
+- Implemented decision 5: the webhook route verifies the Stripe signature, then
+  calls `apply_stripe_subscription_event(secret, payload)`. The shared secret is
+  stored only as a SHA-256 digest via `set_billing_webhook_secret()`, which is
+  AAL2-operator-only and rejects secrets under 32 characters. The service role
+  key stays out of application code entirely.
+- The plan is resolved from the Stripe price through `plan_prices`, never from
+  the payload, so an unknown price grants `free` rather than anything paid.
+  Status mapping: `active`/`trialing`/`past_due` hold the purchased plan;
+  anything terminal falls back to `free`.
+- Added `billing_checkout_context()` so the checkout and portal actions can
+  reach the price catalog and Stripe customer without granting `authenticated`
+  read access to `private`. The workspace is derived from the caller inside the
+  database and never supplied by the client.
+- Application layer: installed `stripe@22`, added a lazy server client,
+  `/api/billing/webhook`, Checkout and Customer Portal server actions, and plan
+  buttons on `/admin/billing` that render only when `BILLING_ENABLED` is true.
+  Strings in both catalogues (894 messages).
+- **Added `/api/billing/webhook` to the middleware public allowlist.** Now that
+  the middleware actually runs, an unauthenticated Stripe POST would otherwise
+  have been redirected to `/login` and never reached the route. The route is
+  authenticated by Stripe signature rather than by cookie.
+- Two bugs caught by the new suite before leaving the machine: `RETURNS TABLE`
+  declared `tenant_id` and `plan_code` as plpgsql variables that collided with
+  the identically named columns in `ON CONFLICT` and `UPDATE` targets, so the
+  output columns were renamed; and the suite itself twice read `private` tables
+  while holding the `anon` or `authenticated` role, which correctly failed.
+- Added `verify_billing_webhook_ledger.sql`: aal1 operator refused, weak secret
+  refused, secret stored only as a digest, wrong secret refused with no plan
+  change, a valid event upgrading the workspace and recording subscription
+  state, redelivery applying nothing and leaving one audit row, `past_due`
+  holding the plan, cancellation falling back to free while preserving all
+  fifteen objects and blocking the sixteenth, an unknown price granting only
+  free, and a malformed event rejected.
+- Verification: clean local reset; all eighteen suites pass; `db lint` and
+  `db advisors --level warn` clean; `npx tsc --noEmit`, `npm run i18n:check`
+  (894 messages), and the 41-route production build pass.
+- Not applied to any remote, and not yet exercised against a real Stripe
+  payload. That needs `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and
+  `BILLING_WEBHOOK_RPC_SECRET` in the environment plus the Stripe CLI, none of
+  which the MCP connector can provide to the running application.
+
 ## 2026-08-15 — Activate the edge middleware, which had never run
 
 - Found that the edge middleware had never executed in production. Unauthenticated

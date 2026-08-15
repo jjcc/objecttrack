@@ -227,6 +227,13 @@
         "free": "Free",
         "hobby": "Hobby",
         "business": "Business"
+      },
+      "changePlan": "Change plan",
+      "upgradeTo": "{plan} — {interval}",
+      "manageBilling": "Manage billing and invoices",
+      "intervals": {
+        "month": "Monthly",
+        "year": "Annual"
       }
     }
   },

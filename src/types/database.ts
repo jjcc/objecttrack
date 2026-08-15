@@ -623,10 +623,26 @@ export type Database = {
         Args: { p_token_hash: string }
         Returns: number
       }
+      apply_stripe_subscription_event: {
+        Args: { p_event: Json; p_secret: string }
+        Returns: {
+          applied: boolean
+          event_tenant_id: number
+          resulting_plan_code: string
+        }[]
+      }
       approve_transfer: { Args: { p_request_id: number }; Returns: undefined }
       authorize_tenant_report_download: {
         Args: { p_report_job_id: string }
         Returns: string
+      }
+      billing_checkout_context: {
+        Args: { p_billing_interval?: string; p_plan_code?: string }
+        Returns: {
+          stripe_customer_id: string
+          stripe_price_id: string
+          workspace_id: number
+        }[]
       }
       can_assign_tenant_role: {
         Args: { p_tenant_id: number; p_tenant_role: string }
@@ -956,6 +972,10 @@ export type Database = {
       revoke_tenant_invitation: {
         Args: { p_invitation_id: string }
         Returns: undefined
+      }
+      set_billing_webhook_secret: {
+        Args: { p_secret: string }
+        Returns: boolean
       }
       set_tenant_plan: {
         Args: { p_plan_code: string; p_tenant_id: number }

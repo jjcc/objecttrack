@@ -58,7 +58,10 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/object-info/") ||
     request.nextUrl.pathname.startsWith("/api/qr/") ||
     request.nextUrl.pathname.startsWith("/invitations/accept") ||
-    request.nextUrl.pathname.startsWith("/auth/callback");
+    request.nextUrl.pathname.startsWith("/auth/callback") ||
+    // Stripe carries no session. The route verifies the Stripe signature
+    // itself, so this is authenticated by signature rather than by cookie.
+    request.nextUrl.pathname === "/api/billing/webhook";
 
   if (!user && !isPublicAuthPage && !isPublicResource) {
     const url = request.nextUrl.clone();
