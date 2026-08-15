@@ -298,3 +298,44 @@ The current mobile `approve_transfer` implementation assigns ownership to
   redeployed the existing Phase 7 build. The production login registration link
   and direct `/register` Household/Small business form both passed browser smoke
   verification, with no new runtime errors during the observation check.
+
+## 2026-08-14 — Production migration history repair
+
+- Found that `ObjectTrack2` had registered the eight Phase 1-7 migrations under
+  fresh version stamps (`20260814024312`-`20260814024409`) instead of their
+  local filenames (`20260813193842`-`20260813231938`). A remote query confirmed
+  the eight rows carried the same phase names in the same order, so the applied
+  schema was correct and only the history table had diverged.
+- Left uncorrected, the next `supabase db push` would have treated all eight
+  local migrations as pending and attempted to re-apply them to production.
+- Repaired the history with `supabase migration repair --linked`: the eight
+  local versions marked `applied` and the eight re-stamped versions marked
+  `reverted`. This wrote only to `supabase_migrations.schema_migrations`; no
+  schema, policy, or tenant data changed.
+- `supabase migration list --linked` now reports all 28 migrations with matching
+  local and remote versions and nothing pending.
+- The equivalent CLI check on `ObjectTrack-stage` could not run: it failed to
+  provision its temporary `cli_login_postgres` login role with `permission
+  denied to alter role`. The Supabase MCP connector reached the project
+  instead and confirmed the same drift: nine migrations stamped
+  `20260814021536`-`20260814021614` and named with a `stage_` prefix
+  (`stage_invitation_first_registration`, `stage_phase1_*` through
+  `stage_phase7_*`) stand in for the local `20260805052328` and Phase 1-7
+  files. Staging was left unrepaired: it is disposable and not the linked
+  project, so no `db push` targets it.
+- The prefixed staging names indicate the root cause of both divergences:
+  the rollout applied purpose-built copies of the migrations rather than the
+  original files, so each copy received a fresh version stamp.
+- Production security advisors reported no ERROR-level findings. The 57
+  `SECURITY DEFINER` warnings cover the intended RPC surface, including the
+  five deliberately anon-executable functions (`object_info`,
+  `object_info_events`, `can_view_object_image`, `invitation_link_status`,
+  `invitation_registration_context`). `private.edition_entitlements` having
+  RLS enabled with no policy is the intended deny-all posture for a
+  non-API-exposed schema.
+- Supabase Auth leaked-password protection (HaveIBeenPwned) cannot currently be
+  enabled: the `MicroMacro` organization is on the `free` plan and the feature
+  requires Pro or above. The advisor warning is therefore an accepted, plan-
+  gated item rather than a pending fix. Password length and character
+  requirements remain available on the free plan if stronger password policy is
+  wanted without upgrading.
