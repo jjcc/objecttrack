@@ -689,6 +689,17 @@ export type Database = {
       }
       current_tenant_edition: { Args: never; Returns: string }
       current_tenant_id: { Args: never; Returns: number }
+      current_tenant_plan: {
+        Args: never
+        Returns: {
+          active_users: number
+          max_objects: number
+          max_users: number
+          object_count: number
+          plan_code: string
+          plan_edition: string
+        }[]
+      }
       current_tenant_product_context: {
         Args: never
         Returns: {
@@ -945,6 +956,15 @@ export type Database = {
       revoke_tenant_invitation: {
         Args: { p_invitation_id: string }
         Returns: undefined
+      }
+      set_tenant_plan: {
+        Args: { p_plan_code: string; p_tenant_id: number }
+        Returns: {
+          changed: boolean
+          edition: string
+          plan_code: string
+          tenant_id: number
+        }[]
       }
       set_tenant_status: {
         Args: { p_reason: string; p_status: string; p_tenant_id: number }

@@ -435,6 +435,39 @@ The current mobile `approve_transfer` implementation assigns ownership to
   production build pass.
 - Not applied to any remote. No application or UI change yet.
 
+## 2026-08-15 — Billing Phase 2: plan administration without payment
+
+- Added `set_tenant_plan(tenant_id, plan_code)`: AAL2 platform-operator only,
+  advisory-locked, idempotent, and audited as `tenant.plan.changed` with the
+  from/to plan and edition recorded. Unknown or inactive plans and missing
+  tenants are rejected.
+- `upgrade_tenant_to_full` required no change. It still sets `edition = 'full'`
+  and `private.sync_tenant_plan_edition()` derives the business plan, so its
+  signature, return shape, and audit action are untouched and the Flutter
+  client and ops flow keep working.
+- Added `current_tenant_plan()`, returning plan code, edition, limits, and
+  current usage. It returns no rows unless the caller holds the Owner-only
+  `tenant.billing.manage`, so the permission is the gate rather than the UI.
+- Added `/admin/billing`, an Owner-facing read-only page showing the plan name
+  and usage meters for objects and members, with strings in both catalogues
+  (now 889 messages). Plan codes are stored untranslated and translated at
+  render; an unrecognised code falls back to the raw value rather than
+  throwing, so adding a plan in the database cannot break the page.
+- Added `BILLING_ENABLED` in `src/lib/billing/flags.ts`, fail-closed like
+  `SELF_SERVICE_REGISTRATION_ENABLED`. It gates commerce only. Entitlements
+  resolve from the stored plan and never consult the flag, so disabling it can
+  never strip a paying workspace of what it paid for.
+- Added `verify_billing_plan_administration.sql`: an Owner cannot change its own
+  plan, an aal1 operator cannot either, an AAL2 operator can and repeating it is
+  a no-op leaving exactly one audit row, unknown plans and missing tenants are
+  rejected, a downgrade to free preserves all twelve existing objects while
+  blocking the thirteenth, and a Member cannot read the plan.
+- Verification: clean local reset; all seventeen suites pass; `db lint` and
+  `db advisors --level warn` clean; `npx tsc --noEmit`, `npm run i18n:check`
+  (889 messages), and the 41-route production build pass.
+- Not applied to any remote. Phase 3 onward is blocked on a Stripe account,
+  price identifiers, and the open pricing, currency, tax, and trial decisions.
+
 ## 2026-08-15 — Activate the edge middleware, which had never run
 
 - Found that the edge middleware had never executed in production. Unauthenticated

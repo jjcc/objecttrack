@@ -185,22 +185,31 @@ no payment, no UI.
 Exit met: all sixteen suites pass, lint and advisors clean, types add only
 `plan_code`, tsc/i18n/build pass. Not applied to any remote.
 
-### Phase 2: Plan administration without payment
+### Phase 2: Plan administration without payment — **complete**
 
-- [ ] `set_tenant_plan(p_tenant_id, p_plan_code)` — AAL2 platform operator,
-      audited, idempotent, advisory-locked, mirroring `upgrade_tenant_to_full`.
-- [ ] Keep `upgrade_tenant_to_full` working as a thin wrapper so the Flutter
-      client and existing ops flows do not break.
-- [ ] Owner-facing read-only plan and usage display, gated on the existing
-      `tenant.billing.manage` permission, which is already Owner-only.
-- [ ] Introduce `BILLING_ENABLED`, defaulting to disabled, and assert the
-      disabled path behaves exactly as today.
-- [ ] `verify_billing_plan_administration.sql` covering operator-only plan
-      changes, audit rows, idempotency, and that a non-operator cannot change
-      `plan_code` directly.
+Delivered by `20260815061000_billing_phase2_plan_administration.sql`.
 
-Exit: plans are fully administrable internally, with no payment integration and
-no user-visible change.
+- [x] `set_tenant_plan(p_tenant_id, p_plan_code)` — AAL2 platform operator,
+      audited as `tenant.plan.changed`, idempotent, advisory-locked, rejecting
+      unknown or inactive plans and missing tenants.
+- [x] `upgrade_tenant_to_full` needed **no change**: it still sets
+      `edition = 'full'`, and the sync trigger derives the business plan from
+      that. Signature, return shape, and audit action are all unchanged, so the
+      Flutter client and existing ops flow are unaffected.
+- [x] `current_tenant_plan()` — read-only plan and usage, returning no rows
+      unless the caller holds the Owner-only `tenant.billing.manage`.
+- [x] Owner-facing `/admin/billing` page with plan name and usage meters for
+      objects and members, in both locales.
+- [x] `BILLING_ENABLED` in `src/lib/billing/flags.ts`, fail-closed. It gates
+      commerce only; entitlements always resolve from the stored plan and never
+      consult the flag.
+- [x] `verify_billing_plan_administration.sql`: Owner denied, aal1 operator
+      denied, AAL2 operator allowed, idempotent with exactly one audit row,
+      unknown plan and missing tenant rejected, downgrade preserves every object
+      while blocking new ones, and `current_tenant_plan` is Owner-only.
+
+Exit met: 17 suites pass, lint and advisors clean, tsc/i18n (889 messages)/
+41-route build pass. Not applied to any remote.
 
 ### Phase 3: Stripe integration
 

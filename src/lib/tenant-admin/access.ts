@@ -16,6 +16,7 @@ type TenantPermission = Extract<
   | "tenant.users.invite"
   | "tenant.reports.generate"
   | "tenant.audit.read"
+  | "tenant.billing.manage"
 >;
 
 export async function requireTenantAdminAccess(

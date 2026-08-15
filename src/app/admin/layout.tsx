@@ -14,6 +14,7 @@ const adminLinks = [
   { href: "/admin/invitations", key: "invitations", permission: "tenant.users.invite" },
   { href: "/admin/reports", key: "reports", permission: "tenant.reports.generate" },
   { href: "/admin/audit", key: "audit", permission: "tenant.audit.read" },
+  { href: "/admin/billing", key: "billing", permission: "tenant.billing.manage" },
 ] as const;
 
 export default async function TenantAdminLayout({
