@@ -233,4 +233,70 @@ BEGIN
 END;
 $$;
 
+-- The plan catalog read is Owner-only and flags the current plan -----------
+
+-- Clear the acting identity first: the tenant-isolation trigger rejects a
+-- profile insert for a tenant other than the acting user's.
+RESET ROLE;
+SELECT set_config('request.jwt.claim.sub', '', true);
+
+INSERT INTO auth.users (
+  id, aud, role, email, encrypted_password,
+  email_confirmed_at, created_at, updated_at,
+  confirmation_token, recovery_token, email_change_token_new, email_change
+) VALUES
+  ('96400000-0000-4000-8000-000000000003', 'authenticated', 'authenticated', 'plan-catalog-member@example.test', '', now(), now(), now(), '', '', '', '');
+
+INSERT INTO public.user_profiles (id, tenant_id, tenant_role, email)
+VALUES ('96400000-0000-4000-8000-000000000003', 964000002, 'member', 'plan-catalog-member@example.test');
+
+DO $$
+DECLARE
+  v_count integer;
+  v_current text;
+BEGIN
+  SET LOCAL ROLE authenticated;
+  PERFORM set_config('request.jwt.claim.role', 'authenticated', true);
+  PERFORM set_config(
+    'request.jwt.claim.sub', '96400000-0000-4000-8000-000000000001', true
+  );
+
+  SELECT count(*) INTO v_count FROM public.billing_plan_catalog();
+  IF v_count <> 3 THEN
+    RAISE EXCEPTION 'Owner should see three plans, saw %', v_count;
+  END IF;
+
+  SELECT plan_code INTO v_current FROM public.billing_plan_catalog()
+  WHERE is_current;
+  IF v_current <> 'free' THEN
+    RAISE EXCEPTION 'Current plan flagged as %, expected free', v_current;
+  END IF;
+
+  -- Paid plans are purchasable on both intervals; free has no Stripe price.
+  IF EXISTS (
+    SELECT 1 FROM public.billing_plan_catalog()
+    WHERE plan_code IN ('hobby', 'business')
+      AND NOT (has_monthly AND has_annual)
+  ) THEN
+    RAISE EXCEPTION 'A paid plan is missing an interval price';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM public.billing_plan_catalog()
+    WHERE plan_code = 'free' AND (has_monthly OR has_annual)
+  ) THEN
+    RAISE EXCEPTION 'The free plan should have no Stripe price';
+  END IF;
+
+  PERFORM set_config(
+    'request.jwt.claim.sub', '96400000-0000-4000-8000-000000000003', true
+  );
+  SELECT count(*) INTO v_count FROM public.billing_plan_catalog();
+  IF v_count <> 0 THEN
+    RAISE EXCEPTION 'A Member read the plan catalog';
+  END IF;
+
+  RESET ROLE;
+END;
+$$;
+
 ROLLBACK;

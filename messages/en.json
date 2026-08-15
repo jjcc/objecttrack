@@ -238,7 +238,21 @@
       "overQuotaTitle": "Above your plan limit",
       "overQuota": "Nothing has been deleted and everything stays readable and editable. You cannot create new items until you are back under the limit or move to a larger plan.",
       "paymentFailedTitle": "Payment failed",
-      "paymentFailed": "We could not process your latest payment. Your workspace keeps its current plan for {days} more day(s). Update your payment details to avoid moving to the Free plan. Nothing will be deleted."
+      "paymentFailed": "We could not process your latest payment. Your workspace keeps its current plan for {days} more day(s). Update your payment details to avoid moving to the Free plan. Nothing will be deleted.",
+      "comparePlans": "Compare plans",
+      "currentBadge": "Current",
+      "limitObjects": "{count} objects",
+      "limitObjectsUnlimited": "Unlimited objects",
+      "limitMembers": "{count} members",
+      "limitMembersUnlimited": "Unlimited members",
+      "featuresNone": "Core tracking only",
+      "features": {
+        "custom_categories": "Custom categories",
+        "groups": "Groups",
+        "advanced_transfers": "Transfers",
+        "reports": "Reports",
+        "audit_ui": "Audit log"
+      }
     }
   },
   "Settings": {
@@ -653,7 +667,7 @@
       "createFailed": "Failed to create object.",
       "objectUsage": "{count} of {limit} objects used",
       "objectUsageHelp": "The limit is enforced for every object creation path.",
-      "objectLimitReached": "This workspace has reached its object limit.",
+      "objectLimitReached": "This workspace has reached its object limit. Nothing has been deleted. A workspace Owner can move to a larger plan to add more.",
       "createSuccess": "Object created successfully.",
       "updateFailed": "Failed to update object.",
       "updateSuccess": "Object updated successfully.",

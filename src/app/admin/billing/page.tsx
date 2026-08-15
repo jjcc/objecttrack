@@ -12,6 +12,10 @@ import { requireTenantAdminAccess } from "@/lib/tenant-admin/access";
 import { isBillingEnabled } from "@/lib/billing/flags";
 import { BILLING_INTERVALS } from "@/lib/billing/stripe";
 import { openBillingPortal, startCheckout } from "@/app/admin/billing/actions";
+import {
+  PlanComparison,
+  type CatalogPlan,
+} from "@/app/admin/billing/_components/PlanComparison";
 import { getTranslations } from "next-intl/server";
 
 const PAID_PLANS = ["hobby", "business"] as const;
@@ -43,12 +47,16 @@ function usagePercent(used: number, limit: number | null): number | null {
 export default async function TenantBillingPage() {
   const t = await getTranslations("Admin.billing");
   const { supabase } = await requireTenantAdminAccess("tenant.billing.manage");
-  const [planResult, statusResult] = await Promise.all([
+  const [planResult, statusResult, catalogResult] = await Promise.all([
     supabase.rpc("current_tenant_plan"),
     supabase.rpc("current_tenant_billing_status"),
+    supabase.rpc("billing_plan_catalog"),
   ]);
   if (planResult.error) throw new Error(planResult.error.message);
   if (statusResult.error) throw new Error(statusResult.error.message);
+  if (catalogResult.error) throw new Error(catalogResult.error.message);
+
+  const catalog = (catalogResult.data ?? []) as CatalogPlan[];
 
   const plan = (planResult.data ?? [])[0] as TenantPlan | undefined;
   const billingStatus = (statusResult.data ?? [])[0] as
@@ -165,6 +173,8 @@ export default async function TenantBillingPage() {
           </Stack>
         </Stack>
       </Card>
+
+      {catalog.length > 0 && <PlanComparison plans={catalog} />}
 
       {!isBillingEnabled() ? (
         <Alert color="gray">{t("changePlanUnavailable")}</Alert>

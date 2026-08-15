@@ -655,6 +655,24 @@ export type Database = {
           workspace_name: string
         }[]
       }
+      billing_plan_catalog: {
+        Args: never
+        Returns: {
+          advanced_transfers: boolean
+          audit_ui: boolean
+          custom_categories: boolean
+          groups: boolean
+          has_annual: boolean
+          has_monthly: boolean
+          is_current: boolean
+          max_objects: number
+          max_users: number
+          plan_code: string
+          plan_edition: string
+          reports: boolean
+          sort_order: number
+        }[]
+      }
       can_assign_tenant_role: {
         Args: { p_tenant_id: number; p_tenant_role: string }
         Returns: boolean

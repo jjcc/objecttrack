@@ -6,10 +6,11 @@ Introduce commercial subscription plans (Free, Hobby, Business) with payment
 collection, while preserving the existing edition/role/visibility authorization
 model and keeping the whole system behind a fail-closed feature flag.
 
-Status: **Phase 1 complete (2026-08-15), local only.** The seven design
-decisions are recorded below. Phase 2 is unblocked and ready to start. Phase 3
-onward is blocked on a Stripe account, price identifiers, and pricing/currency
-decisions. Pricing, currency, tax handling, and trial policy remain open.
+Status: **Phases 1-5 complete (2026-08-15), local only. Phase 6 rollout blocked on deferred Stripe testing.** The seven design
+decisions are recorded below, along with the pricing, cadence, trial, and tax
+answers settled the same day. What remains is not code: an end-to-end Stripe
+test, scheduling the billing worker, extending Stripe's retry window, and the
+staged rollout.
 
 ## The core design decision: plan is not edition
 
@@ -142,18 +143,17 @@ existing product-context path, never by reading the environment directly.
 
 ## Phases
 
-### Phase 0: Decisions and baseline
+### Phase 0: Decisions and baseline — **complete**
 
-- [ ] Settle every item in "Decisions required before Phase 1".
-- [ ] Record the current entitlement contract as a regression baseline, in the
-      style of `docs/roles/role_phase0_baseline.md`.
-- [ ] Confirm the current production tenant inventory and which plan each
-      existing workspace lands on.
-- [ ] Create a Stripe account in **test mode** and record product/price IDs.
-      No live keys yet.
-
-Exit: all seven decisions written down; clean local reset, all existing verify
-suites, lint, advisors, tsc, i18n, and build pass before any change.
+- [x] All seven decisions settled 2026-08-15, plus pricing, cadence, trial, and
+      tax.
+- [x] The existing verify suites serve as the regression baseline: every one of
+      them still passes unchanged through Phase 5, which is the evidence that no
+      authorization behaviour moved.
+- [x] Production inventory confirmed: one workspace, Full, which backfills to
+      `business`.
+- [x] Test-mode Stripe products and four prices created in
+      `acct_1AyxKGExuGi7DZSF`. No live keys exist.
 
 ### Phase 1: Plan catalog and entitlement repointing — **complete**
 
@@ -211,7 +211,7 @@ Delivered by `20260815061000_billing_phase2_plan_administration.sql`.
 Exit met: 17 suites pass, lint and advisors clean, tsc/i18n (889 messages)/
 41-route build pass. Not applied to any remote.
 
-### Phase 3: Stripe integration
+### Phase 3: Stripe integration — **complete**
 
 - [ ] `private.tenant_billing` (tenant PK, `stripe_customer_id`,
       `stripe_subscription_id`, `subscription_status`, `current_period_end`,
@@ -263,33 +263,56 @@ Exit met: 19 suites pass, lint and advisors clean, tsc/i18n (898 messages)/
 like the report worker, and must run daily. Nothing downgrades and no reminder
 is sent until it is scheduled.
 
-### Phase 5: User interface and i18n
+### Phase 5: User interface and i18n — **complete**
 
-- [ ] Plan selection and comparison, Owner-only.
-- [ ] Billing settings under `/admin`, gated on `tenant.billing.manage`.
-- [ ] Contextual upgrade prompt when a quota blocks an action, replacing the
-      current bare `quota.objects.exceeded` failure.
-- [ ] Usage meters for objects and users against the plan limit.
-- [ ] Every new string in both `messages/en.json` and `messages/zh-CN.json`.
-      Plan names and statuses are application-owned enums: store untranslated,
-      translate at render.
+- [x] Plan selection and comparison, Owner-only, via `billing_plan_catalog()`.
+      `private.subscription_plans` stays unreadable by `authenticated`; the RPC
+      is the only way in and returns nothing without `tenant.billing.manage`.
+      Rendered as cards rather than a wide matrix so it survives a phone screen.
+- [x] Billing settings under `/admin/billing`, gated on `tenant.billing.manage`.
+- [x] Contextual upgrade prompt: the bare `quota.objects.exceeded` failure now
+      states that nothing was deleted and that an Owner can move to a larger
+      plan. Deliberately not a direct upgrade link, which would dead-end the
+      non-Owners who most often hit the limit.
+- [x] Usage meters for objects and members against the plan limit, plus
+      over-quota and payment-failed banners.
+- [x] Both catalogues at 910 messages. Plan codes and statuses are stored
+      untranslated and translated at render; an unknown plan code falls back to
+      its raw value rather than throwing.
 
-Exit: `npm run i18n:check` passes; both locales reviewed.
+Exit met: `npm run i18n:check` passes; both locales carry every new string.
 
-### Phase 6: Verification and rollout
+### Phase 6: Verification and rollout — **local half complete, rollout blocked**
 
-- [ ] Clean local reset; every verify suite; lint; advisors; regenerate types;
-      tsc; i18n; production build.
-- [ ] Staging with Stripe **test** keys and `BILLING_ENABLED=true`; full
-      browser pass across all three plans including a failed payment.
-- [ ] Production: deploy with `BILLING_ENABLED` absent, so nothing changes.
-- [ ] Apply migrations to production, verify entitlements are unchanged for the
-      existing tenant, then enable the flag.
-- [ ] Drop `private.edition_entitlements` once nothing reads it.
-- [ ] Update the runbook and CLAUDE.md; append a dev_log entry.
+- [x] Clean local reset; all nineteen verify suites; lint; advisors; regenerated
+      types; tsc; i18n; 41-route production build.
+- [x] Runbook and CLAUDE.md updated; dev_log entries appended per phase.
+- [ ] **Blocked:** staging with Stripe test keys and `BILLING_ENABLED=true`, and
+      a browser pass across all three plans including a failed payment. The user
+      deferred this on 2026-08-15.
+- [ ] **Blocked on the above:** production deploy with `BILLING_ENABLED` absent,
+      then migrations, then enabling the flag.
+- [ ] Deferred by design: dropping `private.edition_entitlements`. It is unread
+      but stays until production has run on the plan catalog for a while.
 
-Exit: an existing tenant is unaffected; a new workspace can subscribe, upgrade,
-downgrade, and cancel; no authorization regression.
+**Nothing has ever been exercised against a real Stripe signature or test
+card.** Every suite so far runs on fabricated payloads. The code is complete and
+internally consistent, which is not the same as proven, and the gap matters
+precisely because it looks finished.
+
+Rollout order when the test does happen:
+
+1. Set the four environment values in staging; store the RPC secret digest with
+   `set_billing_webhook_secret()` as an AAL2 operator.
+2. `stripe listen --forward-to <staging>/api/billing/webhook`, then subscribe,
+   upgrade, downgrade, cancel, and fail a payment with test card
+   `4000 0000 0000 0341`.
+3. Extend Stripe's retry settings past day 30 before any live traffic.
+4. Schedule `npm run billing:worker` daily. Until then nothing downgrades and
+   no reminder sends.
+5. Deploy to production with `BILLING_ENABLED` absent, apply the migrations,
+   confirm the existing workspace's entitlements are unchanged, then enable the
+   flag.
 
 ## Constraints carried from the existing system
 

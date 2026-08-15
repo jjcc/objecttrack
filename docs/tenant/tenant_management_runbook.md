@@ -17,8 +17,10 @@ services or reviewed migrations; do not edit tenant-owned rows directly.
 
 ## Editions, roles, and registration
 
-- Simple workspaces support Owner and Member roles, predefined categories, a
-  five-user limit, a 100-object limit, and private/shared member visibility.
+- Simple workspaces support Owner and Member roles, predefined categories, and
+  private/shared member visibility. Their user and object limits come from the
+  workspace's plan, not from the edition: `free` allows 2 members and 10
+  objects, `hobby` allows 5 and 100. See the Billing operations section.
 - Full workspaces support Owner, Admin, Member, and Viewer roles plus entitled
   administration features. Admin is operational and covers groups and reports;
   workspace settings, billing, Owner management, and audit remain Owner-only.
@@ -46,7 +48,7 @@ The upgrade is locked, idempotent, and in-place. Repeated requests and existing
 Full workspaces are no-ops. There is no automated downgrade. Never change the
 edition directly or delete Full-only data to simulate a downgrade; follow the
 validation requirements in
-[role_implementation_plan.md](role_implementation_plan.md#future-guarded-downgrade-requirements).
+[role_implementation_plan.md](../roles/role_implementation_plan.md#future-guarded-downgrade-requirements).
 
 ## Provision a tenant
 
@@ -168,3 +170,59 @@ Move /ops into a separate deployment when one or more of these becomes true:
 
 Keep authorization and domain services shared at the backend boundary even
 after a UI/deployment split to avoid divergent security rules.
+
+## Billing operations
+
+Billing is gated by `BILLING_ENABLED`, which is fail-closed. With it absent or
+`false` there is no checkout, no portal, and `/api/billing/webhook` returns 503.
+Entitlements are unaffected either way: they resolve from the workspace's stored
+plan and never consult the flag, so turning billing off never strips a paying
+workspace of what it paid for.
+
+### Plans
+
+| Plan | Edition | Objects | Members | Monthly | Annual |
+| --- | --- | --- | --- | --- | --- |
+| `free` | simple | 10 | 2 | — | — |
+| `hobby` | simple | 100 | 5 | $5 | $50 |
+| `business` | full | unlimited | unlimited | $20 | $200 |
+
+`plan_code` is the commercial identity; `edition` remains the capability model
+and follows the plan automatically. Never set them independently.
+
+### Changing a workspace plan by hand
+
+`set_tenant_plan(tenant_id, plan_code)` requires an AAL2 platform operator, is
+idempotent, and writes a `tenant.plan.changed` audit row. Use it for comped
+accounts and support corrections. Do not update `tenant.plan_code` directly:
+the platform-field guard rejects it for any authenticated actor.
+
+### Payment failure and downgrade
+
+`past_due` opens a 30-day grace window during which the workspace keeps its paid
+plan. Reminders go out at day 0, 7, 21, and 29. At expiry the workspace drops to
+`free`.
+
+**A downgrade never deletes or hides anything.** A workspace over its new limit
+keeps every object readable and editable; only creation is blocked until it is
+back under the limit or subscribed again. Say this plainly to any customer who
+asks, because it is true by construction and verified by
+`verify_billing_downgrade_safety.sql`.
+
+### Scheduled worker
+
+`npm run billing:worker` must run daily. It sends due reminders first and
+expires grace second, so the day-29 notice always precedes the day-30
+downgrade. **Nothing downgrades and no reminder is sent until it is
+scheduled** — the code is inert without it.
+
+### Stripe configuration
+
+Stripe's own retry schedule must be extended so it does not cancel or mark a
+subscription unpaid before day 30. Its default gives up earlier, which would
+downgrade customers ahead of our own grace window and make the two clocks
+disagree.
+
+The webhook endpoint is `POST /api/billing/webhook`. It is allowlisted in the
+edge middleware because Stripe carries no session; it is authenticated by
+Stripe signature, not by cookie.

@@ -238,7 +238,21 @@
       "overQuotaTitle": "已超出套餐上限",
       "overQuota": "系统未删除任何数据，全部内容仍可查看和编辑。在回到上限以内或升级套餐之前，将无法新建条目。",
       "paymentFailedTitle": "支付失败",
-      "paymentFailed": "最近一次扣款未能完成。工作区将继续保留当前套餐 {days} 天。请更新支付方式，以免转为免费版。系统不会删除任何数据。"
+      "paymentFailed": "最近一次扣款未能完成。工作区将继续保留当前套餐 {days} 天。请更新支付方式，以免转为免费版。系统不会删除任何数据。",
+      "comparePlans": "套餐对比",
+      "currentBadge": "当前",
+      "limitObjects": "{count} 件物品",
+      "limitObjectsUnlimited": "物品数量不限",
+      "limitMembers": "{count} 位成员",
+      "limitMembersUnlimited": "成员数量不限",
+      "featuresNone": "仅基础追踪功能",
+      "features": {
+        "custom_categories": "自定义分类",
+        "groups": "分组",
+        "advanced_transfers": "转移流程",
+        "reports": "报表",
+        "audit_ui": "审计日志"
+      }
     }
   },
   "Settings": {
@@ -653,7 +667,7 @@
       "createFailed": "创建物品失败。",
       "objectUsage": "已使用 {count}/{limit} 个物品",
       "objectUsageHelp": "所有物品创建方式都会执行此上限。",
-      "objectLimitReached": "此工作区已达到物品数量上限。",
+      "objectLimitReached": "此工作区已达到物品数量上限，系统未删除任何数据。工作区所有者可升级套餐以增加容量。",
       "createSuccess": "物品创建成功。",
       "updateFailed": "更新物品失败。",
       "updateSuccess": "物品更新成功。",

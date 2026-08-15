@@ -561,6 +561,43 @@ The current mobile `approve_transfer` implementation assigns ownership to
   scheduled daily, and Stripe's own retry settings must be extended so it does
   not cancel or mark a subscription unpaid before our day 30.
 
+## 2026-08-15 — Billing Phases 5 and 6: plan comparison, and rollout readiness
+
+- Added `billing_plan_catalog()`, the only way to read
+  `private.subscription_plans` from the application. It returns nothing without
+  the Owner-only `tenant.billing.manage`, flags the caller's current plan, and
+  reports which intervals are purchasable. Prices stay in Stripe, so repricing
+  never needs a migration here.
+- Added a plan comparison to `/admin/billing`, rendered as cards rather than a
+  five-row feature matrix so it stays readable on a phone.
+- Replaced the bare `quota.objects.exceeded` message. It now states that nothing
+  was deleted and that an Owner can move to a larger plan. Deliberately not a
+  direct upgrade link: Members and Viewers hit the limit most often and would
+  land on `/unauthorized`.
+- Extended `verify_billing_plan_catalog.sql` to cover the catalog read: an Owner
+  sees three plans with the current one flagged, paid plans expose both
+  intervals while free exposes none, and a Member sees nothing. Writing that
+  fixture surfaced the tenant-isolation trigger rejecting a profile insert while
+  a previous block's JWT claims were still set.
+- Both catalogues now carry 910 messages.
+- Documentation: billing operations added to the tenant runbook, covering plan
+  limits, manual plan changes, the grace and downgrade policy, the worker
+  schedule, and the Stripe retry requirement. CLAUDE.md gained the billing
+  environment variables and the `billing:worker` command. Fixed a runbook link
+  broken by the docs reorganisation and corrected its claim that Simple implies
+  5 users and 100 objects, which is now plan-derived.
+- Phase 6's local half is complete: clean reset, all nineteen suites, lint,
+  advisors, regenerated types, tsc, i18n, and the 41-route build all pass.
+- **The rollout half is blocked and should stay blocked.** The user deferred
+  end-to-end Stripe testing on 2026-08-15. Nothing in the billing feature has
+  ever run against a real Stripe signature or test card; every suite so far uses
+  fabricated payloads. No billing migration has been applied to any remote
+  database, and none should be until that test passes.
+- Two outstanding prerequisites are not code: `npm run billing:worker` must be
+  scheduled daily or nothing downgrades and no reminder sends, and Stripe's
+  retry settings must be extended past day 30 so the provider does not end a
+  subscription before our own grace window does.
+
 ## 2026-08-15 — Activate the edge middleware, which had never run
 
 - Found that the edge middleware had never executed in production. Unauthenticated
