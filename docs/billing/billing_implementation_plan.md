@@ -6,9 +6,10 @@ Introduce commercial subscription plans (Free, Hobby, Business) with payment
 collection, while preserving the existing edition/role/visibility authorization
 model and keeping the whole system behind a fail-closed feature flag.
 
-Status: **Not started.** The seven design decisions were settled on 2026-08-15
-and are recorded below. Pricing, currency, tax handling, and trial policy remain
-open, but none of them block Phase 1.
+Status: **Phase 1 complete (2026-08-15), local only.** The seven design
+decisions are recorded below. Phase 2 is unblocked and ready to start. Phase 3
+onward is blocked on a Stripe account, price identifiers, and pricing/currency
+decisions. Pricing, currency, tax handling, and trial policy remain open.
 
 ## The core design decision: plan is not edition
 
@@ -154,34 +155,35 @@ existing product-context path, never by reading the environment directly.
 Exit: all seven decisions written down; clean local reset, all existing verify
 suites, lint, advisors, tsc, i18n, and build pass before any change.
 
-### Phase 1: Plan catalog and entitlement repointing
+### Phase 1: Plan catalog and entitlement repointing — **complete**
 
-Database only. No payment, no UI, no behaviour change.
+Delivered by `20260815051500_billing_phase1_plan_catalog.sql`. Database only,
+no payment, no UI.
 
-- [ ] Add `private.subscription_plans` (PK `code`; `edition`, `max_users`,
-      `max_objects`, the five feature booleans, `is_active`, `sort_order`, and
-      display metadata). Constrain `edition` to the existing two values.
-- [ ] Seed `free`, `hobby`, and `business` per the agreed matrix.
-- [ ] Add `tenant.plan_code`, defaulting to the plan that preserves current
-      behaviour, with a foreign key to `subscription_plans`.
-- [ ] Backfill: existing `simple` tenants → agreed grandfather plan;
-      existing `full` tenants → `business`.
-- [ ] Repoint `has_tenant_entitlement`, `enforce_object_quota`,
-      `enforce_profile_quota`, `enforce_invitation_quota`,
-      `current_tenant_usage`, `current_tenant_product_context`, and
-      `platform_tenant_product_context` to resolve through `plan_code`.
-- [ ] Keep `edition` authoritative for role availability and visibility, and
-      derive it from the plan on every plan change so the two cannot drift.
-- [ ] Extend `enforce_tenant_platform_fields` so `plan_code` is
-      operator/service-role controlled, exactly like `edition` today.
-- [ ] Retain `private.edition_entitlements` until Phase 6 to avoid breaking
-      anything mid-flight; drop it only once nothing reads it.
-- [ ] New `verify_billing_plan_catalog.sql`: entitlements resolve identically
-      before and after repointing for every existing tenant; a Free tenant is
-      blocked at its object limit; plan and edition never disagree.
+- [x] Add `private.subscription_plans` (PK `code`; `edition`, `max_users`,
+      `max_objects`, the five feature booleans, `is_active`,
+      `is_default_for_edition`, `sort_order`).
+- [x] Seed `free` (10/2), `hobby` (100/5), `business` (unlimited).
+- [x] Add `tenant.plan_code` with a foreign key to `subscription_plans`.
+- [x] Backfill: existing `simple` → `hobby`; existing `full` → `business`.
+- [x] Repoint all eight entitlement consumers through a new per-tenant view
+      `private.tenant_entitlements`. Only the join line changed in each, so no
+      function signature moved.
+- [x] Keep `edition` authoritative for roles and visibility;
+      `private.sync_tenant_plan_edition()` derives each column from the other
+      so they cannot drift.
+- [x] Extend the platform-field guard so `plan_code` is operator-managed.
+      Note the live trigger calls the **`private`** copy of
+      `enforce_tenant_platform_fields`, not the older unused `public` one.
+- [x] Retain `private.edition_entitlements`, now unread, for a later drop.
+- [x] `verify_billing_plan_catalog.sql` covering catalog shape, bidirectional
+      plan/edition sync, the free ceiling, grandfathered hobby limits, Simple
+      holding no Full features, and Owner-attempted plan escalation.
+- [x] Update the four existing suites that assumed simple means 5 users /
+      100 objects.
 
-Exit: every existing verify suite still passes unchanged, proving no
-authorization behaviour moved.
+Exit met: all sixteen suites pass, lint and advisors clean, types add only
+`plan_code`, tsc/i18n/build pass. Not applied to any remote.
 
 ### Phase 2: Plan administration without payment
 

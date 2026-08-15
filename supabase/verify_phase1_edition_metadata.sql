@@ -104,8 +104,10 @@ BEGIN
      OR v_context.edition <> 'simple'
      OR v_context.workspace_kind <> 'family'
      OR v_context.member_visibility <> 'private'
-     OR v_context.max_users <> 5
-     OR v_context.max_objects <> 100
+     -- A simple workspace created without an explicit plan lands on free,
+     -- which is 2 users and 10 objects.
+     OR v_context.max_users <> 2
+     OR v_context.max_objects <> 10
      OR v_context.custom_categories
      OR v_context.groups
      OR v_context.advanced_transfers

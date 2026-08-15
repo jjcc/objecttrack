@@ -2,16 +2,18 @@
 
 BEGIN;
 
+-- Pinned to hobby because these fixtures need more members than the free plan
+-- allows. Visibility is an edition concern, so the plan only supplies headroom.
 INSERT INTO public.tenant (
-  id, institution_name, edition, member_visibility,
+  id, institution_name, edition, plan_code, member_visibility,
   show_object_info_without_authentication
 )
 OVERRIDING SYSTEM VALUE
 VALUES
-  (975000001, 'Simple Private', 'simple', 'private', false),
-  (975000002, 'Simple Shared', 'simple', 'shared', false),
-  (975000003, 'Full Workspace', 'full', 'private', false),
-  (975000004, 'Other Workspace', 'full', 'private', true);
+  (975000001, 'Simple Private', 'simple', 'hobby', 'private', false),
+  (975000002, 'Simple Shared', 'simple', 'hobby', 'shared', false),
+  (975000003, 'Full Workspace', 'full', 'business', 'private', false),
+  (975000004, 'Other Workspace', 'full', 'business', 'private', true);
 
 INSERT INTO auth.users (id, aud, role, is_sso_user, is_anonymous)
 VALUES

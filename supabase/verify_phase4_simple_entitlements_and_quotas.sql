@@ -2,9 +2,11 @@
 
 BEGIN;
 
-UPDATE private.edition_entitlements
+-- Entitlements now resolve through the plan catalog. A simple workspace created
+-- without an explicit plan lands on free, so that is the plan to shrink.
+UPDATE private.subscription_plans
 SET max_users = 2, max_objects = 2
-WHERE edition = 'simple';
+WHERE code = 'free';
 
 INSERT INTO auth.users (
   id, aud, role, email, encrypted_password, email_confirmed_at,

@@ -385,6 +385,56 @@ The current mobile `approve_transfer` implementation assigns ownership to
   and owner, `tenant.audit.read` and `tenant.owners.manage` on owner only, and
   the three renamed `Tenant managers ... groups` policies.
 
+## 2026-08-15 — Billing Phase 1: commercial plan catalog
+
+- Added `private.subscription_plans` (`free`, `hobby`, `business`) and
+  `public.tenant.plan_code`, introducing a commercial axis above the existing
+  edition capability model. A plan resolves to an edition; `edition` itself is
+  unchanged and still decides which roles exist and how visibility behaves.
+- Repointed all eight entitlement consumers from
+  `private.edition_entitlements` (keyed by edition) to a new per-tenant view
+  `private.tenant_entitlements` (keyed by tenant): `has_tenant_entitlement`,
+  `current_tenant_product_context`, `tenant_admin_profile`,
+  `enforce_object_quota`, `enforce_profile_quota`, `enforce_invitation_quota`,
+  `current_tenant_usage`, and `platform_tenant_product_context`. Only the join
+  line changed in each; no function signature was touched, so the Flutter RPC
+  contract is unaffected.
+- `private.sync_tenant_plan_edition()` keeps the two columns in step in both
+  directions: changing the plan derives the edition, and changing the edition
+  derives that edition's default plan. A verify assertion proves no workspace
+  can hold a plan and edition that disagree.
+- Grandfathering per the 2026-08-15 decision: existing `simple` workspaces
+  backfilled to `hobby`, which carries the same 5-user / 100-object allowance
+  simple had. Existing `full` workspaces backfilled to `business`. No existing
+  workspace loses any capability.
+- `free` is the default plan for the simple edition, so **new** self-service
+  signups get 10 objects / 2 users. This is the only intentional behaviour
+  change and it applies only to workspaces created after this migration.
+- Extended the platform-field guard so `plan_code` is operator-managed like
+  `edition`. This exposed a trap: the trigger calls
+  `private.enforce_tenant_platform_fields()`, added in Phase 3 of the role work
+  with a self-provisioning carve-out, while an older unused
+  `public.enforce_tenant_platform_fields()` still exists. The first attempt
+  patched the public copy and a workspace Owner was consequently able to change
+  its own `plan_code`. The new verify suite caught it before it left the
+  machine; the private copy is now the one patched.
+- Added `verify_billing_plan_catalog.sql`: catalog shape, plan/edition
+  bidirectional sync, the free 10-object ceiling, grandfathered hobby limits,
+  Simple plans holding no Full features, and Owner-attempted plan escalation.
+- Updated four existing suites that assumed simple means 5 users / 100 objects.
+  `verify_phase5_object_visibility.sql` and `verify_phase6_edition_upgrade.sql`
+  now pin `hobby` explicitly, since they need more members than free allows;
+  `verify_phase4_simple_entitlements_and_quotas.sql` shrinks the free plan
+  instead of the retired entitlement table; `verify_phase1_edition_metadata.sql`
+  asserts the new free defaults.
+- `private.edition_entitlements` is intentionally retained and unread. It is
+  dropped in a later phase once production confirms nothing depends on it.
+- Verification: clean local reset; all sixteen suites pass; `db lint` and
+  `db advisors --level warn` clean; regenerated types add only `plan_code`;
+  `npx tsc --noEmit`, `npm run i18n:check` (875 messages), and the 40-route
+  production build pass.
+- Not applied to any remote. No application or UI change yet.
+
 ## 2026-08-15 — Activate the edge middleware, which had never run
 
 - Found that the edge middleware had never executed in production. Unauthenticated

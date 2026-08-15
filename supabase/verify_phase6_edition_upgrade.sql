@@ -2,13 +2,14 @@
 
 BEGIN;
 
+-- Pinned to hobby so the upgrade fixture can hold more members than free allows.
 INSERT INTO public.tenant (
-  id, institution_name, edition, workspace_kind, member_visibility, defaults_version
+  id, institution_name, edition, plan_code, workspace_kind, member_visibility, defaults_version
 )
 OVERRIDING SYSTEM VALUE
 VALUES
-  (976000001, 'Phase 6 Simple', 'simple', 'family', 'private', 1),
-  (976000002, 'Phase 6 Full', 'full', 'business', 'shared', 1);
+  (976000001, 'Phase 6 Simple', 'simple', 'hobby', 'family', 'private', 1),
+  (976000002, 'Phase 6 Full', 'full', 'business', 'business', 'shared', 1);
 
 SELECT private.apply_tenant_defaults(976000001, 1);
 SELECT private.apply_tenant_defaults(976000002, 1);

@@ -377,6 +377,7 @@ export type Database = {
           institution_name: string
           member_visibility: string
           phone: string | null
+          plan_code: string
           show_object_info_without_authentication: boolean
           social_media: Json
           status: string
@@ -399,6 +400,7 @@ export type Database = {
           institution_name: string
           member_visibility?: string
           phone?: string | null
+          plan_code: string
           show_object_info_without_authentication?: boolean
           social_media?: Json
           status?: string
@@ -421,6 +423,7 @@ export type Database = {
           institution_name?: string
           member_visibility?: string
           phone?: string | null
+          plan_code?: string
           show_object_info_without_authentication?: boolean
           social_media?: Json
           status?: string
@@ -1233,3 +1236,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
