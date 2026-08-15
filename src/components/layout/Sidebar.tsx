@@ -84,7 +84,9 @@ export function Sidebar() {
         tenantRole === "owner") &&
       (item.key !== "events" || tenantRole !== "viewer") &&
       (item.key !== "groups" || features.groups) &&
-      (item.key !== "groups" || tenantRole === "owner") &&
+      (item.key !== "groups" ||
+        tenantRole === "admin" ||
+        tenantRole === "owner") &&
       (item.key !== "transfers" || features.advancedTransfers)
   );
   const visibleItems = showTenantAdmin

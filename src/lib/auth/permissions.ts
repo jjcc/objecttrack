@@ -63,15 +63,18 @@ const tenantAdminPermissions = [
   "tenant.transfers.participate",
   "tenant.transfers.manage",
   "tenant.holder.lookup",
+  "tenant.groups.manage",
+  "tenant.reports.generate",
 ] as const satisfies readonly Permission[];
 
+// Owner keeps the governance core: how the workspace is configured, what it
+// costs, who holds authority, and the record of what happened. Operational
+// work belongs to Admin.
 const tenantOwnerPermissions = [
   ...tenantAdminPermissions,
   "tenant.settings.update",
   "tenant.billing.manage",
   "tenant.owners.manage",
-  "tenant.groups.manage",
-  "tenant.reports.generate",
   "tenant.audit.read",
 ] as const satisfies readonly Permission[];
 
