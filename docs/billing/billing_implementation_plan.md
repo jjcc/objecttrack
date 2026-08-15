@@ -56,7 +56,37 @@ Proposed mapping (numbers are proposals, not decisions):
 Hobby at 100 objects deliberately matches today's Simple quota, so existing
 Simple workspaces can be backfilled to Hobby with no change in what they can do.
 
-## Decisions required before Phase 1
+## Decisions settled 2026-08-15
+
+| # | Decision | Answer |
+| --- | --- | --- |
+| 1 | Plan limits | Free 10 objects / 2 users; Hobby 100 / 5; Business unlimited |
+| 2 | Grandfathering | Existing Simple workspaces backfill to Hobby |
+| 3 | Over-quota downgrade | Block creation only; all data stays readable and editable |
+| 4 | Dunning window | 30 days, emails at day 0, 7, 21, and 29 |
+| 5 | Webhook privilege | `SECURITY DEFINER` RPC behind a dedicated shared secret |
+| 6 | Provider | Stripe Checkout + Customer Portal |
+| 7 | Cadence | Monthly **and** annual at launch |
+
+Two answers diverged from the original recommendation and change the work:
+
+**30-day dunning.** Stripe's default retry schedule gives up well before day 30
+and will cancel or mark the subscription `unpaid` on its own. Stripe's retry and
+subscription-lifecycle settings must be configured so the provider never ends
+the subscription before our own grace period does; otherwise the two clocks
+disagree and a customer is downgraded early. This is a Stripe dashboard
+configuration task, not only application code.
+
+**Monthly and annual at launch.** A plan therefore has more than one price, so
+price identifiers cannot live on the plan row. Phase 3 gains a
+`private.plan_prices` table keyed by `(plan_code, interval)`. Phase 4 gains
+proration and mid-term cadence-switch handling, and must decide whether an
+annual downgrade takes effect immediately or at period end.
+
+Still open, none of which block Phase 1 or 2: actual prices, currency, whether
+Stripe Tax is enabled, and whether a trial exists.
+
+## Original decision list, retained for context
 
 1. **Object and user limits per plan.** The table above is a starting point.
    Free at 10 objects is the number you gave; Hobby and the user limits are
