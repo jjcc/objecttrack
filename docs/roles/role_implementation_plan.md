@@ -10,6 +10,35 @@ disposable hosted staging. Self-service registration is now enabled in
 production, and it remains safe by default elsewhere because
 `SELF_SERVICE_REGISTRATION_ENABLED` is disabled when absent or set to `false`.
 
+## Post-rollout amendments
+
+### 2026-08-14: narrow the Owner/Admin gap
+
+Migration `20260815023231_admin_operational_permissions.sql` moved
+`tenant.groups.manage` and `tenant.reports.generate` from Owner to Admin.
+
+Owner had been Admin plus six permissions. Two of those six were routine
+operations rather than governance, so delegating them to Admin removes friction
+without weakening the role boundary. Owner keeps a four-permission governance
+core: `tenant.settings.update`, `tenant.billing.manage`,
+`tenant.owners.manage`, and `tenant.audit.read`.
+
+`tenant.owners.manage` stays Owner-only because an Admin able to grant roles
+could promote itself or demote an Owner, which would require a last-authority
+rule to reintroduce the same protection under a different name.
+`tenant.audit.read` stays Owner-only so that no actor holds sole control of the
+record of its own actions.
+
+This partially amends the Phase 2 first-release decision to remove Admin report
+access; audit access remains removed from Admin as originally decided. Edition
+entitlements are unchanged and still gate both permissions independently of
+role, so Simple workspaces reach neither.
+
+Scope: two catalog rows, three group-policy renames for accuracy, the
+`permissions.ts` role table, and one hardcoded Owner check in the sidebar
+navigation. No schema change, no function change, no RPC signature change, and
+therefore no impact on the Flutter client contract.
+
 ## Objective
 
 Extend the existing ObjectTrack tenant model to support Simple and Full editions without migrating tenant data or replacing the current application architecture.
@@ -191,7 +220,7 @@ Database changes:
 
 - [x] Expand the tenant-role constraint and permission catalog to support `viewer`.
 - [x] Introduce granular permissions for governance, membership, invitations, objects, categories, transfers, reports, audit, and controlled holder lookup.
-- [x] Make billing/plan changes, Owner grants/removals, governance-sensitive settings, reports, and audit Owner-only.
+- [x] Make billing/plan changes, Owner grants/removals, governance-sensitive settings, reports, and audit Owner-only. *(Amended 2026-08-14: reports and groups moved to Admin. See Post-rollout amendments.)*
 - [x] Give Admin object, category, transfer, invitation, and supported non-Owner role-management permissions.
 - [x] Give Member participation and scoped-read permissions.
 - [x] Give Viewer assigned-object read and controlled lookup permissions only.

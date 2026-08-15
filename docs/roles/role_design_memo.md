@@ -123,15 +123,23 @@ Downgrading requires validation. A workspace should only downgrade when it is wi
 
 The Owner is the accountable authority for one tenant. The role combines operational permissions with tenant governance.
 
-Owner-only responsibilities should include:
+Owner-only responsibilities are the governance core — how the workspace is
+configured, what it costs, who holds authority, and the record of what happened:
 
 - Managing tenant identity and core settings.
 - Managing billing and plan selection.
 - Granting or removing the Owner role.
 - Protecting the tenant from losing its final Owner.
-- Managing reports and audit access unless those capabilities are delegated later.
+- Reading the tenant audit log.
 
 The Owner also has the operational permissions of an Admin.
+
+Amended 2026-08-14: group management and report generation were moved to Admin
+because both are routine operations rather than governance. This narrowed the
+Owner/Admin gap from six permissions to four. Audit access stayed Owner-only so
+that an actor does not hold sole control of the record of its own actions, and
+Owner-role management stayed Owner-only to preserve the last-authority
+guarantee.
 
 ### Admin
 
@@ -142,6 +150,8 @@ An Admin is a delegated operational administrator. The desired Admin scope is in
 - Manage transfers.
 - Invite users.
 - Assign non-Owner roles where appropriate.
+- Manage groups.
+- Generate tenant reports.
 
 An Admin should not automatically be able to:
 
@@ -149,9 +159,11 @@ An Admin should not automatically be able to:
 - Grant or remove the Owner role.
 - Manage billing or subscription plans.
 - Change governance-sensitive tenant settings.
+- Read the tenant audit log.
 - Read platform-wide information.
 
-Reports and tenant audit access should initially remain Owner-only. They can become separate permissions later if business customers need delegation.
+Tenant audit access remains Owner-only. It can become a separate delegated
+permission later if business customers need it.
 
 ### Member or Custodian
 

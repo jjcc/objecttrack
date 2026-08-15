@@ -339,3 +339,41 @@ The current mobile `approve_transfer` implementation assigns ownership to
   gated item rather than a pending fix. Password length and character
   requirements remain available on the free plan if stronger password policy is
   wanted without upgrading.
+
+## 2026-08-14 — Narrow the Owner/Admin permission gap
+
+- Moved `tenant.groups.manage` and `tenant.reports.generate` from Owner to Admin
+  in `20260815023231_admin_operational_permissions.sql`. Both are routine
+  operations rather than governance.
+- Owner keeps a four-permission governance core: `tenant.settings.update`,
+  `tenant.billing.manage`, `tenant.owners.manage`, and `tenant.audit.read`.
+  Owner-role management stays Owner-only to preserve the last-authority
+  guarantee, and audit stays Owner-only so no actor solely controls the record
+  of its own actions.
+- The migration is additive and idempotent: two rows in
+  `private.role_permissions` plus three `ALTER POLICY ... RENAME` statements on
+  `public.groups`, whose policies were already permission-driven but still named
+  "Tenant owners …". No schema change, no function change, no RPC signature
+  change, so the Flutter client contract is unaffected.
+- Application changes were the `permissions.ts` role table and one hardcoded
+  `tenantRole === "owner"` check for the groups navigation item in
+  `Sidebar.tsx`. The reports surfaces were already permission-driven and needed
+  no change.
+- Entitlement gating is untouched. `has_permission()` evaluates
+  `has_tenant_entitlement()` independently of role, so Simple workspaces still
+  reach neither groups nor reports.
+- Added `verify_admin_operational_permissions.sql`, covering the new Admin
+  permissions, the retained Owner governance core, Member exclusion, an
+  end-to-end Admin group insert through RLS, and a Simple-edition Owner that
+  still cannot reach either permission.
+- Three existing suites encoded the old contract and were updated as intentional
+  changes rather than regressions: `verify_phase2_granular_roles.sql`,
+  `verify_role_edition_baseline.sql`, and `verify_tenant_authorization.sql`
+  (which also asserted that an Admin group insert must be denied).
+- Verification: clean local `db reset` applied the full chain including the new
+  migration; all fifteen rollback-only suites passed; `db lint` reported no
+  schema errors; `db advisors --level warn` reported no issues; regenerated
+  types differed only by the generator's trailing blank line; `npx tsc
+  --noEmit`, `npm run i18n:check` (875 messages), and the 40-route production
+  build passed. No new user-facing strings were required.
+- Not yet applied to `ObjectTrack2` production or to `ObjectTrack-stage`.

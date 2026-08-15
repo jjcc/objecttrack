@@ -46,8 +46,8 @@ both identities, but Platform Operator status alone grants no tenant access.
 | Manage objects, categories, event types, custom fields, and advanced transfers | — | — | ✓ | ✓ | — |
 | Read users, invite users, and manage supported non-Owner roles | — | — | ✓ | ✓ | — |
 | Access tenant administration | — | — | ✓ | ✓ | — |
-| Update workspace settings; manage billing and Owners | — | — | — | ✓ | — |
-| Manage groups, generate reports, and read tenant audit | — | — | — | ✓ | — |
+| Manage groups and generate reports | — | — | ✓ | ✓ | — |
+| Update workspace settings; manage billing and Owners; read tenant audit | — | — | — | ✓ | — |
 | Create, update, or suspend tenants; read platform audit | — | — | — | — | ✓ |
 
 The exact synchronized catalog lives in
@@ -60,6 +60,13 @@ authorization.
 
 Owner-only invariants apply in addition to the catalog. An Admin cannot grant,
 demote, or remove an Owner, and no action may remove the final Owner.
+
+The Owner/Admin boundary is deliberately four permissions wide:
+`tenant.settings.update`, `tenant.billing.manage`, `tenant.owners.manage`, and
+`tenant.audit.read`. Group management and report generation moved to Admin on
+2026-08-14 as routine operations. The remaining four are governance: an Admin
+that could grant roles could promote itself, and an Admin that solely controlled
+the audit log could obscure its own actions.
 
 ## Object visibility and lookup
 

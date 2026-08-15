@@ -20,8 +20,8 @@ services or reviewed migrations; do not edit tenant-owned rows directly.
 - Simple workspaces support Owner and Member roles, predefined categories, a
   five-user limit, a 100-object limit, and private/shared member visibility.
 - Full workspaces support Owner, Admin, Member, and Viewer roles plus entitled
-  administration features. Admin is operational; workspace governance,
-  billing, Owner management, reports, and audit remain Owner-only.
+  administration features. Admin is operational and covers groups and reports;
+  workspace settings, billing, Owner management, and audit remain Owner-only.
 - `workspace_kind` controls onboarding wording only and never authorization.
 - Direct self-registration is controlled by
   `SELF_SERVICE_REGISTRATION_ENABLED`. It defaults to disabled when absent.
