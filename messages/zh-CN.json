@@ -10,41 +10,41 @@
       "billing": "套餐与用量"
     },
     "home": {
-      "title": "租户管理",
-      "description": "管理操作仅限于您当前的租户。",
+      "title": "组织管理",
+      "description": "管理操作仅限于您当前的组织。",
       "profile": {
         "title": "资料与设置",
-        "description": "管理租户身份、联系信息和可见性设置。"
+        "description": "管理组织信息、联系信息和可见性设置。"
       },
       "members": {
         "title": "成员",
-        "description": "查看租户成员并安全地管理租户角色。"
+        "description": "查看组织成员并安全地管理组织角色。"
       },
       "invitations": {
         "title": "邀请",
-        "description": "邀请用户并将其加入此租户。"
+        "description": "邀请用户并将其加入此组织。"
       },
       "reports": {
         "title": "报告",
-        "description": "生成并下载租户范围的报告。"
+        "description": "生成并下载组织报告。"
       }
     },
     "audit": {
-      "title": "租户审计",
-      "description": "当前租户敏感操作的只追加记录。"
+      "title": "组织审计",
+      "description": "当前组织敏感操作的只追加记录。"
     },
     "members": {
       "title": "成员",
-      "description": "角色更改和移除操作仅限租户范围并会被审计。最后一位所有者不能被降级或移除。"
+      "description": "角色更改和移除操作仅限组织范围并会被审计。最后一位所有者不能被降级或移除。"
     },
     "profile": {
       "title": "资料与设置",
       "description": "平台控制的状态、默认版本和账单所有权无法在此更改。",
-      "unavailable": "租户资料不可用。"
+      "unavailable": "组织资料不可用。"
     },
     "reports": {
       "title": "报告",
-      "description": "租户范围的报告生成和下载。"
+      "description": "组织报告的生成和下载。"
     },
     "invitations": {
       "title": "邀请",
@@ -62,7 +62,7 @@
     "membersTable": {
       "member": "成员",
       "title": "职务",
-      "tenantRole": "租户角色",
+      "tenantRole": "组织角色",
       "removeMembership": "移除成员资格",
       "save": "保存",
       "confirm": "确认",
@@ -75,7 +75,7 @@
       }
     },
     "profileForm": {
-      "title": "租户资料与设置",
+      "title": "组织资料与设置",
       "updateFailed": "更新失败",
       "updated": "已更新",
       "productTitle": "工作区版本",
@@ -114,12 +114,12 @@
         "shared": "共享"
       },
       "saveWorkspace": "保存工作区偏好",
-      "institutionName": "机构名称",
+      "institutionName": "组织名称",
       "description": "描述",
       "address": "地址",
       "contact": "联系人",
       "phone": "电话",
-      "email": "机构邮箱",
+      "email": "组织邮箱",
       "website": "网站",
       "socialMedia": "社交媒体",
       "jsonObject": "JSON 对象",
@@ -162,7 +162,7 @@
       "noPendingActions": "无待处理操作",
       "createTitle": "创建邀请",
       "email": "受邀邮箱",
-      "tenantRole": "租户角色",
+      "tenantRole": "组织角色",
       "expiresInDays": "有效天数",
       "send": "发送邀请",
       "recipient": "接收人",
@@ -196,9 +196,9 @@
       "socialObject": "社交媒体信息必须是 JSON 对象。",
       "socialJson": "社交媒体信息必须是有效的 JSON。",
       "failed": "操作失败。",
-      "profileUpdated": "租户资料和设置已更新。",
+      "profileUpdated": "组织资料和设置已更新。",
       "roleUpdated": "成员角色已更新。",
-      "memberRemoved": "租户成员资格已移除。",
+      "memberRemoved": "组织成员资格已移除。",
       "workspaceUpdated": "工作区偏好已更新。"
     },
     "invitationActions": {
@@ -270,7 +270,7 @@
       },
       "customFields": {
         "title": "自定义物品字段",
-        "description": "定义租户物品需要收集的附加字段。"
+        "description": "定义组织物品需要收集的附加字段。"
       }
     },
     "categories": {
@@ -337,10 +337,10 @@
       "dashboard": "控制面板",
       "settings": "设置",
       "title": "自定义物品字段",
-      "description": "定义一个附加到物品表单的租户级架构。",
+      "description": "定义一个附加到物品表单的组织级架构。",
       "add": "添加字段",
       "loadFailed": "无法加载自定义字段",
-      "tenantMissing": "您的个人资料尚未分配给租户。",
+      "tenantMissing": "您的个人资料尚未分配给组织。",
       "missingName": "缺少字段名称",
       "missingNameMessage": "每个自定义字段都需要名称。",
       "duplicateName": "字段名称重复",
@@ -660,8 +660,8 @@
       "cancel": "取消",
       "imageTooLarge": "图片过大",
       "imageSizeHelp": "请选择不超过 2 MB 的图片。",
-      "tenantUnavailable": "租户不可用",
-      "tenantMissing": "您的个人资料尚未分配给租户。",
+      "tenantUnavailable": "组织不可用",
+      "tenantMissing": "您的个人资料尚未分配给组织。",
       "error": "错误",
       "success": "成功",
       "createFailed": "创建物品失败。",
@@ -715,7 +715,7 @@
       "unavailableTitle": "物品信息不可用",
       "imageAlt": "{name}的图片",
       "objectId": "物品 ID",
-      "institution": "机构",
+      "institution": "组织",
       "owner": "当前保管人",
       "category": "类别",
       "model": "型号",
@@ -803,15 +803,15 @@
     "register": {
       "appTitle": "物品追踪",
       "title": "申请访问权限",
-      "description": "创建账户不会自动获得租户访问权限。授权的租户管理员或所有者必须将您添加为该租户的成员。",
+      "description": "创建账户不会自动获得组织访问权限。授权的组织管理员或所有者必须将您添加为成员。",
       "invitationTitle": "创建账户并接受邀请",
-      "invitationDescription": "请为 {email} 创建账户以加入 {tenant}。只有接受邀请后，系统才会分配租户和角色。",
+      "invitationDescription": "请为 {email} 创建账户以加入 {tenant}。只有接受邀请后，系统才会分配组织和角色。",
       "selfServiceTitle": "创建您的免费工作区",
       "selfServiceDescription": "为家庭、小型企业、俱乐部或收藏创建一个私密的简易版工作区。",
       "selfServiceUnavailableTitle": "注册暂时不可用",
-      "selfServiceUnavailable": "开放工作区注册尚未启用。您仍可通过有效的租户邀请创建账户。",
+      "selfServiceUnavailable": "开放工作区注册尚未启用。您仍可通过有效的组织邀请创建账户。",
       "invitationRequiredTitle": "需要邀请",
-      "invitationRequired": "请从有效的租户邀请链接打开注册页面。单独注册不会获得访问权限。",
+      "invitationRequired": "请从有效的组织邀请链接打开注册页面。单独注册不会获得访问权限。",
       "email": "电子邮箱",
       "password": "密码",
       "confirmPassword": "确认密码",
@@ -903,11 +903,11 @@
   },
   "Invitations": {
     "accept": {
-      "title": "租户邀请",
+      "title": "组织邀请",
       "invalidTitle": "链接无效",
       "invalid": "此邀请链接无效。",
       "expiredTitle": "链接已过期",
-      "expired": "此邀请已过期。请联系租户管理员重新发送。",
+      "expired": "此邀请已过期。请联系组织管理员重新发送。",
       "revokedTitle": "邀请已撤销",
       "revoked": "此邀请已被撤销，无法再接受。",
       "acceptedTitle": "已接受",
@@ -926,7 +926,7 @@
         "invalid": "邀请链接无效。",
         "signInRequired": "请先登录再接受邀请。",
         "wrongEmail": "请使用邀请中指定的电子邮箱登录。",
-        "alreadyMember": "此账户已属于一个租户，无法接受其他租户邀请。",
+        "alreadyMember": "此账户已属于一个组织，无法接受其他组织邀请。",
         "failed": "接受邀请失败。"
       }
     }
@@ -949,7 +949,7 @@
       "transfers": "转移",
       "events": "事件",
       "settings": "设置",
-      "tenantAdmin": "租户管理"
+      "tenantAdmin": "组织管理"
     }
   },
   "Ops": {

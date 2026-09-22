@@ -10,41 +10,41 @@
       "billing": "Plan and usage"
     },
     "home": {
-      "title": "Tenant administration",
-      "description": "Administrative actions are restricted to your current tenant.",
+      "title": "Organization administration",
+      "description": "Administrative actions are restricted to your current organization.",
       "profile": {
         "title": "Profile & settings",
-        "description": "Manage supported tenant identity, contact, and visibility settings."
+        "description": "Manage organization details, contact information, and visibility settings."
       },
       "members": {
         "title": "Members",
-        "description": "Review tenant members and safely manage tenant roles."
+        "description": "Review organization members and safely manage organization roles."
       },
       "invitations": {
         "title": "Invitations",
-        "description": "Invite and onboard users into this tenant."
+        "description": "Invite and onboard users into this organization."
       },
       "reports": {
         "title": "Reports",
-        "description": "Generate and download tenant-scoped reports."
+        "description": "Generate and download organization reports."
       }
     },
     "audit": {
-      "title": "Tenant audit",
-      "description": "Append-only sensitive actions for your current tenant."
+      "title": "Organization audit",
+      "description": "Append-only sensitive actions for your current organization."
     },
     "members": {
       "title": "Members",
-      "description": "Role changes and removals are tenant-scoped and audited. The final owner cannot be demoted or removed."
+      "description": "Role changes and removals are limited to your organization and audited. The final owner cannot be demoted or removed."
     },
     "profile": {
       "title": "Profile & settings",
       "description": "Platform-controlled status, defaults version, and billing ownership cannot be changed here.",
-      "unavailable": "Tenant profile is unavailable."
+      "unavailable": "Organization profile is unavailable."
     },
     "reports": {
       "title": "Reports",
-      "description": "Tenant-scoped report generation and downloads."
+      "description": "Organization report generation and downloads."
     },
     "invitations": {
       "title": "Invitations",
@@ -62,7 +62,7 @@
     "membersTable": {
       "member": "Member",
       "title": "Title",
-      "tenantRole": "Tenant role",
+      "tenantRole": "Organization role",
       "removeMembership": "Remove membership",
       "save": "Save",
       "confirm": "Confirm",
@@ -75,7 +75,7 @@
       }
     },
     "profileForm": {
-      "title": "Tenant profile and settings",
+      "title": "Organization profile and settings",
       "updateFailed": "Update failed",
       "updated": "Updated",
       "productTitle": "Workspace edition",
@@ -114,12 +114,12 @@
         "shared": "Shared"
       },
       "saveWorkspace": "Save workspace preferences",
-      "institutionName": "Institution name",
+      "institutionName": "Organization name",
       "description": "Description",
       "address": "Address",
       "contact": "Contact",
       "phone": "Phone",
-      "email": "Institution email",
+      "email": "Organization email",
       "website": "Website",
       "socialMedia": "Social media",
       "jsonObject": "JSON object",
@@ -162,7 +162,7 @@
       "noPendingActions": "No pending actions",
       "createTitle": "Create invitation",
       "email": "Invited email",
-      "tenantRole": "Tenant role",
+      "tenantRole": "Organization role",
       "expiresInDays": "Expires in days",
       "send": "Send invitation",
       "recipient": "Recipient",
@@ -196,9 +196,9 @@
       "socialObject": "Social media must be a JSON object.",
       "socialJson": "Social media must be valid JSON.",
       "failed": "The operation failed.",
-      "profileUpdated": "Tenant profile and settings updated.",
+      "profileUpdated": "Organization profile and settings updated.",
       "roleUpdated": "Member role updated.",
-      "memberRemoved": "Tenant membership removed.",
+      "memberRemoved": "Organization membership removed.",
       "workspaceUpdated": "Workspace preferences updated."
     },
     "invitationActions": {
@@ -270,7 +270,7 @@
       },
       "customFields": {
         "title": "Custom Object Fields",
-        "description": "Define additional fields collected for objects in your tenant."
+        "description": "Define additional fields collected for objects in your organization."
       }
     },
     "categories": {
@@ -337,10 +337,10 @@
       "dashboard": "Dashboard",
       "settings": "Settings",
       "title": "Custom Object Fields",
-      "description": "Define one tenant-wide schema appended to object forms.",
+      "description": "Define one organization-wide schema appended to object forms.",
       "add": "Add Field",
       "loadFailed": "Unable to load custom fields",
-      "tenantMissing": "Your profile is not assigned to a tenant.",
+      "tenantMissing": "Your profile is not assigned to an organization.",
       "missingName": "Missing field name",
       "missingNameMessage": "Every custom field needs a name.",
       "duplicateName": "Duplicate field name",
@@ -660,8 +660,8 @@
       "cancel": "Cancel",
       "imageTooLarge": "Image too large",
       "imageSizeHelp": "Choose an image no larger than 2 MB.",
-      "tenantUnavailable": "Tenant unavailable",
-      "tenantMissing": "Your profile is not assigned to a tenant.",
+      "tenantUnavailable": "Organization unavailable",
+      "tenantMissing": "Your profile is not assigned to an organization.",
       "error": "Error",
       "success": "Success",
       "createFailed": "Failed to create object.",
@@ -715,7 +715,7 @@
       "unavailableTitle": "Object information unavailable",
       "imageAlt": "{name} image",
       "objectId": "Object ID",
-      "institution": "Institution",
+      "institution": "Organization",
       "owner": "Current holder",
       "category": "Category",
       "model": "Model",
@@ -803,15 +803,15 @@
     "register": {
       "appTitle": "Object Tracking",
       "title": "Request Access",
-      "description": "Creating an account does not grant tenant access automatically. An authorized tenant administrator or owner must add you as a member of their tenant.",
+      "description": "Creating an account does not grant organization access automatically. An authorized organization administrator or owner must add you as a member.",
       "invitationTitle": "Create account to accept invitation",
-      "invitationDescription": "Create the account for {email} to join {tenant}. Your tenant and role will be assigned only when you accept the invitation.",
+      "invitationDescription": "Create the account for {email} to join {tenant}. Your organization and role will be assigned only when you accept the invitation.",
       "selfServiceTitle": "Create your free workspace",
       "selfServiceDescription": "Start a private Simple workspace for your household, small business, club, or collection.",
       "selfServiceUnavailableTitle": "Registration is temporarily unavailable",
-      "selfServiceUnavailable": "Open workspace registration is not enabled yet. You can still create an account from a valid tenant invitation.",
+      "selfServiceUnavailable": "Open workspace registration is not enabled yet. You can still create an account from a valid organization invitation.",
       "invitationRequiredTitle": "Invitation required",
-      "invitationRequired": "Open the registration page from a valid tenant invitation. Registration by itself does not grant access.",
+      "invitationRequired": "Open the registration page from a valid organization invitation. Registration by itself does not grant access.",
       "email": "Email",
       "password": "Password",
       "confirmPassword": "Confirm Password",
@@ -903,11 +903,11 @@
   },
   "Invitations": {
     "accept": {
-      "title": "Tenant invitation",
+      "title": "Organization invitation",
       "invalidTitle": "Invalid link",
       "invalid": "This invitation link is invalid.",
       "expiredTitle": "Expired link",
-      "expired": "This invitation has expired. Ask the tenant administrator to resend it.",
+      "expired": "This invitation has expired. Ask the organization administrator to resend it.",
       "revokedTitle": "Revoked invitation",
       "revoked": "This invitation was revoked and can no longer be accepted.",
       "acceptedTitle": "Already accepted",
@@ -926,7 +926,7 @@
         "invalid": "Invitation link is invalid.",
         "signInRequired": "Sign in before accepting the invitation.",
         "wrongEmail": "Sign in with the email address named in the invitation.",
-        "alreadyMember": "This account already belongs to a tenant and cannot accept another tenant invitation.",
+        "alreadyMember": "This account already belongs to an organization and cannot accept another organization invitation.",
         "failed": "Invitation acceptance failed."
       }
     }
@@ -949,7 +949,7 @@
       "transfers": "Transfers",
       "events": "Events",
       "settings": "Settings",
-      "tenantAdmin": "Tenant Admin"
+      "tenantAdmin": "Organization Admin"
     }
   },
   "Ops": {
