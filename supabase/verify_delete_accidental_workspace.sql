@@ -95,6 +95,13 @@ BEGIN
 END;
 $$;
 
+-- Production installations may intentionally precede the optional billing
+-- migrations. Verify that the cleanup still works when that relation is absent.
+RESET ROLE;
+ALTER TABLE private.tenant_billing
+  RENAME TO tenant_billing_verification_backup;
+SET LOCAL ROLE authenticated;
+
 SELECT public.delete_accidental_workspace(
   tenant_id,
   'Accidental workspace',
@@ -102,6 +109,11 @@ SELECT public.delete_accidental_workspace(
 )
 FROM accidental_workspace_result
 WHERE owner_id = '98000000-0000-4000-8000-000000000002';
+
+RESET ROLE;
+ALTER TABLE private.tenant_billing_verification_backup
+  RENAME TO tenant_billing;
+SET LOCAL ROLE authenticated;
 
 DO $$
 DECLARE

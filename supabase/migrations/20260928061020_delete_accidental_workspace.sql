@@ -40,6 +40,7 @@ DECLARE
   v_tenant public.tenant%ROWTYPE;
   v_owner_id uuid;
   v_owner_email text;
+  v_has_billing_history boolean := false;
   v_previous_defaults_context text := current_setting(
     'app.applying_tenant_defaults', true
   );
@@ -91,6 +92,27 @@ BEGIN
       USING ERRCODE = '55000';
   END IF;
 
+  -- Billing was introduced after self-service workspaces. Some installations
+  -- intentionally run without those tables, in which case billing history
+  -- cannot exist. Dynamic SQL avoids resolving an optional relation when it is
+  -- absent while preserving the guard wherever billing is installed.
+  IF pg_catalog.to_regclass('private.tenant_billing') IS NOT NULL THEN
+    EXECUTE $billing_check$
+      SELECT EXISTS (
+        SELECT 1
+        FROM private.tenant_billing AS billing
+        WHERE billing.tenant_id = $1
+          AND (
+            billing.stripe_customer_id IS NOT NULL
+            OR billing.stripe_subscription_id IS NOT NULL
+            OR billing.subscription_status IS NOT NULL
+          )
+      )
+    $billing_check$
+    INTO v_has_billing_history
+    USING p_tenant_id;
+  END IF;
+
   IF EXISTS (SELECT 1 FROM public.objects WHERE tenant_id = p_tenant_id)
      OR EXISTS (SELECT 1 FROM public.groups WHERE tenant_id = p_tenant_id)
      OR EXISTS (SELECT 1 FROM public.events WHERE tenant_id = p_tenant_id)
@@ -103,16 +125,7 @@ BEGIN
        WHERE stored_object.bucket_id IN ('object-images', 'tenant-reports')
          AND (storage.foldername(stored_object.name))[1] = p_tenant_id::text
      )
-     OR EXISTS (
-       SELECT 1
-       FROM private.tenant_billing AS billing
-       WHERE billing.tenant_id = p_tenant_id
-         AND (
-           billing.stripe_customer_id IS NOT NULL
-           OR billing.stripe_subscription_id IS NOT NULL
-           OR billing.subscription_status IS NOT NULL
-         )
-     ) THEN
+     OR v_has_billing_history THEN
     RAISE EXCEPTION 'Workspace contains user data or billing history and cannot be deleted'
       USING ERRCODE = '55000';
   END IF;
