@@ -42,3 +42,6 @@ Thumbs.db
 *.pem
 *.tsbuildinfo
 .env*
+supabase/.temp/cli-latest
+supabase/.temp/gotrue-version
+supabase/.temp/storage-version
