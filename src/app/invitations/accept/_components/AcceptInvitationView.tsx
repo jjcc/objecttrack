@@ -11,6 +11,7 @@ import {
   Paper,
   Stack,
   Text,
+  TextInput,
   Title,
 } from "@mantine/core";
 import { useFormState, useFormStatus } from "react-dom";
@@ -41,6 +42,8 @@ export function AcceptInvitationView({
   authenticated,
   signedInEmail,
   emailMatches,
+  initialFirstName,
+  initialLastName,
 }: {
   token: string;
   status: string;
@@ -49,6 +52,8 @@ export function AcceptInvitationView({
   authenticated: boolean;
   signedInEmail: string | null;
   emailMatches: boolean;
+  initialFirstName: string;
+  initialLastName: string;
 }) {
   const t = useTranslations("Invitations.accept");
   const router = useRouter();
@@ -106,6 +111,20 @@ export function AcceptInvitationView({
                 emailMatches ? (
                   <form action={action}>
                     <input type="hidden" name="token" value={token} />
+                    <Stack mb="md">
+                      <TextInput
+                        name="firstName"
+                        label={t("firstName")}
+                        defaultValue={initialFirstName}
+                        required
+                      />
+                      <TextInput
+                        name="lastName"
+                        label={t("lastName")}
+                        defaultValue={initialLastName}
+                        required
+                      />
+                    </Stack>
                     <AcceptButton />
                   </form>
                 ) : (

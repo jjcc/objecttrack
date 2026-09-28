@@ -55,6 +55,16 @@ export default async function AcceptInvitationPage({
       authenticated={Boolean(user)}
       signedInEmail={signedInEmail}
       emailMatches={emailMatches}
+      initialFirstName={
+        typeof user?.user_metadata.first_name === "string"
+          ? user.user_metadata.first_name
+          : ""
+      }
+      initialLastName={
+        typeof user?.user_metadata.last_name === "string"
+          ? user.user_metadata.last_name
+          : ""
+      }
     />
   );
 }

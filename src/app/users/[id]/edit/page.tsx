@@ -23,7 +23,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 type UserFormValues = {
-  first_name?: string; last_name?: string; email?: string; title?: string; group_id?: string;
+  first_name: string; last_name: string; email?: string; title?: string; group_id?: string;
   phone?: string; city?: string; province?: string; country?: string; zipcode?: string; wechat_id?: string;
 };
 
@@ -37,7 +37,8 @@ export default function UserEditPage() {
   const [isPending, setIsPending] = useState(false);
   const [groupOptions, setGroupOptions] = useState<{ value: string; label: string }[]>([]);
   const userSchema = z.object({
-    first_name: z.string().optional(), last_name: z.string().optional(),
+    first_name: z.string().trim().min(1, t("nameRequired")),
+    last_name: z.string().trim().min(1, t("nameRequired")),
     email: z.string().email(t("invalidEmail")).optional().or(z.literal("")),
     title: z.string().optional(), group_id: z.string().optional(), phone: z.string().optional(),
     city: z.string().optional(), province: z.string().optional(), country: z.string().optional(),
@@ -103,8 +104,8 @@ export default function UserEditPage() {
       const supabase = getSupabaseClient();
       const { error } = await (supabase.from("user_profiles") as any)
         .update({
-          first_name: values.first_name || null,
-          last_name: values.last_name || null,
+          first_name: values.first_name.trim(),
+          last_name: values.last_name.trim(),
           email: values.email || null,
           title: values.title || null,
           group_id: values.group_id ? Number(values.group_id) : null,
@@ -162,11 +163,13 @@ export default function UserEditPage() {
                 <TextInput
                   label={t("firstName")}
                   placeholder={t("firstNamePlaceholder")}
+                  required
                   {...form.getInputProps("first_name")}
                 />
                 <TextInput
                   label={t("lastName")}
                   placeholder={t("lastNamePlaceholder")}
+                  required
                   {...form.getInputProps("last_name")}
                 />
                 <TextInput

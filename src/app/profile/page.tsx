@@ -42,7 +42,9 @@ export default function ProfilePage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<ProfileMetadata | null>(null);
   const profileSchema = z.object({
-    first_name: z.string(), last_name: z.string(), email: z.string().email(t("invalidEmail")).or(z.literal("")),
+    first_name: z.string().trim().min(1, t("nameRequired")),
+    last_name: z.string().trim().min(1, t("nameRequired")),
+    email: z.string().email(t("invalidEmail")).or(z.literal("")),
     title: z.string(), phone: z.string(), city: z.string(), province: z.string(), country: z.string(), zipcode: z.string(), wechat_id: z.string(),
   });
 
@@ -224,10 +226,12 @@ export default function ProfilePage() {
                 <TextInput
                   label={t("firstName")}
                   placeholder={t("firstNamePlaceholder")}
+                  required
                   {...form.getInputProps("first_name")}
                 />
                 <TextInput
                   label={t("lastName")}
+                  required
                   placeholder={t("lastNamePlaceholder")}
                   {...form.getInputProps("last_name")}
                 />

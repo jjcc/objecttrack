@@ -219,10 +219,10 @@ export default function PublicObjectInfoPage() {
             <InfoField label={t("objectId")} value={record.id} />
             <InfoField label={t("institution")} value={record.institution_name} />
             <InfoField
-              label={t("assignmentStatus")}
+              label={t("owner")}
               value={record.is_assigned
                 ? record.owner_name
-                  ? t("assignedTo", { owner: record.owner_name })
+                  ? record.owner_name
                   : t("owner")
                 : t("unassigned")}
             />

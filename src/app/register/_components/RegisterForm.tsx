@@ -24,6 +24,8 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 
 type RegisterFormValues = {
   email: string;
+  firstName: string;
+  lastName: string;
   password: string;
   confirmPassword: string;
   workspaceName: string;
@@ -49,6 +51,8 @@ export function RegisterForm({
   const registerSchema = z
     .object({
       email: z.string().email(t("invalidEmail")),
+      firstName: z.string().trim().min(1, t("nameRequired")),
+      lastName: z.string().trim().min(1, t("nameRequired")),
       password: z.string().min(8, t("passwordMin", { count: 8 })),
       confirmPassword: z.string().min(8, t("passwordMin", { count: 8 })),
       workspaceName: z.string().trim(),
@@ -66,6 +70,8 @@ export function RegisterForm({
   const form = useForm<RegisterFormValues>({
     initialValues: {
       email: invitedEmail ?? "",
+      firstName: "",
+      lastName: "",
       password: "",
       confirmPassword: "",
       workspaceName: "",
@@ -88,6 +94,8 @@ export function RegisterForm({
           emailRedirectTo: confirmationUrl.toString(),
           data: {
             email: values.email,
+            first_name: values.firstName.trim(),
+            last_name: values.lastName.trim(),
             registration_mode:
               mode === "selfService" ? "self_service" : "invitation",
             ...(mode === "selfService"
@@ -111,6 +119,8 @@ export function RegisterForm({
             await supabase.rpc("create_simple_workspace", {
               p_workspace_name: values.workspaceName.trim(),
               p_workspace_kind: values.workspaceKind,
+              p_first_name: values.firstName.trim(),
+              p_last_name: values.lastName.trim(),
             });
           const result = provisioning?.[0];
           if (
@@ -192,6 +202,16 @@ export function RegisterForm({
                 required
                 {...form.getInputProps("email")}
                 readOnly={mode === "invitation"}
+              />
+              <TextInput
+                label={t("firstName")}
+                required
+                {...form.getInputProps("firstName")}
+              />
+              <TextInput
+                label={t("lastName")}
+                required
+                {...form.getInputProps("lastName")}
               />
               {mode === "selfService" ? (
                 <>

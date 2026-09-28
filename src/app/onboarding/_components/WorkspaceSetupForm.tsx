@@ -32,9 +32,13 @@ function SubmitButton() {
 export function WorkspaceSetupForm({
   initialName,
   initialKind,
+  initialFirstName,
+  initialLastName,
 }: {
   initialName: string;
   initialKind: "family" | "business" | "club" | "collector" | "other";
+  initialFirstName: string;
+  initialLastName: string;
 }) {
   const t = useTranslations("Onboarding");
   const [state, action] = useFormState(
@@ -50,6 +54,18 @@ export function WorkspaceSetupForm({
             {t(`errors.${state.code || "failed"}`)}
           </Alert>
         ) : null}
+        <TextInput
+          name="firstName"
+          label={t("firstName")}
+          defaultValue={initialFirstName}
+          required
+        />
+        <TextInput
+          name="lastName"
+          label={t("lastName")}
+          defaultValue={initialLastName}
+          required
+        />
         <TextInput
           name="workspaceName"
           label={t("workspaceName")}

@@ -17,6 +17,8 @@ export type WorkspaceProvisioningState = {
 };
 
 const workspaceSchema = z.object({
+  firstName: z.string().trim().min(1),
+  lastName: z.string().trim().min(1),
   workspaceName: z.string().trim().min(2).max(200),
   workspaceKind: z.enum(["family", "business", "club", "collector", "other"]),
 });
@@ -26,6 +28,8 @@ export async function createSimpleWorkspaceAction(
   formData: FormData
 ): Promise<WorkspaceProvisioningState> {
   const parsed = workspaceSchema.safeParse({
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
     workspaceName: formData.get("workspaceName"),
     workspaceKind: formData.get("workspaceKind"),
   });
@@ -45,6 +49,8 @@ export async function createSimpleWorkspaceAction(
     const { data, error } = await supabase.rpc("create_simple_workspace", {
       p_workspace_name: parsed.data.workspaceName,
       p_workspace_kind: parsed.data.workspaceKind,
+      p_first_name: parsed.data.firstName,
+      p_last_name: parsed.data.lastName,
     });
     if (error) return { status: "error", code: "failed" };
 

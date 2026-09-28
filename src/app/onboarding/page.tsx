@@ -56,6 +56,14 @@ export default async function OnboardingPage({
       ? user.user_metadata.workspace_name
       : "";
   const initialKind = workspaceKind(user.user_metadata.workspace_kind);
+  const initialFirstName =
+    typeof user.user_metadata.first_name === "string"
+      ? user.user_metadata.first_name
+      : "";
+  const initialLastName =
+    typeof user.user_metadata.last_name === "string"
+      ? user.user_metadata.last_name
+      : "";
 
   return (
     <Center mih="100vh" bg="gray.1" p="md">
@@ -82,6 +90,8 @@ export default async function OnboardingPage({
               <WorkspaceSetupForm
                 initialName={initialName}
                 initialKind={initialKind}
+                initialFirstName={initialFirstName}
+                initialLastName={initialLastName}
               />
             </>
           )}

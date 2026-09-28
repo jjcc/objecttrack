@@ -13,6 +13,7 @@ export type AcceptInvitationState = {
     | "signInRequired"
     | "wrongEmail"
     | "alreadyMember"
+    | "nameRequired"
     | "failed";
 };
 
@@ -20,9 +21,20 @@ export async function acceptInvitationAction(
   _previousState: AcceptInvitationState,
   formData: FormData
 ): Promise<AcceptInvitationState> {
-  const parsed = z.string().min(20).max(500).safeParse(formData.get("token"));
+  const parsed = z.object({
+    token: z.string().min(20).max(500),
+    firstName: z.string().trim().min(1),
+    lastName: z.string().trim().min(1),
+  }).safeParse({
+    token: formData.get("token"),
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+  });
   if (!parsed.success) {
-    return { status: "error", code: "invalid" };
+    return {
+      status: "error",
+      code: formData.get("token") ? "nameRequired" : "invalid",
+    };
   }
 
   try {
@@ -36,7 +48,9 @@ export async function acceptInvitationAction(
     }
 
     const { error } = await supabase.rpc("accept_tenant_invitation", {
-      p_token_hash: hashInvitationToken(parsed.data),
+      p_token_hash: hashInvitationToken(parsed.data.token),
+      p_first_name: parsed.data.firstName,
+      p_last_name: parsed.data.lastName,
     });
     if (error) {
       if (error.message.includes("Sign in with the invited email address")) {
