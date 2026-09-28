@@ -650,3 +650,14 @@ The current mobile `approve_transfer` implementation assigns ownership to
   occurrences are attributed to `dpl_44aurmddmxzvJzM53kXopU1cbVq2`, the last
   pre-fix deployment, and came from this investigation's own probes. With the
   middleware live those requests no longer reach the server component.
+
+## 2026-09-28 — Accidental self-service workspace cleanup
+
+- Added an AAL2 platform-operator action to delete only an empty self-service
+  Simple workspace while preserving its owner's Auth account, allowing that
+  user to accept an existing organization invitation.
+- Added server-side guards for membership, tenant data, files, reports, and
+  billing history; an exact workspace-name confirmation; and retained audit
+  evidence after tenant deletion.
+- Added rollback-only SQL verification for both successful cleanup and refusal
+  when workspace data exists.

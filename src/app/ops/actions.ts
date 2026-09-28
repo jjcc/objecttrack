@@ -46,6 +46,12 @@ const upgradeSchema = z.object({
   confirmation: z.literal("confirmed"),
 });
 
+const deleteAccidentalWorkspaceSchema = z.object({
+  tenantId: z.coerce.number().int().positive(),
+  confirmationName: z.string().trim().min(1).max(200),
+  reason: z.string().trim().min(1).max(1000),
+});
+
 function formValue(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
@@ -212,4 +218,36 @@ export async function upgradeTenantToFullAction(
   revalidatePath("/ops");
   revalidatePath(`/ops/tenants/${parsed.data.tenantId}`);
   return { status: "success", message: t("upgraded") };
+}
+
+export async function deleteAccidentalWorkspaceAction(
+  _previousState: OpsActionState,
+  formData: FormData
+): Promise<OpsActionState> {
+  const t = await getTranslations("Ops.actions");
+  const parsed = deleteAccidentalWorkspaceSchema.safeParse({
+    tenantId: formValue(formData, "tenantId"),
+    confirmationName: formValue(formData, "confirmationName"),
+    reason: formValue(formData, "reason"),
+  });
+  if (!parsed.success) {
+    return { status: "error", message: t("deleteConfirmationInvalid") };
+  }
+
+  try {
+    const { supabase } = await requirePlatformAccess(
+      "platform.tenants.delete_accidental"
+    );
+    const { error } = await supabase.rpc("delete_accidental_workspace", {
+      p_tenant_id: parsed.data.tenantId,
+      p_confirmation_name: parsed.data.confirmationName,
+      p_reason: parsed.data.reason,
+    });
+    if (error) throw new Error(error.message);
+  } catch {
+    return { status: "error", message: t("deleteFailed") };
+  }
+
+  revalidatePath("/ops");
+  redirect("/ops?deleted=1");
 }

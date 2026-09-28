@@ -968,7 +968,9 @@
       "searchPlaceholder": "机构或电子邮箱",
       "search": "搜索",
       "loadFailedTitle": "无法加载租户",
-      "loadFailed": "无法加载租户记录，请重试。"
+      "loadFailed": "无法加载租户记录，请重试。",
+      "deletedTitle": "工作区已删除",
+      "deleted": "误建的工作区及其成员关系已删除。该用户账户现在可以接受组织邀请。"
     },
     "audit": {
       "title": "审计与监控",
@@ -1097,7 +1099,14 @@
       "statusPending": {
         "active": "正在启用…",
         "suspended": "正在停用…"
-      }
+      },
+      "deleteTitle": "删除误建的工作区",
+      "deleteDescription": "仅适用于由原始所有者自行创建且为空的简易版工作区。工作区及成员关系将被永久删除，但用户账户会保留，以便接受其他组织的邀请。",
+      "deleteReason": "删除原因",
+      "deleteConfirmation": "请输入 {name} 以确认",
+      "delete": "删除工作区",
+      "deleting": "正在删除……",
+      "deleteFailed": "工作区删除失败"
     },
     "actions": {
       "invalidValues": "请检查提交的内容。",
@@ -1112,7 +1121,9 @@
         "suspended": "租户已停用。"
       },
       "upgradeFailed": "无法升级工作区。",
-      "upgraded": "工作区已升级到完整版。"
+      "upgraded": "工作区已升级到完整版。",
+      "deleteConfirmationInvalid": "请填写原因，并输入完整且完全一致的工作区名称以确认删除。",
+      "deleteFailed": "无法删除此工作区。工作区中可能包含成员、数据、邀请、报告、文件或账单历史。"
     }
   }
 }

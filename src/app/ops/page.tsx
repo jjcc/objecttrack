@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function OperationsTenantsPage({
   searchParams,
 }: {
-  searchParams?: { q?: string };
+  searchParams?: { q?: string; deleted?: string };
 }) {
   const t = await getTranslations("Ops.tenants");
   const query = searchParams?.q?.trim() ?? "";
@@ -40,6 +40,12 @@ export default async function OperationsTenantsPage({
           {t("create")}
         </Button>
       </Group>
+
+      {searchParams?.deleted === "1" ? (
+        <Alert color="green" title={t("deletedTitle")}>
+          {t("deleted")}
+        </Alert>
+      ) : null}
 
       <Paper withBorder p="md" radius="md">
         <form method="get">

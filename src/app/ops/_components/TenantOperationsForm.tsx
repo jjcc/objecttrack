@@ -16,6 +16,7 @@ import {
 } from "@mantine/core";
 import { useFormState } from "react-dom";
 import {
+  deleteAccidentalWorkspaceAction,
   setTenantStatusAction,
   upgradeTenantToFullAction,
   updateTenantAction,
@@ -75,8 +76,17 @@ export function TenantOperationsForm({
     upgradeTenantToFullAction,
     initialState
   );
+  const [deleteState, deleteAction] = useFormState(
+    deleteAccidentalWorkspaceAction,
+    initialState
+  );
   const nextStatus = tenant.status === "active" ? "suspended" : "active";
   const statusVerb = t(`verbs.${nextStatus}`);
+  const canRequestDeletion =
+    product.edition === "simple" &&
+    product.active_users === 1 &&
+    product.pending_invitations === 0 &&
+    product.object_count === 0;
 
   return (
     <Stack gap="lg">
@@ -263,6 +273,46 @@ export function TenantOperationsForm({
           </Stack>
         </form>
       </Paper>
+
+      {canRequestDeletion ? (
+        <Paper withBorder p="lg" radius="md">
+          <form action={deleteAction}>
+            <Stack>
+              <Title order={3}>{t("deleteTitle")}</Title>
+              <Text size="sm" c="dimmed">
+                {t("deleteDescription")}
+              </Text>
+              {deleteState.status === "error" ? (
+                <Alert color="red" title={t("deleteFailed")}>
+                  {deleteState.message}
+                </Alert>
+              ) : null}
+              <input type="hidden" name="tenantId" value={tenant.id} />
+              <Textarea
+                name="reason"
+                label={t("deleteReason")}
+                required
+                rows={3}
+                maxLength={1000}
+              />
+              <TextInput
+                name="confirmationName"
+                label={t("deleteConfirmation", {
+                  name: tenant.institution_name,
+                })}
+                required
+                autoComplete="off"
+              />
+              <Divider />
+              <SubmitButton
+                idleLabel={t("delete")}
+                pendingLabel={t("deleting")}
+                color="red"
+              />
+            </Stack>
+          </form>
+        </Paper>
+      ) : null}
     </Stack>
   );
 }

@@ -968,7 +968,9 @@
       "searchPlaceholder": "Institution or email",
       "search": "Search",
       "loadFailedTitle": "Unable to load tenants",
-      "loadFailed": "Tenant records could not be loaded. Please try again."
+      "loadFailed": "Tenant records could not be loaded. Please try again.",
+      "deletedTitle": "Workspace deleted",
+      "deleted": "The accidental workspace and its membership were removed. The user account can now accept an organization invitation."
     },
     "audit": {
       "title": "Audit & monitoring",
@@ -1097,7 +1099,14 @@
       "statusPending": {
         "active": "Activating…",
         "suspended": "Suspending…"
-      }
+      },
+      "deleteTitle": "Delete accidental workspace",
+      "deleteDescription": "Available only for an empty, self-service Simple workspace with its original owner. The workspace and membership are permanently deleted; the user account is preserved so it can accept another organization's invitation.",
+      "deleteReason": "Deletion reason",
+      "deleteConfirmation": "Type {name} to confirm",
+      "delete": "Delete workspace",
+      "deleting": "Deleting…",
+      "deleteFailed": "Workspace deletion failed"
     },
     "actions": {
       "invalidValues": "Check the submitted values.",
@@ -1112,7 +1121,9 @@
         "suspended": "Tenant suspended."
       },
       "upgradeFailed": "The workspace could not be upgraded.",
-      "upgraded": "Workspace upgraded to Full."
+      "upgraded": "Workspace upgraded to Full.",
+      "deleteConfirmationInvalid": "Enter a reason and type the exact workspace name to confirm deletion.",
+      "deleteFailed": "This workspace could not be deleted. It may contain members, data, invitations, reports, files, or billing history."
     }
   }
 }

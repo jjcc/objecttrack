@@ -717,6 +717,14 @@ export type Database = {
           tenant_id: number
         }[]
       }
+      delete_accidental_workspace: {
+        Args: {
+          p_confirmation_name: string
+          p_reason: string
+          p_tenant_id: number
+        }
+        Returns: undefined
+      }
       create_tenant_invitation: {
         Args: {
           p_expires_at: string
@@ -1329,4 +1337,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

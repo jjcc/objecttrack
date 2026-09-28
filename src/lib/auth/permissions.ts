@@ -35,6 +35,7 @@ export const PERMISSIONS = [
   "platform.tenants.create",
   "platform.tenants.update",
   "platform.tenants.suspend",
+  "platform.tenants.delete_accidental",
   "platform.audit.read",
 ] as const;
 
@@ -87,6 +88,7 @@ export const ROLE_PERMISSIONS = {
     "platform.tenants.create",
     "platform.tenants.update",
     "platform.tenants.suspend",
+    "platform.tenants.delete_accidental",
     "platform.audit.read",
   ],
 } as const satisfies Record<AppRole, readonly Permission[]>;

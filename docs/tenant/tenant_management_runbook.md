@@ -84,6 +84,16 @@ validation requirements in
   INVITATION_FROM_EMAIL, then use the rate-limited resend action.
 - For suspected disclosure, revoke the invitation and issue a new one.
 
+If an invited user accidentally created a self-service Simple workspace before
+accepting an organization invitation, open that workspace in OPC and use
+**Delete accidental workspace**. The action is available only when the
+workspace has its original owner, no objects, no pending invitations, and no
+other visible usage. The database additionally refuses deletion when it finds
+members, groups, events, transfers, invitations, reports, stored files, or paid
+billing state. Enter an operational reason and the exact workspace name. The
+workspace membership is removed, but the Supabase Auth account is preserved so
+the user can return to the original invitation link and accept it.
+
 ## Reports and retention
 
 - Small inventory exports stream synchronously from a tenant-scoped service.
