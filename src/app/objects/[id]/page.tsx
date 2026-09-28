@@ -27,6 +27,8 @@ import dayjs from "dayjs";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { showNotification } from "@mantine/notifications";
 
+const UNASSIGNED_OPTION = "__unassigned__";
+
 export default function ObjectShowPage() {
   const t = useTranslations("Objects.detail");
   const format = useFormatter();
@@ -40,7 +42,11 @@ export default function ObjectShowPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [canManageObjects, setCanManageObjects] = useState(false);
-  const [memberOptions, setMemberOptions] = useState<{ value: string; label: string }[]>([]);
+  const [memberOptions, setMemberOptions] = useState<{
+    value: string;
+    label: string;
+    disabled?: boolean;
+  }[]>([]);
   const [profileNames, setProfileNames] = useState<Record<string, string>>({});
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [isAssigning, setIsAssigning] = useState(false);
@@ -92,12 +98,28 @@ export default function ObjectShowPage() {
             return [profile.id, name || profile.email || profile.id];
           }));
           setProfileNames(labels);
-          setMemberOptions(profileRows
+          const memberOptions = profileRows
             .filter((profile) => profile.tenant_role === "member")
             .map((profile) => ({
               value: profile.id,
               label: labels[profile.id],
-            })));
+            }));
+          const currentOwnerId = (objectResult.data as { current_owner_id?: string | null } | null)
+            ?.current_owner_id;
+          if (
+            currentOwnerId &&
+            !memberOptions.some((option) => option.value === currentOwnerId)
+          ) {
+            memberOptions.push({
+              value: currentOwnerId,
+              label: labels[currentOwnerId] ?? t("ownerAssigned"),
+              disabled: true,
+            });
+          }
+          setMemberOptions([
+            { value: UNASSIGNED_OPTION, label: t("assignment.unassignedOption") },
+            ...memberOptions,
+          ]);
         }
 
         if (objectResult.error || eventsResult.error) {
@@ -106,6 +128,9 @@ export default function ObjectShowPage() {
 
         const objectData = objectResult.error ? null : objectResult.data;
         setRecord(objectData as unknown as Record<string, unknown> | null);
+        const currentOwnerId = (objectData as { current_owner_id?: string | null } | null)
+          ?.current_owner_id;
+        setSelectedMemberId(currentOwnerId ?? null);
         setEvents(
           eventsResult.error
             ? []
@@ -141,16 +166,25 @@ export default function ObjectShowPage() {
     try {
       const { error } = await getSupabaseClient().rpc("assign_object_to_member", {
         p_object_id: Number(id),
-        p_member_id: selectedMemberId,
+        p_member_id: selectedMemberId === UNASSIGNED_OPTION ? null : selectedMemberId,
       });
       if (error) {
         setAssignmentError(t("assignment.failed"));
         return;
       }
+      const nextOwnerId = selectedMemberId === UNASSIGNED_OPTION ? null : selectedMemberId;
+      const currentOwnerId = typeof record?.current_owner_id === "string"
+        ? record.current_owner_id
+        : null;
+      const action = currentOwnerId === null
+        ? "assign"
+        : nextOwnerId === null
+          ? "unassign"
+          : "reassign";
       showNotification({
         color: "green",
-        title: t("assignment.successTitle"),
-        message: t("assignment.success"),
+        title: t(`assignment.${action}SuccessTitle`),
+        message: t(`assignment.${action}Success`),
       });
       setSelectedMemberId(null);
       setRefreshKey((current) => current + 1);
@@ -163,6 +197,15 @@ export default function ObjectShowPage() {
 
   const category = record?.categories as Record<string, string> | null;
   const extra = (record?.extra as Record<string, unknown> | null) ?? {};
+  const currentOwnerId = typeof record?.current_owner_id === "string"
+    ? record.current_owner_id
+    : null;
+  const selectedOwnerId = selectedMemberId === UNASSIGNED_OPTION ? null : selectedMemberId;
+  const assignmentAction = currentOwnerId === null
+    ? "assign"
+    : selectedOwnerId === null
+      ? "unassign"
+      : "reassign";
 
   return (
     <AppShell>
@@ -253,11 +296,17 @@ export default function ObjectShowPage() {
           </SimpleGrid>
         </Paper>
 
-        {canManageObjects && !record?.current_owner_id ? (
+        {canManageObjects && record ? (
           <Paper withBorder p="md" radius="md">
             <Stack gap="sm">
-              <Text fw={600}>{t("assignment.title")}</Text>
-              <Text size="sm" c="dimmed">{t("assignment.description")}</Text>
+              <Text fw={600}>
+                {currentOwnerId ? t("assignment.reassignTitle") : t("assignment.title")}
+              </Text>
+              <Text size="sm" c="dimmed">
+                {currentOwnerId
+                  ? t("assignment.reassignDescription")
+                  : t("assignment.description")}
+              </Text>
               {assignmentError ? <Alert color="red">{assignmentError}</Alert> : null}
               <Group align="end">
                 <Select
@@ -268,15 +317,19 @@ export default function ObjectShowPage() {
                   onChange={setSelectedMemberId}
                   searchable
                   clearable
-                  disabled={isAssigning || memberOptions.length === 0}
+                  disabled={isAssigning}
                   style={{ flex: 1 }}
                 />
                 <Button
                   leftSection={isAssigning ? <Loader size={14} /> : <IconUserPlus size={16} />}
                   onClick={assignSelectedMember}
-                  disabled={!selectedMemberId || isAssigning}
+                  disabled={
+                    !selectedMemberId ||
+                    selectedOwnerId === currentOwnerId ||
+                    isAssigning
+                  }
                 >
-                  {t("assignment.assign")}
+                  {t(`assignment.${assignmentAction}`)}
                 </Button>
               </Group>
               {memberOptions.length === 0 ? (

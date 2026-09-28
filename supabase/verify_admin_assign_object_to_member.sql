@@ -1,4 +1,4 @@
--- Rollback-only verification for admin assignment of an unassigned object.
+-- Rollback-only verification for admin assignment, reassignment, and unassignment.
 -- Run with psql as local postgres after all migrations.
 
 BEGIN;
@@ -11,7 +11,8 @@ INSERT INTO auth.users (
 ) VALUES
   ('99000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated', 'assign-operator@example.test', now(), false, false),
   ('99000000-0000-4000-8000-000000000002', 'authenticated', 'authenticated', 'assign-admin@example.test', now(), false, false),
-  ('99000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated', 'assign-member@example.test', now(), false, false);
+  ('99000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated', 'assign-member@example.test', now(), false, false),
+  ('99000000-0000-4000-8000-000000000004', 'authenticated', 'authenticated', 'assign-member-2@example.test', now(), false, false);
 
 INSERT INTO private.platform_operators (user_id)
 VALUES ('99000000-0000-4000-8000-000000000001');
@@ -33,6 +34,10 @@ FROM assignment_fixture;
 
 INSERT INTO public.user_profiles (id, tenant_id, tenant_role, email)
 SELECT '99000000-0000-4000-8000-000000000003', tenant_id, 'member', 'assign-member@example.test'
+FROM assignment_fixture;
+
+INSERT INTO public.user_profiles (id, tenant_id, tenant_role, email)
+SELECT '99000000-0000-4000-8000-000000000004', tenant_id, 'member', 'assign-member-2@example.test'
 FROM assignment_fixture;
 
 INSERT INTO public.objects (tenant_id, name)
@@ -96,6 +101,39 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Assignment event was not recorded for an ungrouped object';
   END IF;
+
+  PERFORM public.assign_object_to_member(
+    v_object_id,
+    '99000000-0000-4000-8000-000000000004'
+  );
+  IF NOT EXISTS (
+    SELECT 1 FROM public.objects
+    WHERE id = v_object_id
+      AND current_owner_id = '99000000-0000-4000-8000-000000000004'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM public.events
+    WHERE object_id = v_object_id
+      AND e_from = '99000000-0000-4000-8000-000000000003'
+      AND e_to = '99000000-0000-4000-8000-000000000004'
+      AND extra->>'action' = 'reassigned'
+  ) THEN
+    RAISE EXCEPTION 'Admin reassignment did not update ownership and history';
+  END IF;
+
+  PERFORM public.assign_object_to_member(v_object_id, NULL);
+  IF NOT EXISTS (
+    SELECT 1 FROM public.objects
+    WHERE id = v_object_id
+      AND current_owner_id IS NULL
+  ) OR NOT EXISTS (
+    SELECT 1 FROM public.events
+    WHERE object_id = v_object_id
+      AND e_from = '99000000-0000-4000-8000-000000000004'
+      AND e_to IS NULL
+      AND extra->>'action' = 'unassigned'
+  ) THEN
+    RAISE EXCEPTION 'Admin unassignment did not clear ownership and record history';
+  END IF;
 END;
 $$;
 
@@ -122,5 +160,5 @@ END;
 $$;
 
 RESET ROLE;
-SELECT 'admin object assignment verification passed' AS result;
+SELECT 'admin assignment, reassignment, and unassignment verification passed' AS result;
 ROLLBACK;

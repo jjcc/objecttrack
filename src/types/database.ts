@@ -633,7 +633,7 @@ export type Database = {
       }
       approve_transfer: { Args: { p_request_id: number }; Returns: undefined }
       assign_object_to_member: {
-        Args: { p_member_id: string; p_object_id: number }
+        Args: { p_member_id: string | null; p_object_id: number }
         Returns: undefined
       }
       authorize_tenant_report_download: {
