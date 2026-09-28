@@ -138,22 +138,27 @@ export default function ObjectShowPage() {
     if (!selectedMemberId) return;
     setIsAssigning(true);
     setAssignmentError(null);
-    const { error } = await getSupabaseClient().rpc("assign_object_to_member", {
-      p_object_id: Number(id),
-      p_member_id: selectedMemberId,
-    });
-    setIsAssigning(false);
-    if (error) {
+    try {
+      const { error } = await getSupabaseClient().rpc("assign_object_to_member", {
+        p_object_id: Number(id),
+        p_member_id: selectedMemberId,
+      });
+      if (error) {
+        setAssignmentError(t("assignment.failed"));
+        return;
+      }
+      showNotification({
+        color: "green",
+        title: t("assignment.successTitle"),
+        message: t("assignment.success"),
+      });
+      setSelectedMemberId(null);
+      setRefreshKey((current) => current + 1);
+    } catch {
       setAssignmentError(t("assignment.failed"));
-      return;
+    } finally {
+      setIsAssigning(false);
     }
-    showNotification({
-      color: "green",
-      title: t("assignment.successTitle"),
-      message: t("assignment.success"),
-    });
-    setSelectedMemberId(null);
-    setRefreshKey((current) => current + 1);
   }
 
   const category = record?.categories as Record<string, string> | null;
