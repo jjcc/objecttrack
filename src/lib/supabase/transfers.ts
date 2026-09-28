@@ -16,6 +16,13 @@ export interface TransferDisplayRecord {
   to_user_full_name: string | null;
 }
 
+export interface ObjectTransferContext {
+  can_request: boolean;
+  pending_request_id: number | null;
+  is_current_owner: boolean;
+  is_requester: boolean;
+}
+
 type TransferDisplayDatabase = Omit<Database, "public"> & {
   public: Omit<Database["public"], "Views"> & {
     Views: Database["public"]["Views"] & {
@@ -41,6 +48,17 @@ export async function approveTransfer(
     p_request_id: requestId,
   });
   if (error) throw error;
+}
+
+export async function requestTransferForObject(
+  supabase: SupabaseClient<Database>,
+  objectId: number,
+): Promise<number> {
+  const { data, error } = await supabase.rpc("request_transfer_for_object", {
+    p_object_id: objectId,
+  });
+  if (error) throw error;
+  return data;
 }
 
 export async function rejectTransfer(

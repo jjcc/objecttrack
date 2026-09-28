@@ -632,6 +632,15 @@ export type Database = {
         }[]
       }
       approve_transfer: { Args: { p_request_id: number }; Returns: undefined }
+      object_transfer_context: {
+        Args: { p_object_id: number }
+        Returns: {
+          can_request: boolean
+          is_current_owner: boolean
+          is_requester: boolean
+          pending_request_id: number | null
+        }[]
+      }
       assign_object_to_member: {
         Args: { p_member_id: string | null; p_object_id: number }
         Returns: undefined
@@ -1032,6 +1041,10 @@ export type Database = {
       }
       request_transfer: {
         Args: { p_object_id: number; p_to_user_id: string }
+        Returns: number
+      }
+      request_transfer_for_object: {
+        Args: { p_object_id: number }
         Returns: number
       }
       revoke_tenant_invitation: {

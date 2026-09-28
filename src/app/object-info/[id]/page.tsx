@@ -2,8 +2,10 @@
 
 import {
   Alert,
+  Button,
   Center,
   Container,
+  Group,
   Image,
   Loader,
   Paper,
@@ -13,12 +15,18 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { IconAlertCircle } from "@tabler/icons-react";
+import { showNotification } from "@mantine/notifications";
+import { IconAlertCircle, IconCheck } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import {
+  approveTransfer,
+  requestTransferForObject,
+  type ObjectTransferContext,
+} from "@/lib/supabase/transfers";
 import type { Json } from "@/types/database";
 
 type ObjectInfo = {
@@ -62,6 +70,9 @@ export default function PublicObjectInfoPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [transferContext, setTransferContext] = useState<ObjectTransferContext | null>(null);
+  const [transferAction, setTransferAction] = useState<"request" | "approve" | null>(null);
+  const [refreshVersion, setRefreshVersion] = useState(0);
 
   useEffect(() => {
     async function fetchObjectInfo() {
@@ -100,7 +111,71 @@ export default function PublicObjectInfoPage() {
       setIsLoading(false);
     }
     fetchObjectInfo();
-  }, [id, t]);
+  }, [id, refreshVersion, t]);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function fetchTransferContext() {
+      setTransferContext(null);
+      if (!record) return;
+
+      const supabase = getSupabaseClient();
+      const { data: authData } = await supabase.auth.getUser();
+      if (!isCurrent || !authData.user) return;
+
+      const { data, error: contextError } = await supabase.rpc("object_transfer_context", {
+        p_object_id: record.id,
+      });
+      if (!isCurrent || contextError) return;
+      setTransferContext((data?.[0] as ObjectTransferContext | undefined) ?? null);
+    }
+
+    fetchTransferContext();
+    return () => {
+      isCurrent = false;
+    };
+  }, [record, refreshVersion]);
+
+  const handleRequestTransfer = async () => {
+    if (!record) return;
+    setTransferAction("request");
+    try {
+      await requestTransferForObject(getSupabaseClient(), record.id);
+      showNotification({
+        color: "green",
+        title: t("transferRequested"),
+        message: t("requestPending"),
+      });
+      setRefreshVersion((version) => version + 1);
+    } catch {
+      showNotification({ color: "red", title: t("transferRequestFailed"), message: t("unavailable") });
+    } finally {
+      setTransferAction(null);
+    }
+  };
+
+  const handleApproveTransfer = async () => {
+    if (!transferContext?.pending_request_id) return;
+    setTransferAction("approve");
+    try {
+      await approveTransfer(getSupabaseClient(), transferContext.pending_request_id);
+      showNotification({
+        color: "green",
+        title: t("transferApproved"),
+        message: t("transferApprovedMessage"),
+      });
+      setRefreshVersion((version) => version + 1);
+    } catch {
+      showNotification({
+        color: "red",
+        title: t("transferApprovalFailed"),
+        message: t("unavailable"),
+      });
+    } finally {
+      setTransferAction(null);
+    }
+  };
 
   if (isLoading) {
     return <Center mih="100vh"><Loader /></Center>;
@@ -168,6 +243,35 @@ export default function PublicObjectInfoPage() {
             ))}
           </SimpleGrid>
         </Paper>
+        {transferContext && (
+          <Paper withBorder p="lg" radius="md">
+            <Group justify="space-between" align="center">
+              {transferContext.is_requester && (
+                <Text c="dimmed">{t("requestPending")}</Text>
+              )}
+              {transferContext.can_request && (
+                <Button
+                  loading={transferAction === "request"}
+                  disabled={transferAction !== null}
+                  onClick={handleRequestTransfer}
+                >
+                  {t("requestOwnership")}
+                </Button>
+              )}
+              {transferContext.is_current_owner && transferContext.pending_request_id !== null && (
+                <Button
+                  color="green"
+                  leftSection={<IconCheck size={16} />}
+                  loading={transferAction === "approve"}
+                  disabled={transferAction !== null}
+                  onClick={handleApproveTransfer}
+                >
+                  {t("approveTransfer")}
+                </Button>
+              )}
+            </Group>
+          </Paper>
+        )}
         <Paper withBorder p="lg" radius="md">
           <Title order={3} mb="md">{t("eventHistory")}</Title>
           <Table striped highlightOnHover>
