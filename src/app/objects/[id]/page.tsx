@@ -98,7 +98,7 @@ export default function ObjectShowPage() {
             return [profile.id, name || profile.email || profile.id];
           }));
           setProfileNames(labels);
-          const memberOptions = profileRows
+          const memberOptions: { value: string; label: string; disabled?: boolean }[] = profileRows
             .filter((profile) => profile.tenant_role === "member")
             .map((profile) => ({
               value: profile.id,
