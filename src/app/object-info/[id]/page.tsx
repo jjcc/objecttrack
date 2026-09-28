@@ -244,6 +244,10 @@ export default function PublicObjectInfoPage() {
           </SimpleGrid>
         </Paper>
         {transferContext && (
+          transferContext.can_request
+          || transferContext.is_requester
+          || (transferContext.is_current_owner && transferContext.pending_request_id !== null)
+        ) && (
           <Paper withBorder p="lg" radius="md">
             <Group justify="space-between" align="center">
               {transferContext.is_requester && (
