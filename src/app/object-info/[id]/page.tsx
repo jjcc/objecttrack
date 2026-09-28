@@ -40,6 +40,7 @@ type ObjectInfo = {
   institution_name: string;
   owner_name: string | null;
   created_at: string;
+  is_assigned: boolean;
 };
 
 type ObjectInfoEvent = {
@@ -219,8 +220,10 @@ export default function PublicObjectInfoPage() {
             <InfoField label={t("institution")} value={record.institution_name} />
             <InfoField
               label={t("assignmentStatus")}
-              value={record.owner_name
-                ? t("assignedTo", { owner: record.owner_name })
+              value={record.is_assigned
+                ? record.owner_name
+                  ? t("assignedTo", { owner: record.owner_name })
+                  : t("owner")
                 : t("unassigned")}
             />
             <InfoField label={t("category")} value={record.category_name} />

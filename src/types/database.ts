@@ -879,6 +879,7 @@ export type Database = {
           id: number
           image: string
           institution_name: string
+          is_assigned: boolean
           model: string
           name: string
           owner_name: string
