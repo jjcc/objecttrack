@@ -14,8 +14,10 @@ import {
   LoadingOverlay,
   Image,
   Alert,
+  Select,
+  Loader,
 } from "@mantine/core";
-import { IconEdit, IconExternalLink } from "@tabler/icons-react";
+import { IconEdit, IconExternalLink, IconUserPlus } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
@@ -23,6 +25,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { EventTypeBadge } from "@/components/shared/EventTypeBadge";
 import dayjs from "dayjs";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { showNotification } from "@mantine/notifications";
 
 export default function ObjectShowPage() {
   const t = useTranslations("Objects.detail");
@@ -37,6 +40,12 @@ export default function ObjectShowPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [canManageObjects, setCanManageObjects] = useState(false);
+  const [memberOptions, setMemberOptions] = useState<{ value: string; label: string }[]>([]);
+  const [profileNames, setProfileNames] = useState<Record<string, string>>({});
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [assignmentError, setAssignmentError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     async function fetchData() {
@@ -62,6 +71,34 @@ export default function ObjectShowPage() {
         setCanManageObjects(
           roleResult.data === "admin" || roleResult.data === "owner"
         );
+
+        if (roleResult.data === "admin" || roleResult.data === "owner") {
+          const { data: profiles } = await supabase
+            .from("user_profiles")
+            .select("id, first_name, last_name, email, tenant_role")
+            .order("first_name")
+            .limit(500);
+          const profileRows = (profiles ?? []) as unknown as {
+            id: string;
+            first_name: string | null;
+            last_name: string | null;
+            email: string | null;
+            tenant_role: string;
+          }[];
+          const labels = Object.fromEntries(profileRows.map((profile) => {
+            const name = [profile.first_name, profile.last_name]
+              .filter(Boolean)
+              .join(" ");
+            return [profile.id, name || profile.email || profile.id];
+          }));
+          setProfileNames(labels);
+          setMemberOptions(profileRows
+            .filter((profile) => profile.tenant_role === "member")
+            .map((profile) => ({
+              value: profile.id,
+              label: labels[profile.id],
+            })));
+        }
 
         if (objectResult.error || eventsResult.error) {
           setLoadError(t("loadFailed"));
@@ -95,7 +132,29 @@ export default function ObjectShowPage() {
     }
 
     fetchData();
-  }, [id, t]);
+  }, [id, t, refreshKey]);
+
+  async function assignSelectedMember() {
+    if (!selectedMemberId) return;
+    setIsAssigning(true);
+    setAssignmentError(null);
+    const { error } = await getSupabaseClient().rpc("assign_object_to_member", {
+      p_object_id: Number(id),
+      p_member_id: selectedMemberId,
+    });
+    setIsAssigning(false);
+    if (error) {
+      setAssignmentError(t("assignment.failed"));
+      return;
+    }
+    showNotification({
+      color: "green",
+      title: t("assignment.successTitle"),
+      message: t("assignment.success"),
+    });
+    setSelectedMemberId(null);
+    setRefreshKey((current) => current + 1);
+  }
 
   const category = record?.categories as Record<string, string> | null;
   const extra = (record?.extra as Record<string, unknown> | null) ?? {};
@@ -167,6 +226,14 @@ export default function ObjectShowPage() {
               </Text>
             </div>
             <div>
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>{t("currentOwner")}</Text>
+              <Text>
+                {typeof record?.current_owner_id === "string"
+                  ? profileNames[record.current_owner_id] ?? t("ownerAssigned")
+                  : t("unassigned")}
+              </Text>
+            </div>
+            <div>
               <Text size="xs" c="dimmed" tt="uppercase" fw={700}>{t("description")}</Text>
               <Text>{(record?.description as string) ?? "—"}</Text>
             </div>
@@ -178,6 +245,39 @@ export default function ObjectShowPage() {
             ))}
           </SimpleGrid>
         </Paper>
+
+        {canManageObjects && !record?.current_owner_id ? (
+          <Paper withBorder p="md" radius="md">
+            <Stack gap="sm">
+              <Text fw={600}>{t("assignment.title")}</Text>
+              <Text size="sm" c="dimmed">{t("assignment.description")}</Text>
+              {assignmentError ? <Alert color="red">{assignmentError}</Alert> : null}
+              <Group align="end">
+                <Select
+                  label={t("assignment.member")}
+                  placeholder={t("assignment.selectMember")}
+                  data={memberOptions}
+                  value={selectedMemberId}
+                  onChange={setSelectedMemberId}
+                  searchable
+                  clearable
+                  disabled={isAssigning || memberOptions.length === 0}
+                  style={{ flex: 1 }}
+                />
+                <Button
+                  leftSection={isAssigning ? <Loader size={14} /> : <IconUserPlus size={16} />}
+                  onClick={assignSelectedMember}
+                  disabled={!selectedMemberId || isAssigning}
+                >
+                  {t("assignment.assign")}
+                </Button>
+              </Group>
+              {memberOptions.length === 0 ? (
+                <Text size="sm" c="dimmed">{t("assignment.noMembers")}</Text>
+              ) : null}
+            </Stack>
+          </Paper>
+        ) : null}
 
         <Paper withBorder p="md" radius="md" pos="relative">
           <Title order={4} mb="md">

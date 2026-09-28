@@ -117,7 +117,7 @@ export type Database = {
           e_to: string | null
           event_type_id: number
           extra: Json | null
-          group_id: number
+          group_id: number | null
           id: number
           object_id: number
           tenant_id: number
@@ -128,7 +128,7 @@ export type Database = {
           e_to?: string | null
           event_type_id: number
           extra?: Json | null
-          group_id: number
+          group_id?: number | null
           id?: never
           object_id: number
           tenant_id: number
@@ -139,7 +139,7 @@ export type Database = {
           e_to?: string | null
           event_type_id?: number
           extra?: Json | null
-          group_id?: number
+          group_id?: number | null
           id?: never
           object_id?: number
           tenant_id?: number
@@ -632,6 +632,10 @@ export type Database = {
         }[]
       }
       approve_transfer: { Args: { p_request_id: number }; Returns: undefined }
+      assign_object_to_member: {
+        Args: { p_member_id: string; p_object_id: number }
+        Returns: undefined
+      }
       authorize_tenant_report_download: {
         Args: { p_report_job_id: string }
         Returns: string
