@@ -231,10 +231,12 @@ export default function ObjectShowPage() {
               </Text>
             </div>
             <div>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>{t("currentOwner")}</Text>
+              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>{t("assignmentStatus")}</Text>
               <Text>
                 {typeof record?.current_owner_id === "string"
-                  ? profileNames[record.current_owner_id] ?? t("ownerAssigned")
+                  ? t("assignment.assignedTo", {
+                      owner: profileNames[record.current_owner_id] ?? t("ownerAssigned"),
+                    })
                   : t("unassigned")}
               </Text>
             </div>

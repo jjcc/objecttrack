@@ -142,7 +142,12 @@ export default function PublicObjectInfoPage() {
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
             <InfoField label={t("objectId")} value={record.id} />
             <InfoField label={t("institution")} value={record.institution_name} />
-            <InfoField label={t("owner")} value={record.owner_name} />
+            <InfoField
+              label={t("assignmentStatus")}
+              value={record.owner_name
+                ? t("assignedTo", { owner: record.owner_name })
+                : t("unassigned")}
+            />
             <InfoField label={t("category")} value={record.category_name} />
             <InfoField label={t("model")} value={record.model} />
             <InfoField
