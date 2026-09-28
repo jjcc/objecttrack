@@ -17,7 +17,7 @@ import {
   Select,
   Loader,
 } from "@mantine/core";
-import { IconEdit, IconExternalLink, IconUserPlus } from "@tabler/icons-react";
+import { IconEdit, IconExternalLink, IconUserMinus, IconUserPlus } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
@@ -206,6 +206,9 @@ export default function ObjectShowPage() {
     : selectedOwnerId === null
       ? "unassign"
       : "reassign";
+  const hasAssignableMembers = memberOptions.some(
+    (option) => option.value !== UNASSIGNED_OPTION && !option.disabled
+  );
 
   return (
     <AppShell>
@@ -321,7 +324,11 @@ export default function ObjectShowPage() {
                   style={{ flex: 1 }}
                 />
                 <Button
-                  leftSection={isAssigning ? <Loader size={14} /> : <IconUserPlus size={16} />}
+                  leftSection={isAssigning
+                    ? <Loader size={14} />
+                    : assignmentAction === "unassign"
+                      ? <IconUserMinus size={16} />
+                      : <IconUserPlus size={16} />}
                   onClick={assignSelectedMember}
                   disabled={
                     !selectedMemberId ||
@@ -332,7 +339,7 @@ export default function ObjectShowPage() {
                   {t(`assignment.${assignmentAction}`)}
                 </Button>
               </Group>
-              {memberOptions.length === 0 ? (
+              {!hasAssignableMembers ? (
                 <Text size="sm" c="dimmed">{t("assignment.noMembers")}</Text>
               ) : null}
             </Stack>

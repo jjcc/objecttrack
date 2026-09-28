@@ -714,7 +714,7 @@
         "reassign": "重新分配物品",
         "unassign": "取消分配",
         "noMembers": "没有可分配的成员。",
-        "failed": "无法分配此物品，请重试。",
+        "failed": "无法更改此物品的分配状态，请重试。",
         "assignSuccessTitle": "物品已分配",
         "assignSuccess": "物品现已分配给所选成员。",
         "reassignSuccessTitle": "分配已更改",

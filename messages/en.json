@@ -714,7 +714,7 @@
         "reassign": "Reassign object",
         "unassign": "Unassign object",
         "noMembers": "There are no Members available to assign.",
-        "failed": "The object could not be assigned. Please try again.",
+        "failed": "The assignment could not be changed. Please try again.",
         "assignSuccessTitle": "Object assigned",
         "assignSuccess": "The object is now assigned to the selected member.",
         "reassignSuccessTitle": "Assignment changed",
