@@ -699,7 +699,7 @@
       "model": "Model",
       "created": "Created",
       "currentOwner": "Current owner",
-      "assignmentStatus": "Assignment status",
+      "assignmentStatus": "Current owner",
       "ownerAssigned": "Assigned member",
       "unassigned": "Unassigned",
       "description": "Description",
@@ -971,6 +971,7 @@
       "switchAccount": "Sign out and continue",
       "errors": {
         "invalid": "Invitation link is invalid.",
+        "nameRequired": "First and last name are required.",
         "signInRequired": "Sign in before accepting the invitation.",
         "wrongEmail": "Sign in with the email address named in the invitation.",
         "alreadyMember": "This account already belongs to an organization and cannot accept another organization invitation.",

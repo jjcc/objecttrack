@@ -46,11 +46,17 @@ export async function createSimpleWorkspaceAction(
       return { status: "error", code: "signInRequired" };
     }
 
+    const { error: metadataError } = await supabase.auth.updateUser({
+      data: {
+        first_name: parsed.data.firstName,
+        last_name: parsed.data.lastName,
+      },
+    });
+    if (metadataError) return { status: "error", code: "failed" };
+
     const { data, error } = await supabase.rpc("create_simple_workspace", {
       p_workspace_name: parsed.data.workspaceName,
       p_workspace_kind: parsed.data.workspaceKind,
-      p_first_name: parsed.data.firstName,
-      p_last_name: parsed.data.lastName,
     });
     if (error) return { status: "error", code: "failed" };
 

@@ -30,14 +30,6 @@ export async function GET(request: NextRequest) {
               p_workspace_name: workspaceName,
               p_workspace_kind:
                 typeof workspaceKind === "string" ? workspaceKind : "other",
-              p_first_name:
-                typeof user?.user_metadata.first_name === "string"
-                  ? user.user_metadata.first_name
-                  : "",
-              p_last_name:
-                typeof user?.user_metadata.last_name === "string"
-                  ? user.user_metadata.last_name
-                  : "",
             }
           );
           const result = data?.[0];

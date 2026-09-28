@@ -119,8 +119,6 @@ export function RegisterForm({
             await supabase.rpc("create_simple_workspace", {
               p_workspace_name: values.workspaceName.trim(),
               p_workspace_kind: values.workspaceKind,
-              p_first_name: values.firstName.trim(),
-              p_last_name: values.lastName.trim(),
             });
           const result = provisioning?.[0];
           if (

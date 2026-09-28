@@ -47,10 +47,16 @@ export async function acceptInvitationAction(
       return { status: "error", code: "signInRequired" };
     }
 
+    const { error: metadataError } = await supabase.auth.updateUser({
+      data: {
+        first_name: parsed.data.firstName,
+        last_name: parsed.data.lastName,
+      },
+    });
+    if (metadataError) return { status: "error", code: "failed" };
+
     const { error } = await supabase.rpc("accept_tenant_invitation", {
       p_token_hash: hashInvitationToken(parsed.data.token),
-      p_first_name: parsed.data.firstName,
-      p_last_name: parsed.data.lastName,
     });
     if (error) {
       if (error.message.includes("Sign in with the invited email address")) {

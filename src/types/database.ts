@@ -530,10 +530,10 @@ export type Database = {
           country: string | null
           created_at: string
           email: string | null
-          first_name: string | null
+          first_name: string
           group_id: number | null
           id: string
-          last_name: string | null
+          last_name: string
           phone: string | null
           province: string | null
           tenant_id: number
@@ -547,10 +547,10 @@ export type Database = {
           country?: string | null
           created_at?: string
           email?: string | null
-          first_name?: string | null
+          first_name: string
           group_id?: number | null
           id: string
-          last_name?: string | null
+          last_name: string
           phone?: string | null
           province?: string | null
           tenant_id: number
@@ -564,10 +564,10 @@ export type Database = {
           country?: string | null
           created_at?: string
           email?: string | null
-          first_name?: string | null
+          first_name?: string
           group_id?: number | null
           id?: string
-          last_name?: string | null
+          last_name?: string
           phone?: string | null
           province?: string | null
           tenant_id?: number
